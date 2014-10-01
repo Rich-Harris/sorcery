@@ -1,0 +1,1 @@
+Run `node test.js` in this folder - it will create some intermediate files in `tmp`, and three output files in `dist` (an `index.html`, `helloworld.min.js`, and `helloworld.min.js.map`). Navigate to the `dist` folder in a browser and open your devtools - it should link the transpiled and minified code back to the original source (which is inlined with the sourcemap).
