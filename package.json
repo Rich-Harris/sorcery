@@ -2,10 +2,12 @@
   "name": "sorcery",
   "description": "Resolve a chain of sourcemaps back to the original source",
   "version": "0.1.1",
+  "author": "Rich Harris",
+  "repository": "https://github.com/Rich-Harris/sorcery",
   "main": "lib/index.js",
   "license": "MIT",
   "dependencies": {
-    "sander": "^0.1.5",
+    "sander": "^0.1.6",
     "vlq": "^0.1.0"
   },
   "devDependencies": {
