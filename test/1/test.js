@@ -18,7 +18,9 @@ compileCoffeeScript()
 	.then( minifyJavaScript )
 	.then( resolveSourceMapChain )
 	.catch( function ( err ) {
-		console.log( 'err', err );
+		setTimeout( function () {
+			throw err;
+		});
 	});
 
 function compileCoffeeScript () {
