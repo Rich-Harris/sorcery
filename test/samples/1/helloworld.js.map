@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "helloworld.js",
+  "sourceRoot": "",
+  "sources": [
+    "helloworld.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA,MAAA,MAAA;;AAAA,EAAA,MAAA,GAAS,EAAA,GAAK,CAAd,CAAA;;AAAA,EACA,OAAO,CAAC,GAAR,CAAa,gBAAA,GAAgB,MAA7B,CADA,CAAA;AAAA"
+}
