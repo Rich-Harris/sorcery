@@ -11,18 +11,15 @@ Most compilers don't do that. ([UglifyJS](https://github.com/mishoo/UglifyJS2) i
 This is a work-in-progress - suitable for playing around with, but don't rely on it to debug air traffic control software or medical equipment. Other than that, it can't do much harm.
 
 
-## Installation
-
-```bash
-npm install sorcery
-```
-
-
 ## Usage
 
 ### As a node module
 
-You can use sorcery as a node module...
+Install sorcery locally:
+
+```bash
+npm install sorcery
+```
 
 ```js
 var sorcery = require( 'sorcery' );
