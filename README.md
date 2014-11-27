@@ -55,7 +55,7 @@ First, install sorcery globally:
 npm install -g sorcery
 ```
 
-```bash
+```
 Usage:
   sorcery [options]
 
