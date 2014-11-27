@@ -20,7 +20,73 @@ npm install sorcery
 
 ## Usage
 
-API still in flux, lots of work to do... instructions coming soon! Try cloning this repo and looking inside the `test` folder to get started.
+### As a node module
+
+You can use sorcery as a node module...
+
+```js
+var sorcery = require( 'sorcery' );
+
+sorcery.load( 'some/generated/code.min.js' ).then( function ( chain ) {
+  // generate a flattened sourcemap
+  var map = chain.apply(); // { version: 3, file: 'code.min.js', ... }
+
+  // get a JSON representation of the sourcemap
+  map.toString(); // '{"version":3,"file":"code.min.js",...}'
+
+  // get a data URI representation
+  map.toUrl(); // 'data:application/json;charset=utf-8;base64,eyJ2ZXJ...'
+
+  // find the origin of line x, column y. Returns an object with
+  // `source`, `line`, `column` and (if applicable) `name` properties.
+  // Note - for consistency with other tools, line numbers are always
+  // one-based, column numbers are always zero-based. It's daft, I know.
+  var loc = chain.trace( x, y );
+});
+
+// You can also use sorcery synchronously:
+var chain = sorcery.loadSync( 'some/generated/code.min.js' );
+var map = chain.apply();
+var loc = chain.trace( x, y );
+```
+
+### On the command line
+
+First, install sorcery globally:
+
+```bash
+npm install -g sorcery
+```
+
+```bash
+Usage:
+  sorcery [options]
+
+Options:
+  -h, --help               Show help message
+  -v, --version            Show version
+  -i, --input <file>       Input file
+  -o, --output <file>      Output file (if absent, will overwrite input)
+  -d, --datauri            Append map as a data URI, rather than separate file
+  -x, --excludeContent     Don't populate the sourcesContent array
+```
+
+Examples:
+
+```bash
+# overwrite sourcemap in place (will write map to
+# some/generated/code.min.js.map, and update
+# sourceMappingURL comment if necessary
+sorcery -i some/generated/code.min.js
+
+# append flattened sourcemap as an inline data URI
+# (will delete existing .map file, if applicable)
+sorcery -i -d some/generated/code.min.js
+
+# write to a new file (will create newfile.js and
+# newfile.js.map)
+sorcery -i some/generated/code.min.js -o newfile.js
+```
 
 
 ## License
