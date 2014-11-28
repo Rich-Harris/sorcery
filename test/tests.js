@@ -7,11 +7,11 @@ var path = require( 'path' ),
 process.chdir( __dirname );
 
 describe( 'sorcery', function () {
-	before( function () {
+	beforeEach( function () {
 		return sander.rimraf( 'tmp' );
 	});
 
-	after( function () {
+	afterEach( function () {
 		return sander.rimraf( 'tmp' );
 	});
 
@@ -47,7 +47,7 @@ describe( 'sorcery', function () {
 			return sorcery.load( 'samples/1/helloworld.min.js' ).then( function ( chain ) {
 				var map, smc;
 
-				map = chain.apply({ includeContent: true });
+				map = chain.apply();
 				smc = new SourceMapConsumer( map );
 
 				assert.equal( map.version, 3 );
@@ -71,7 +71,7 @@ describe( 'sorcery', function () {
 					return sorcery.load( 'tmp/helloworld.min.js' ).then( function ( chain ) {
 						var map, smc;
 
-						map = chain.apply({ includeContent: true });
+						map = chain.apply();
 						smc = new SourceMapConsumer( map );
 
 						assert.equal( map.version, 3 );
@@ -84,6 +84,29 @@ describe( 'sorcery', function () {
 						assert.equal( loc.line, 2 );
 						assert.equal( loc.column, 8 );
 						assert.equal( loc.name, 'log' );
+					});
+				});
+			});
+		});
+
+		it( 'overwrites existing file', function () {
+			return sander.copydir( 'samples/1' ).to( 'tmp' ).then( function () {
+				return sorcery.load( 'tmp/helloworld.min.js' ).then( function ( chain ) {
+					return chain.write().then( function () {
+						return sander.readFile( 'tmp/helloworld.min.js.map' ).then( String ).then( JSON.parse ).then( function ( map ) {
+							smc = new SourceMapConsumer( map );
+
+							assert.equal( map.version, 3 );
+							assert.deepEqual( map.file, 'helloworld.min.js' );
+							assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
+							assert.deepEqual( map.sourcesContent, [ 'answer = 40 + 2\nconsole.log "the answer is #{answer}"' ]);
+
+							loc = smc.originalPositionFor({ line: 1, column: 31 });
+							assert.equal( loc.source, 'helloworld.coffee' );
+							assert.equal( loc.line, 2 );
+							assert.equal( loc.column, 8 );
+							assert.equal( loc.name, 'log' );
+						});
 					});
 				});
 			});
