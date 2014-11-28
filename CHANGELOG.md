@@ -1,5 +1,9 @@
 # changelog
 
+## 0.2.3
+
+* CLI now uses `chain.write()` internally
+
 ## 0.2.2
 
 * `chain.write()` will overwrite the existing file, if no destination is supplied
