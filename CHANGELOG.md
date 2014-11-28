@@ -1,5 +1,10 @@
 # changelog
 
+## 0.2.2
+
+* `chain.write()` will overwrite the existing file, if no destination is supplied
+* sorcery will use the `sourcesContent` array, rather than reading additional files, if possible
+
 ## 0.2.1
 
 * Implement `chain.write()`
