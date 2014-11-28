@@ -18,5 +18,14 @@
   },
   "bin": {
     "sorcery": "bin/index.js"
-  }
+  },
+  "scripts": {
+    "test": "mocha",
+    "prepublish": "mocha"
+  },
+  "files": [
+    "lib/",
+    "bin/",
+    "README.md"
+  ]
 }
