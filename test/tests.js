@@ -1,4 +1,5 @@
 var path = require( 'path' ),
+	sander = require( 'sander' ),
 	assert = require( 'assert' ),
 	SourceMapConsumer = require( 'source-map' ).SourceMapConsumer,
 	sorcery = require( '../' );
@@ -6,6 +7,22 @@ var path = require( 'path' ),
 process.chdir( __dirname );
 
 describe( 'sorcery', function () {
+	before( function () {
+		return sander.rimraf( 'tmp' );
+	});
+
+	after( function () {
+		return sander.rimraf( 'tmp' );
+	});
+
+	describe( 'sorcery.load()', function () {
+		it( 'resolves to null if target has no sourcemap', function () {
+			return sorcery.load( 'samples/1/helloworld.coffee', function ( chain ) {
+				assert.equal( chain, null );
+			});
+		});
+	});
+
 	describe( 'chain.trace()', function () {
 		it( 'follows a mapping back to its origin', function () {
 			return sorcery.load( 'samples/1/helloworld.min.js' ).then( function ( chain ) {
@@ -43,6 +60,32 @@ describe( 'sorcery', function () {
 				assert.equal( loc.line, 2 );
 				assert.equal( loc.column, 8 );
 				assert.equal( loc.name, 'log' );
+			});
+		});
+	});
+
+	describe( 'chain.write()', function () {
+		it( 'writes a file and accompanying sourcemap', function () {
+			return sorcery.load( 'samples/1/helloworld.min.js' ).then( function ( chain ) {
+				return chain.write( 'tmp/helloworld.min.js' ).then( function () {
+					return sorcery.load( 'tmp/helloworld.min.js' ).then( function ( chain ) {
+						var map, smc;
+
+						map = chain.apply({ includeContent: true });
+						smc = new SourceMapConsumer( map );
+
+						assert.equal( map.version, 3 );
+						assert.deepEqual( map.file, 'helloworld.min.js' );
+						assert.deepEqual( map.sources, [ '../samples/1/helloworld.coffee' ]);
+						assert.deepEqual( map.sourcesContent, [ 'answer = 40 + 2\nconsole.log "the answer is #{answer}"' ]);
+
+						loc = smc.originalPositionFor({ line: 1, column: 31 });
+						assert.equal( loc.source, '../samples/1/helloworld.coffee' );
+						assert.equal( loc.line, 2 );
+						assert.equal( loc.column, 8 );
+						assert.equal( loc.name, 'log' );
+					});
+				});
 			});
 		});
 	});
