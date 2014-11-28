@@ -1,5 +1,10 @@
 # changelog
 
+## 0.2.1
+
+* Implement `chain.write()`
+* Various bug fixes
+
 ## 0.2.0
 
 * Redesigned API around `sorcery.load()` - consult the [docs](https://github.com/Rich-Harris/sorcery/wiki)

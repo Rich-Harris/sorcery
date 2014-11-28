@@ -34,6 +34,18 @@ sorcery.load( 'some/generated/code.min.js' ).then( function ( chain ) {
   // get a data URI representation
   map.toUrl(); // 'data:application/json;charset=utf-8;base64,eyJ2ZXJ...'
 
+  // write to a new file - this will create `output.js` and
+  // `output.js.map`, and will preserve relative paths. It
+  // returns a Promise
+  chain.write( 'output.js' );
+
+  // write to a new file, but append the flattened sourcemap as a data URI
+  chain.write( 'output.js', { inline: true });
+
+  // overwrite the existing file
+  chain.write();
+  chain.write({ inline: true });
+
   // find the origin of line x, column y. Returns an object with
   // `source`, `line`, `column` and (if applicable) `name` properties.
   // Note - for consistency with other tools, line numbers are always
