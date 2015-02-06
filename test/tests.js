@@ -111,6 +111,19 @@ describe( 'sorcery', function () {
 				});
 			});
 		});
+
+		it( 'allows sourceMappingURL to be an absolute path', function () {
+			return sorcery.load( 'samples/1/helloworld.min.js' ).then( function ( chain ) {
+				return chain.write( 'tmp/helloworld.min.js', {
+					absolutePath: true
+				}).then( function () {
+					return sander.readFile( 'tmp/helloworld.min.js' ).then( String ).then( function ( generated ) {
+						var mappingURL = /sourceMappingURL=([^\s]+)/.exec( generated )[1];
+						assert.equal( mappingURL, path.resolve( 'tmp/helloworld.min.js.map' ) );
+					});
+				});
+			});
+		});
 	});
 });
 

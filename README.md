@@ -39,6 +39,10 @@ sorcery.load( 'some/generated/code.min.js' ).then( function ( chain ) {
   // returns a Promise
   chain.write( 'output.js' );
 
+  // write to a new file but use an absolute path for the
+  // sourceMappingURL
+  chain.write( 'output.js', { absolutePath: true });
+
   // write to a new file, but append the flattened sourcemap as a data URI
   chain.write( 'output.js', { inline: true });
 
