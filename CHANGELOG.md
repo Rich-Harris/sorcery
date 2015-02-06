@@ -1,5 +1,9 @@
 # changelog
 
+## 0.2.4
+
+* `absolutePath` option ensures `sourceMappingURL` is an absolute path to the resulting `.map` file
+
 ## 0.2.3
 
 * CLI now uses `chain.write()` internally
