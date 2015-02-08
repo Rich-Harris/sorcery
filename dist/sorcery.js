@@ -21,11 +21,11 @@ var SourceMap = function (properties) {
 };
 
 SourceMap.prototype = {
-	toString: function () {
+	toString: function toString() {
 		return JSON.stringify(this);
 	},
 
-	toUrl: function () {
+	toUrl: function toUrl() {
 		return "data:application/json;charset=utf-8;base64," + btoa(this.toString());
 	}
 };
@@ -202,64 +202,53 @@ var Node = function (file, content) {
 };
 
 Node.prototype = {
-	_load: function () {
-		var self = this;
-
-		function getContent() {
-			if (!self.content) {
-				return sander.readFile(self.file).then(String);
-			}
-
-			return sander.Promise.resolve(self.content);
-		}
-
-		return getContent().then(function (content) {
+	_load: function _load() {
+		var _this = this;
+		return getContent(this).then(function (content) {
 			var url;
 
-			self.content = content;
-			self.lines = content.split("\n");
+			_this.content = content;
+			_this.lines = content.split("\n");
 
 			url = getSourceMappingUrl(content);
 
 			if (!url) {
-				self.isOriginalSource = true;
-				return self;
+				_this.isOriginalSource = true;
+				return _this;
 			} else {
-				return getMapFromUrl(url, self.file).then(function (map) {
+				return getMapFromUrl(url, _this.file).then(function (map) {
 					var promises, sourcesContent;
 
-					self.map = map;
-					self.mappings = decodeMappings(map.mappings);
+					_this.map = map;
+					_this.mappings = decodeMappings(map.mappings);
 					sourcesContent = map.sourcesContent || [];
 
-					self.sources = map.sources.map(function (source, i) {
-						return new Node(resolveSourcePath(self, source), sourcesContent[i]);
+					_this.sources = map.sources.map(function (source, i) {
+						return new Node(resolveSourcePath(_this, source), sourcesContent[i]);
 					});
 
-					promises = self.sources.map(function (node) {
+					promises = _this.sources.map(function (node) {
 						return node._load();
 					});
 
 					return sander.Promise.all(promises);
 				}).then(function () {
-					getSourcesContent(self);
-					return self;
+					getSourcesContent(_this);
+					return _this;
 				});
 			}
 		}).then(function () {
-			if (!self.isOriginalSource) {
-				return self;
+			if (!_this.isOriginalSource) {
+				return _this;
 			}
 
 			return null;
 		});
 	},
 
-	_loadSync: function () {
-		var self = this,
-		    url,
-		    map,
-		    sourcesContent;
+	_loadSync: function _loadSync() {
+		var _this = this;
+		var url, map, sourcesContent;
 
 		if (!this.content) {
 			this.content = sander.readFileSync(this.file).toString();
@@ -270,28 +259,28 @@ Node.prototype = {
 		url = getSourceMappingUrl(this.content);
 
 		if (!url) {
-			self.isOriginalSource = true;
+			this.isOriginalSource = true;
 		} else {
-			self.map = map = getMapFromUrl(url, this.file, true);
-			self.mappings = decodeMappings(map.mappings);
+			this.map = map = getMapFromUrl(url, this.file, true);
+			this.mappings = decodeMappings(map.mappings);
 			sourcesContent = map.sourcesContent || [];
 
-			self.sources = map.sources.map(function (source, i) {
-				var node = new Node(resolveSourcePath(self, source), sourcesContent[i]);
+			this.sources = map.sources.map(function (source, i) {
+				var node = new Node(resolveSourcePath(_this, source), sourcesContent[i]);
 				node._loadSync();
 
 				return node;
 			});
 
-			getSourcesContent(self);
+			getSourcesContent(this);
 		}
 
 		return !this.isOriginalSource ? this : null;
 	},
 
-	apply: function (options) {
-		var self = this,
-		    resolved,
+	apply: function apply(options) {
+		var _this = this;
+		var resolved,
 		    names = [],
 		    sources = [],
 		    mappings,
@@ -312,8 +301,8 @@ Node.prototype = {
 					return;
 				}
 
-				source = self.sources[segment[1]];
-				traced = source.trace(segment[2] + 1, segment[3], self.map.names[segment[4]]);
+				source = _this.sources[segment[1]];
+				traced = source.trace(segment[2] + 1, segment[3], _this.map.names[segment[4]]);
 
 				if (!traced) {
 					return;
@@ -348,17 +337,17 @@ Node.prototype = {
 		return new SourceMap({
 			file: this.file.split("/").pop(),
 			sources: sources.map(function (source) {
-				return getRelativePath(options.base || self.file, source);
+				return getRelativePath(options.base || _this.file, source);
 			}),
 			sourcesContent: sources.map(function (source) {
-				return includeContent ? self.sourcesContentByPath[source] : null;
+				return includeContent ? _this.sourcesContentByPath[source] : null;
 			}),
 			names: names,
 			mappings: mappings
 		});
 	},
 
-	trace: function (oneBasedLineIndex, zeroBasedColumnIndex, name) {
+	trace: function trace(oneBasedLineIndex, zeroBasedColumnIndex, name) {
 		var segments, line, segment, len, i, parent, leadingWhitespace;
 
 		// If this node doesn't have a source map, we treat it as
@@ -402,7 +391,7 @@ Node.prototype = {
 		}
 	},
 
-	write: function (dest, options) {
+	write: function write(dest, options) {
 		var map, url, index, content, promises;
 
 		if (typeof dest !== "string") {
@@ -434,6 +423,14 @@ Node.prototype = {
 };
 
 
+
+function getContent(node) {
+	if (!node.content) {
+		return sander.readFile(node.file).then(String);
+	}
+
+	return sander.Promise.resolve(node.content);
+}
 
 function resolveSourcePath(node, source) {
 	// TODO handle sourceRoot

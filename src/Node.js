@@ -15,61 +15,51 @@ var Node = function ( file, content ) {
 };
 
 Node.prototype = {
-	_load: function () {
-		var self = this;
-
-		function getContent () {
-			if ( !self.content ) {
-				return sander.readFile( self.file ).then( String );
-			}
-
-			return sander.Promise.resolve( self.content );
-		}
-
-		return getContent().then( function ( content ) {
+	_load () {
+		return getContent( this ).then( content => {
 			var url;
 
-			self.content = content;
-			self.lines = content.split( '\n' );
+			this.content = content;
+			this.lines = content.split( '\n' );
 
 			url = getSourceMappingUrl( content );
 
 			if ( !url ) {
-				self.isOriginalSource = true;
-				return self;
+				this.isOriginalSource = true;
+				return this;
 			} else {
-				return getMapFromUrl( url, self.file ).then( function ( map ) {
+				return getMapFromUrl( url, this.file ).then( map => {
 					var promises, sourcesContent;
 
-					self.map = map;
-					self.mappings = decodeMappings( map.mappings );
+					this.map = map;
+					this.mappings = decodeMappings( map.mappings );
 					sourcesContent = map.sourcesContent || [];
 
-					self.sources = map.sources.map( function ( source, i ) {
-						return new Node( resolveSourcePath( self, source ), sourcesContent[i] );
+					this.sources = map.sources.map( ( source, i ) => {
+						return new Node( resolveSourcePath( this, source ), sourcesContent[i] );
 					});
 
-					promises = self.sources.map( function ( node ) {
+					promises = this.sources.map( node => {
 						return node._load();
 					});
 
 					return sander.Promise.all( promises );
-				}).then( function () {
-					getSourcesContent( self );
-					return self;
+				}).then( () => {
+					getSourcesContent( this );
+					return this;
 				});
 			}
-		}).then( function () {
-			if ( !self.isOriginalSource ) {
-				return self;
+		}).then( () => {
+			if ( !this.isOriginalSource ) {
+				return this;
 			}
 
 			return null;
 		});
 	},
 
-	_loadSync: function () {
-		var self = this, url, map, sourcesContent;
+	_loadSync () {
+		var url, map, sourcesContent;
 
 		if ( !this.content ) {
 			this.content = sander.readFileSync( this.file ).toString();
@@ -80,28 +70,27 @@ Node.prototype = {
 		url = getSourceMappingUrl( this.content );
 
 		if ( !url ) {
-			self.isOriginalSource = true;
+			this.isOriginalSource = true;
 		} else {
-			self.map = map = getMapFromUrl( url, this.file, true );
-			self.mappings = decodeMappings( map.mappings );
+			this.map = map = getMapFromUrl( url, this.file, true );
+			this.mappings = decodeMappings( map.mappings );
 			sourcesContent = map.sourcesContent || [];
 
-			self.sources = map.sources.map( function ( source, i) {
-				var node = new Node( resolveSourcePath( self, source ), sourcesContent[i] );
+			this.sources = map.sources.map( ( source, i ) => {
+				var node = new Node( resolveSourcePath( this, source ), sourcesContent[i] );
 				node._loadSync();
 
 				return node;
 			});
 
-			getSourcesContent( self );
+			getSourcesContent( this );
 		}
 
 		return !this.isOriginalSource ? this : null;
 	},
 
-	apply: function ( options ) {
-		var self = this,
-			resolved,
+	apply ( options ) {
+		var resolved,
 			names = [],
 			sources = [],
 			mappings,
@@ -110,10 +99,10 @@ Node.prototype = {
 		options = options || {};
 		includeContent = options.includeContent !== false;
 
-		resolved = this.mappings.map( function ( line ) {
+		resolved = this.mappings.map( line => {
 			var result = [];
 
-			line.forEach( function ( segment ) {
+			line.forEach( segment => {
 				var source, traced, newSegment, sourceIndex, nameIndex;
 
 				if ( segment.length === 1 ) {
@@ -122,8 +111,8 @@ Node.prototype = {
 					return;
 				}
 
-				source = self.sources[ segment[1] ];
-				traced = source.trace( segment[2] + 1, segment[3], self.map.names[ segment[4] ] );
+				source = this.sources[ segment[1] ];
+				traced = source.trace( segment[2] + 1, segment[3], this.map.names[ segment[4] ] );
 
 				if ( !traced ) {
 					return;
@@ -157,18 +146,18 @@ Node.prototype = {
 
 		return new SourceMap({
 			file: this.file.split( '/' ).pop(),
-			sources: sources.map( function ( source ) {
-				return getRelativePath( options.base || self.file, source );
+			sources: sources.map( ( source ) => {
+				return getRelativePath( options.base || this.file, source );
 			}),
-			sourcesContent: sources.map( function ( source ) {
-				return includeContent ? self.sourcesContentByPath[ source ] : null;
+			sourcesContent: sources.map( ( source ) => {
+				return includeContent ? this.sourcesContentByPath[ source ] : null;
 			}),
 			names: names,
 			mappings: mappings
 		});
 	},
 
-	trace: function ( oneBasedLineIndex, zeroBasedColumnIndex, name ) {
+	trace ( oneBasedLineIndex, zeroBasedColumnIndex, name ) {
 		var segments, line, segment, len, i, parent, leadingWhitespace;
 
 		// If this node doesn't have a source map, we treat it as
@@ -212,7 +201,7 @@ Node.prototype = {
 		}
 	},
 
-	write: function ( dest, options ) {
+	write ( dest, options ) {
 		var map, url, index, content, promises;
 
 		if ( typeof dest !== 'string' ) {
@@ -245,16 +234,24 @@ Node.prototype = {
 
 export default Node;
 
+function getContent ( node ) {
+	if ( !node.content ) {
+		return sander.readFile( node.file ).then( String );
+	}
+
+	return sander.Promise.resolve( node.content );
+}
+
 function resolveSourcePath ( node, source ) {
 	// TODO handle sourceRoot
 	return path.resolve( path.dirname( node.file ), source );
 }
 
 function getSourcesContent ( node ) {
-	node.sources.forEach( function ( source ) {
+	node.sources.forEach( source => {
 		node.sourcesContentByPath[ source.file ] = source.content;
 
-		Object.keys( source.sourcesContentByPath ).forEach( function ( file ) {
+		Object.keys( source.sourcesContentByPath ).forEach( file => {
 			node.sourcesContentByPath[ file ] = source.sourcesContentByPath[ file ];
 		});
 	});

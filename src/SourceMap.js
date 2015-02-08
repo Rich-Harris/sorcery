@@ -11,11 +11,11 @@ var SourceMap = function ( properties ) {
 };
 
 SourceMap.prototype = {
-	toString: function () {
+	toString () {
 		return JSON.stringify( this );
 	},
 
-	toUrl: function () {
+	toUrl () {
 		return 'data:application/json;charset=utf-8;base64,' + btoa( this.toString() );
 	}
 };
