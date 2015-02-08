@@ -1,4 +1,4 @@
-module.exports = function getRelativePath ( from, to ) {
+export default function getRelativePath ( from, to ) {
 	var fromParts, toParts, i;
 
 	fromParts = from.split( '/' );
@@ -17,4 +17,4 @@ module.exports = function getRelativePath ( from, to ) {
 	}
 
 	return fromParts.concat( toParts ).join( '/' );
-};
+}

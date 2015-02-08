@@ -1,4 +1,4 @@
-module.exports = function getSourceMappingUrl ( str ) {
+export default function getSourceMappingUrl ( str ) {
 	var index, substring, url, match;
 
 	// assume we want the last occurence
@@ -13,4 +13,4 @@ module.exports = function getSourceMappingUrl ( str ) {
 
 	url = match ? match[0] : null;
 	return url;
-};
+}

@@ -1,10 +1,11 @@
 {
   "name": "sorcery",
   "description": "Resolve a chain of sourcemaps back to the original source",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "author": "Rich Harris",
   "repository": "https://github.com/Rich-Harris/sorcery",
-  "main": "lib/index.js",
+  "main": "dist/sorcery.js",
+  "jsnext:main": "src/index.js",
   "license": "MIT",
   "dependencies": {
     "minimist": "^1.1.0",
@@ -13,6 +14,9 @@
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
+    "gobble": "^0.7.2",
+    "gobble-6to5": "^3.0.0",
+    "gobble-esperanto-bundle": "^0.1.7",
     "source-map": "^0.1.40",
     "uglify-js": "^2.4.15"
   },
@@ -20,11 +24,13 @@
     "sorcery": "bin/index.js"
   },
   "scripts": {
+    "build": "mkdir -p .tmp; rm .tmp/*; set -e; npm test; rm dist/*; cp .tmp/* dist",
     "test": "mocha",
-    "prepublish": "mocha"
+    "prepublish": "npm run build"
   },
   "files": [
-    "lib/",
+    "src/",
+    "dist/",
     "bin/",
     "README.md"
   ]

@@ -1,5 +1,9 @@
 # changelog
 
+## 0.2.5
+
+* Re-architect as ES6 modules, add `jsnext:main` field to package.json
+
 ## 0.2.4
 
 * `absolutePath` option ensures `sourceMappingURL` is an absolute path to the resulting `.map` file

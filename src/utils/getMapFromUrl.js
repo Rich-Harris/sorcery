@@ -1,8 +1,8 @@
-var path = require( 'path' ),
-	sander = require( 'sander' ),
-	atob = require( './atob' );
+import path from 'path';
+import sander from 'sander';
+import atob from './atob';
 
-module.exports = function getMapFromUrl ( url, base, sync ) {
+export default function getMapFromUrl ( url, base, sync ) {
 	var json, map, match;
 
 	if ( /^data/.test( url ) ) {
@@ -24,4 +24,4 @@ module.exports = function getMapFromUrl ( url, base, sync ) {
 	} else {
 		return sander.readFile( url ).then( String ).then( JSON.parse );
 	}
-};
+}

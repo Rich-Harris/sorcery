@@ -1,12 +1,21 @@
 var path = require( 'path' ),
 	sander = require( 'sander' ),
 	assert = require( 'assert' ),
-	SourceMapConsumer = require( 'source-map' ).SourceMapConsumer,
-	sorcery = require( '../' );
+	SourceMapConsumer = require( 'source-map' ).SourceMapConsumer;
 
 process.chdir( __dirname );
 
 describe( 'sorcery', function () {
+	var sorcery;
+
+	before( function () {
+		return require( '../gobblefile' ).build({
+			dest: path.resolve( __dirname, '../.tmp' )
+		}).then( function () {
+			sorcery = require( '../.tmp/sorcery' );
+		});
+	});
+
 	beforeEach( function () {
 		return sander.rimraf( 'tmp' );
 	});
@@ -125,25 +134,25 @@ describe( 'sorcery', function () {
 			});
 		});
 	});
-});
 
-describe( 'sorcery (sync)', function () {
-	describe( 'chain.trace()', function () {
-		it( 'follows a mapping back to its origin', function () {
-			var chain, actual, expected;
+	describe( 'sorcery (sync)', function () {
+		describe( 'chain.trace()', function () {
+			it( 'follows a mapping back to its origin', function () {
+				var chain, actual, expected;
 
-			chain = sorcery.loadSync( 'samples/1/helloworld.min.js' );
+				chain = sorcery.loadSync( 'samples/1/helloworld.min.js' );
 
-			actual = chain.trace( 1, 31 );
+				actual = chain.trace( 1, 31 );
 
-			expected = {
-				source: path.resolve( 'samples/1/helloworld.coffee' ),
-				line: 2,
-				column: 8,
-				name: 'log'
-			};
+				expected = {
+					source: path.resolve( 'samples/1/helloworld.coffee' ),
+					line: 2,
+					column: 8,
+					name: 'log'
+				};
 
-			assert.deepEqual( actual, expected );
+				assert.deepEqual( actual, expected );
+			});
 		});
 	});
 });

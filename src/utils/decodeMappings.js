@@ -1,6 +1,6 @@
-var vlq = require( 'vlq' );
+import * as vlq from 'vlq';
 
-module.exports = function ( mappings ) {
+export default function decodeMappings ( mappings ) {
 	var decoded,
 	sourceFileIndex = 0,   // second field
 	sourceCodeLine = 0,    // third field
@@ -44,4 +44,4 @@ module.exports = function ( mappings ) {
 	});
 
 	return decoded;
-};
+}

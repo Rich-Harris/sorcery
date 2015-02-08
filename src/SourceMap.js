@@ -1,4 +1,4 @@
-var btoa = require( './utils/btoa' );
+import btoa from './utils/btoa';
 
 var SourceMap = function ( properties ) {
 	this.version = 3;
@@ -20,4 +20,4 @@ SourceMap.prototype = {
 	}
 };
 
-module.exports = SourceMap;
+export default SourceMap;

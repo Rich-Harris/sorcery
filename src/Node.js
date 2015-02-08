@@ -1,11 +1,11 @@
-var path = require( 'path' ),
-	sander = require( 'sander' ),
-	SourceMap = require( './SourceMap' ),
-	getRelativePath = require( './utils/getRelativePath' ),
-	encodeMappings = require( './utils/encodeMappings' ),
-	decodeMappings = require( './utils/decodeMappings' ),
-	getSourceMappingUrl = require( './utils/getSourceMappingUrl' ),
-	getMapFromUrl = require( './utils/getMapFromUrl' );
+import path from 'path';
+import sander from 'sander';
+import SourceMap from './SourceMap';
+import getRelativePath from './utils/getRelativePath';
+import encodeMappings from './utils/encodeMappings';
+import decodeMappings from './utils/decodeMappings';
+import getSourceMappingUrl from './utils/getSourceMappingUrl';
+import getMapFromUrl from './utils/getMapFromUrl';
 
 var Node = function ( file, content ) {
 	this.file = path.resolve( file );
@@ -243,7 +243,7 @@ Node.prototype = {
 	}
 };
 
-module.exports = Node;
+export default Node;
 
 function resolveSourcePath ( node, source ) {
 	// TODO handle sourceRoot
