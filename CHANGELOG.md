@@ -1,5 +1,9 @@
 # changelog
 
+## 0.3.0
+
+* Handle browserify-style line mappings
+
 ## 0.2.5
 
 * Re-architect as ES6 modules, add `jsnext:main` field to package.json
