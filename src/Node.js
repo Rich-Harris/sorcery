@@ -92,8 +92,8 @@ Node.prototype = {
 
 	apply ( options = {} ) {
 		var resolved,
-			names = [],
-			sources = [],
+			allNames = [],
+			allSources = [],
 			includeContent;
 
 		includeContent = options.includeContent !== false;
@@ -102,34 +102,34 @@ Node.prototype = {
 			var result = [];
 
 			line.forEach( segment => {
-				var source, traced, newSegment, sourceIndex, nameIndex;
+				var [
+						generatedCodeColumn,
+						sourceFileIndex,
+						sourceCodeLine,
+						sourceCodeColumn
+					] = segment,
+					source, traced, newSegment, sourceIndex, nameIndex;
 
-				if ( segment.length === 1 ) {
-					// TODO not sure what to do here...?
-					resolved.push([ segment[0] ]);
-					return;
-				}
-
-				source = this.sources[ segment[1] ];
-				traced = source.trace( segment[2] + 1, segment[3], this.map.names[ segment[4] ] );
+				source = this.sources[ sourceFileIndex ];
+				traced = source.trace( sourceCodeLine + 1, sourceCodeColumn, this.map.names[ segment[4] ] );
 
 				if ( !traced ) {
 					return;
 				}
 
-				sourceIndex = sources.indexOf( traced.source );
+				sourceIndex = allSources.indexOf( traced.source );
 				if ( !~sourceIndex ) {
-					sourceIndex = sources.length;
-					sources.push( traced.source );
+					sourceIndex = allSources.length;
+					allSources.push( traced.source );
 				}
 
-				newSegment = [ segment[0], sourceIndex, traced.line - 1, traced.column ];
+				newSegment = [ generatedCodeColumn, sourceIndex, traced.line - 1, traced.column ];
 
 				if ( traced.name ) {
-					nameIndex = names.indexOf( traced.name );
+					nameIndex = allNames.indexOf( traced.name );
 					if ( !~nameIndex ) {
-						nameIndex = names.length;
-						names.push( traced.name );
+						nameIndex = allNames.length;
+						allNames.push( traced.name );
 					}
 
 					newSegment.push( nameIndex );
@@ -143,13 +143,13 @@ Node.prototype = {
 
 		return new SourceMap({
 			file: this.file.split( '/' ).pop(),
-			sources: sources.map( ( source ) => {
+			sources: allSources.map( ( source ) => {
 				return getRelativePath( options.base || this.file, source );
 			}),
-			sourcesContent: sources.map( ( source ) => {
+			sourcesContent: allSources.map( ( source ) => {
 				return includeContent ? this.sourcesContentByPath[ source ] : null;
 			}),
-			names: names,
+			names: allNames,
 			mappings: encodeMappings( resolved )
 		});
 	},
