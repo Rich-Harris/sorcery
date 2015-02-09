@@ -50,6 +50,22 @@ describe( 'sorcery', function () {
 				assert.deepEqual( actual, expected );
 			});
 		});
+
+		it( 'handles browserify-style line mappings', function () {
+			return sorcery.load( 'samples/2/bundle.min.js' ).then( function ( chain ) {
+				var actual, expected;
+
+				actual = chain.trace( 1, 451 );
+
+				expected = {
+					source: path.resolve( 'samples/2/a.js' ),
+					line: 2,
+					name: 'log'
+				};
+
+				assert.deepEqual( actual, expected );
+			});
+		});
 	});
 
 	describe( 'chain.apply()', function () {

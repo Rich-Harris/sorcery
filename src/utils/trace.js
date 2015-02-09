@@ -15,12 +15,16 @@
      to the segment being traced
  */
 export default function trace ( node, lineIndex, columnIndex, name  ) {
-	var segments, len, i;
+	var segments;
 
-	// If this node doesn't have a source map, we treat it as
-	// the original source
+	// If this node doesn't have a source map, we have
+	// to assume it is the original source
 	if ( node.isOriginalSource ) {
-		return {
+		return columnIndex == null ? {
+			source: node.file,
+			line: lineIndex + 1,
+			name: name
+		} : {
 			source: node.file,
 			line: lineIndex + 1,
 			column: columnIndex,
@@ -32,28 +36,43 @@ export default function trace ( node, lineIndex, columnIndex, name  ) {
 	// the intermediate file corresponds to in *its* source
 	segments = node.mappings[ lineIndex ];
 
-	if ( !segments ) {
+	if ( !segments || segments.length === 0 ) {
 		return null;
 	}
 
-	len = segments.length;
+	if ( columnIndex != null ) {
+		let len = segments.length;
+		let i;
 
-	for ( i = 0; i < len; i += 1 ) {
-		let [
-			generatedCodeColumn,
-			sourceFileIndex,
-			sourceCodeLine,
-			sourceCodeColumn,
-			nameIndex
-		] = segments[i];
+		for ( i = 0; i < len; i += 1 ) {
+			let [
+				generatedCodeColumn,
+				sourceFileIndex,
+				sourceCodeLine,
+				sourceCodeColumn,
+				nameIndex
+			] = segments[i];
 
-		if ( generatedCodeColumn === columnIndex ) {
-			let parent = node.sources[ sourceFileIndex ];
-			return trace( parent, sourceCodeLine, sourceCodeColumn, node.map.names[ nameIndex ] || name );
-		}
+			if ( generatedCodeColumn === columnIndex ) {
+				let parent = node.sources[ sourceFileIndex ];
+				return trace( parent, sourceCodeLine, sourceCodeColumn, node.map.names[ nameIndex ] || name );
+			}
 
-		if ( generatedCodeColumn > columnIndex ) {
-			return null;
+			if ( generatedCodeColumn > columnIndex ) {
+				break;
+			}
 		}
 	}
+
+	// fall back to a line mapping
+	let [
+		generatedCodeColumn,
+		sourceFileIndex,
+		sourceCodeLine,
+		sourceCodeColumn,
+		nameIndex
+	] = segments[0];
+
+	let parent = node.sources[ sourceFileIndex ];
+	return trace( parent, sourceCodeLine, null, node.map.names[ nameIndex ] || name );
 }
