@@ -10,7 +10,8 @@ describe( 'sorcery', function () {
 
 	before( function () {
 		return require( '../gobblefile' ).build({
-			dest: path.resolve( __dirname, '../.tmp' )
+			dest: path.resolve( __dirname, '../.tmp' ),
+			force: true
 		}).then( function () {
 			sorcery = require( '../.tmp/sorcery' );
 		});

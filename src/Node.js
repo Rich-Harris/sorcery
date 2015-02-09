@@ -7,9 +7,18 @@ import decodeMappings from './utils/decodeMappings';
 import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
 
+var Promise = sander.Promise;
+
 var Node = function ( file, content ) {
 	this.file = path.resolve( file );
-	this.content = content;
+	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+
+	// these get filled in later
+	this.map = null;
+	this.mappings = null;
+	this.sources = null;
+	this.isOriginalSource = null;
+	this.lines = null;
 
 	this.sourcesContentByPath = {};
 };
@@ -26,35 +35,27 @@ Node.prototype = {
 
 			if ( !url ) {
 				this.isOriginalSource = true;
-				return this;
-			} else {
-				return getMapFromUrl( url, this.file ).then( map => {
-					var promises, sourcesContent;
+				return null;
+			}
 
-					this.map = map;
-					this.mappings = decodeMappings( map.mappings );
-					sourcesContent = map.sourcesContent || [];
+			return getMapFromUrl( url, this.file ).then( map => {
+				var promises, sourcesContent;
 
-					this.sources = map.sources.map( ( source, i ) => {
-						return new Node( resolveSourcePath( this, source ), sourcesContent[i] );
-					});
+				this.map = map;
+				this.mappings = decodeMappings( map.mappings );
+				sourcesContent = map.sourcesContent || [];
 
-					promises = this.sources.map( node => {
-						return node._load();
-					});
+				this.sources = map.sources.map( ( source, i ) => {
+					return new Node( resolveSourcePath( this, source ), sourcesContent[i] );
+				});
 
-					return sander.Promise.all( promises );
-				}).then( () => {
+				promises = this.sources.map( load );
+
+				return Promise.all( promises ).then( () => {
 					getSourcesContent( this );
 					return this;
 				});
-			}
-		}).then( () => {
-			if ( !this.isOriginalSource ) {
-				return this;
-			}
-
-			return null;
+			});
 		});
 	},
 
@@ -89,14 +90,12 @@ Node.prototype = {
 		return !this.isOriginalSource ? this : null;
 	},
 
-	apply ( options ) {
+	apply ( options = {} ) {
 		var resolved,
 			names = [],
 			sources = [],
-			mappings,
 			includeContent;
 
-		options = options || {};
 		includeContent = options.includeContent !== false;
 
 		resolved = this.mappings.map( line => {
@@ -142,8 +141,6 @@ Node.prototype = {
 			return result;
 		});
 
-		mappings = encodeMappings( resolved );
-
 		return new SourceMap({
 			file: this.file.split( '/' ).pop(),
 			sources: sources.map( ( source ) => {
@@ -153,7 +150,7 @@ Node.prototype = {
 				return includeContent ? this.sourcesContentByPath[ source ] : null;
 			}),
 			names: names,
-			mappings: mappings
+			mappings: encodeMappings( resolved )
 		});
 	},
 
@@ -228,18 +225,22 @@ Node.prototype = {
 			promises.push( sander.writeFile( dest + '.map', map.toString() ) );
 		}
 
-		return sander.Promise.all( promises );
+		return Promise.all( promises );
 	}
 };
 
 export default Node;
+
+function load ( node ) {
+	return node._load();
+}
 
 function getContent ( node ) {
 	if ( !node.content ) {
 		return sander.readFile( node.file ).then( String );
 	}
 
-	return sander.Promise.resolve( node.content );
+	return Promise.resolve( node.content );
 }
 
 function resolveSourcePath ( node, source ) {

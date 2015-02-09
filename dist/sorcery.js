@@ -194,9 +194,18 @@ function getMapFromUrl(url, base, sync) {
 	}
 }
 
+var Node__Promise = sander.Promise;
+
 var Node = function (file, content) {
 	this.file = path.resolve(file);
-	this.content = content;
+	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+
+	// these get filled in later
+	this.map = null;
+	this.mappings = null;
+	this.sources = null;
+	this.isOriginalSource = null;
+	this.lines = null;
 
 	this.sourcesContentByPath = {};
 };
@@ -214,35 +223,29 @@ Node.prototype = {
 
 			if (!url) {
 				_this.isOriginalSource = true;
-				return _this;
-			} else {
-				return getMapFromUrl(url, _this.file).then(function (map) {
-					var promises, sourcesContent;
+				return null;
+			}
 
-					_this.map = map;
-					_this.mappings = decodeMappings(map.mappings);
-					sourcesContent = map.sourcesContent || [];
+			return getMapFromUrl(url, _this.file).then(function (map) {
+				var promises, sourcesContent;
 
-					_this.sources = map.sources.map(function (source, i) {
-						return new Node(resolveSourcePath(_this, source), sourcesContent[i]);
-					});
+				_this.map = map;
+				_this.mappings = decodeMappings(map.mappings);
+				sourcesContent = map.sourcesContent || [];
 
-					promises = _this.sources.map(function (node) {
-						return node._load();
-					});
-
-					return sander.Promise.all(promises);
-				}).then(function () {
-					getSourcesContent(_this);
-					return _this;
+				_this.sources = map.sources.map(function (source, i) {
+					return new Node(resolveSourcePath(_this, source), sourcesContent[i]);
 				});
-			}
-		}).then(function () {
-			if (!_this.isOriginalSource) {
-				return _this;
-			}
 
-			return null;
+				promises = _this.sources.map(function (node) {
+					return node._load();
+				});
+
+				return Node__Promise.all(promises);
+			}).then(function () {
+				getSourcesContent(_this);
+				return _this;
+			});
 		});
 	},
 
@@ -418,7 +421,7 @@ Node.prototype = {
 			promises.push(sander.writeFile(dest + ".map", map.toString()));
 		}
 
-		return sander.Promise.all(promises);
+		return Node__Promise.all(promises);
 	}
 };
 
@@ -429,7 +432,7 @@ function getContent(node) {
 		return sander.readFile(node.file).then(String);
 	}
 
-	return sander.Promise.resolve(node.content);
+	return Node__Promise.resolve(node.content);
 }
 
 function resolveSourcePath(node, source) {
