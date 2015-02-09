@@ -112,7 +112,7 @@ Node.prototype = {
 					source, traced, newSegment, sourceIndex, nameIndex;
 
 				source = this.sources[ sourceFileIndex ];
-				traced = trace( source, sourceCodeLine + 1, sourceCodeColumn, this.map.names[ segment[4] ] );
+				traced = trace( source, sourceCodeLine, sourceCodeColumn, this.map.names[ segment[4] ] );
 
 				if ( !traced ) {
 					return;
@@ -156,7 +156,7 @@ Node.prototype = {
 	},
 
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
-		return trace( this, oneBasedLineIndex, zeroBasedColumnIndex, null );
+		return trace( this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
 	},
 
 	write ( dest, options ) {
