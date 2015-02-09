@@ -6,6 +6,7 @@ import encodeMappings from './utils/encodeMappings';
 import decodeMappings from './utils/decodeMappings';
 import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
+import trace from './utils/trace';
 
 var Promise = sander.Promise;
 
@@ -111,7 +112,7 @@ Node.prototype = {
 					source, traced, newSegment, sourceIndex, nameIndex;
 
 				source = this.sources[ sourceFileIndex ];
-				traced = source.trace( sourceCodeLine + 1, sourceCodeColumn, this.map.names[ segment[4] ] );
+				traced = trace( source, sourceCodeLine + 1, sourceCodeColumn, this.map.names[ segment[4] ] );
 
 				if ( !traced ) {
 					return;
@@ -154,48 +155,8 @@ Node.prototype = {
 		});
 	},
 
-	trace ( oneBasedLineIndex, zeroBasedColumnIndex, name ) {
-		var segments, line, segment, len, i, parent, leadingWhitespace;
-
-		// If this node doesn't have a source map, we treat it as
-		// the original source
-		if ( this.isOriginalSource ) {
-			return {
-				source: this.file,
-				line: oneBasedLineIndex,
-				column: zeroBasedColumnIndex,
-				name: name
-			};
-		}
-
-		// Otherwise, we need to figure out what this position in
-		// the intermediate file corresponds to in *its* source
-		segments = this.mappings[ oneBasedLineIndex - 1 ];
-
-		if ( !segments ) {
-			return null;
-		}
-
-		if ( zeroBasedColumnIndex === undefined ) {
-			// we only have a line to go on. Use the first non-whitespace character
-			line = this.lines[ oneBasedLineIndex - 1 ];
-			zeroBasedColumnIndex = leadingWhitespace ? leadingWhitespace[0].length : 0;
-		}
-
-		len = segments.length;
-
-		for ( i = 0; i < len; i += 1 ) {
-			segment = segments[i];
-
-			if ( segment[0] === zeroBasedColumnIndex ) {
-				parent = this.sources[ segment[1] ];
-				return parent.trace( segment[2] + 1, segment[3], this.map.names[ segment[4] ] || name );
-			}
-
-			if ( segment[0] > zeroBasedColumnIndex ) {
-				return null;
-			}
-		}
+	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
+		return trace( this, oneBasedLineIndex, zeroBasedColumnIndex, null );
 	},
 
 	write ( dest, options ) {
