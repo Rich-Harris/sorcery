@@ -20,14 +20,10 @@ export default function trace ( node, lineIndex, columnIndex, name  ) {
 	// If this node doesn't have a source map, we have
 	// to assume it is the original source
 	if ( node.isOriginalSource ) {
-		return columnIndex == null ? {
+		return {
 			source: node.file,
 			line: lineIndex + 1,
-			name: name
-		} : {
-			source: node.file,
-			line: lineIndex + 1,
-			column: columnIndex,
+			column: columnIndex || 0,
 			name: name
 		};
 	}

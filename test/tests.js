@@ -60,6 +60,7 @@ describe( 'sorcery', function () {
 				expected = {
 					source: path.resolve( 'samples/2/a.js' ),
 					line: 2,
+					column: 0,
 					name: 'log'
 				};
 
