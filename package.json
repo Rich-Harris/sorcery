@@ -17,6 +17,7 @@
     "gobble": "^0.7.2",
     "gobble-6to5": "^3.0.0",
     "gobble-esperanto-bundle": "^0.1.7",
+    "mocha": "^2.1.0",
     "source-map": "^0.1.40",
     "uglify-js": "^2.4.15"
   },
