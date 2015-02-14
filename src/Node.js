@@ -143,7 +143,7 @@ Node.prototype = {
 		});
 
 		return new SourceMap({
-			file: this.file.split( '/' ).pop(),
+			file: path.basename( this.file ),
 			sources: allSources.map( ( source ) => {
 				return getRelativePath( options.base || this.file, source );
 			}),
