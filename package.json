@@ -25,7 +25,7 @@
     "sorcery": "bin/index.js"
   },
   "scripts": {
-    "build": "mkdir -p .tmp; rm .tmp/*; set -e; npm test; rm dist/*; cp .tmp/* dist",
+    "build": "sh ./scripts/build.sh",
     "test": "mocha",
     "prepublish": "npm run build"
   },
