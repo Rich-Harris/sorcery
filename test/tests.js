@@ -9,6 +9,8 @@ process.chdir( __dirname );
 describe( 'sorcery', function () {
 	var sorcery;
 
+	this.timeout( 20000 );
+
 	before( function () {
 		function buildLib () {
 			return require( '../gobblefile' ).build({
