@@ -1,5 +1,9 @@
 # changelog
 
+## 0.3.1
+
+* Correct behaviour on Windows ([#3](https://github.com/Rich-Harris/sorcery/issues/3))
+
 ## 0.3.0
 
 * Handle browserify-style line mappings
