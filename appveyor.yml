@@ -1,6 +1,11 @@
 # Test against this version of Node.js
 environment:
-  nodejs_version: "0.12"
+  matrix:
+  # node.js
+  - nodejs_version: "0.10"
+  - nodejs_version: "0.12"
+  # io.js
+  - nodejs_version: "1.0"
 
 # Install scripts. (runs after repo cloning)
 install:
