@@ -92,38 +92,30 @@ Node.prototype = {
 	},
 
 	apply ( options = {} ) {
-		var resolved = new Array( this.mappings.length ),
+		var resolved,
 			allNames = [],
 			allSources = [],
-			includeContent,
-			i;
+			includeContent;
 
 		includeContent = options.includeContent !== false;
 
-		// We're using for loops rather than .map and .forEach
-		// because this is performance sensitive code
-		for ( i = 0; i < this.mappings.length; i += 1 ) {
-			let line = this.mappings[i];
-			let resolvedLine = [];
+		resolved = this.mappings.map( line => {
+			var result = [];
 
-			let j;
-
-			for ( j = 0; j < line.length; j += 1 ) {
-				let segment = line[j];
-
-				// destructuring hurts performance, so we're not using it here
-				let generatedCodeColumn = segment[0];
-				let sourceFileIndex = segment[1];
-				let sourceCodeLine = segment[2];
-				let sourceCodeColumn = segment[3];
-
-				let source, traced, newSegment, sourceIndex, nameIndex;
+			line.forEach( segment => {
+				var [
+						generatedCodeColumn,
+						sourceFileIndex,
+						sourceCodeLine,
+						sourceCodeColumn
+					] = segment,
+					source, traced, newSegment, sourceIndex, nameIndex;
 
 				source = this.sources[ sourceFileIndex ];
 				traced = trace( source, sourceCodeLine, sourceCodeColumn, this.map.names[ segment[4] ] );
 
 				if ( !traced ) {
-					break;
+					return;
 				}
 
 				sourceIndex = allSources.indexOf( traced.source );
@@ -144,13 +136,11 @@ Node.prototype = {
 					newSegment.push( nameIndex );
 				}
 
-				resolvedLine.push( newSegment );
-			}
+				result.push( newSegment );
+			});
 
-			resolved[i] = resolvedLine;
-		}
-
-		var mappings = encodeMappings( resolved );
+			return result;
+		});
 
 		return new SourceMap({
 			file: path.basename( this.file ),
@@ -161,7 +151,7 @@ Node.prototype = {
 				return includeContent ? this.sourcesContentByPath[ source ] : null;
 			}),
 			names: allNames,
-			mappings: mappings
+			mappings: encodeMappings( resolved )
 		});
 	},
 
