@@ -99,48 +99,56 @@ Node.prototype = {
 
 		includeContent = options.includeContent !== false;
 
-		resolved = this.mappings.map( line => {
-			var result = [];
+		resolved = [];
 
-			line.forEach( segment => {
-				var [
-						generatedCodeColumn,
-						sourceFileIndex,
-						sourceCodeLine,
-						sourceCodeColumn
-					] = segment,
-					source, traced, newSegment, sourceIndex, nameIndex;
+		var i, j, line, result;
 
-				source = this.sources[ sourceFileIndex ];
-				traced = trace( source, sourceCodeLine, sourceCodeColumn, this.map.names[ segment[4] ] );
+		var applySegment = segment => {
+			var generatedCodeColumn = segment[0];
+			var sourceFileIndex = segment[1];
+			var sourceCodeLine = segment[2];
+			var sourceCodeColumn = segment[3];
 
-				if ( !traced ) {
-					return;
+			var source = this.sources[ sourceFileIndex ];
+			var traced = trace( source, sourceCodeLine, sourceCodeColumn, this.map.names[ segment[4] ] );
+
+			if ( !traced ) {
+				return;
+			}
+
+			var sourceIndex = allSources.indexOf( traced.source );
+			if ( !~sourceIndex ) {
+				sourceIndex = allSources.length;
+				allSources.push( traced.source );
+			}
+
+			var newSegment = [ generatedCodeColumn, sourceIndex, traced.line - 1, traced.column ];
+			var nameIndex;
+
+			if ( traced.name ) {
+				nameIndex = allNames.indexOf( traced.name );
+				if ( !~nameIndex ) {
+					nameIndex = allNames.length;
+					allNames.push( traced.name );
 				}
 
-				sourceIndex = allSources.indexOf( traced.source );
-				if ( !~sourceIndex ) {
-					sourceIndex = allSources.length;
-					allSources.push( traced.source );
-				}
+				newSegment.push( nameIndex );
+			}
 
-				newSegment = [ generatedCodeColumn, sourceIndex, traced.line - 1, traced.column ];
+			result.push( newSegment );
+		};
 
-				if ( traced.name ) {
-					nameIndex = allNames.indexOf( traced.name );
-					if ( !~nameIndex ) {
-						nameIndex = allNames.length;
-						allNames.push( traced.name );
-					}
+		for ( i = 0; i < this.mappings.length; i += 1 ) {
+			line = this.mappings[i];
 
-					newSegment.push( nameIndex );
-				}
+			result = [];
 
-				result.push( newSegment );
-			});
+			for ( j = 0; j < line.length; j += 1 ) {
+				applySegment( line[j] );
+			}
 
-			return result;
-		});
+			resolved[i] = result;
+		}
 
 		return new SourceMap({
 			file: path.basename( this.file ),
