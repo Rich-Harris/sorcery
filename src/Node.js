@@ -92,25 +92,16 @@ Node.prototype = {
 	},
 
 	apply ( options = {} ) {
-		var resolved,
-			allNames = [],
-			allSources = [],
-			includeContent;
+		var allNames = [],
+			allSources = [];
 
-		includeContent = options.includeContent !== false;
-
-		resolved = [];
-
-		var i, j, line, result;
-
-		var applySegment = segment => {
-			var generatedCodeColumn = segment[0];
-			var sourceFileIndex = segment[1];
-			var sourceCodeLine = segment[2];
-			var sourceCodeColumn = segment[3];
-
-			var source = this.sources[ sourceFileIndex ];
-			var traced = trace( source, sourceCodeLine, sourceCodeColumn, this.map.names[ segment[4] ] );
+		var applySegment = ( segment, result ) => {
+			var traced = trace(
+				this.sources[ segment[1] ], // source
+				segment[2], // source code line
+				segment[3], // source code column
+				this.map.names[ segment[4] ]
+			);
 
 			if ( !traced ) {
 				return;
@@ -122,7 +113,13 @@ Node.prototype = {
 				allSources.push( traced.source );
 			}
 
-			var newSegment = [ generatedCodeColumn, sourceIndex, traced.line - 1, traced.column ];
+			var newSegment = [
+				segment[0], // generated code column
+				sourceIndex,
+				traced.line - 1,
+				traced.column
+			];
+
 			var nameIndex;
 
 			if ( traced.name ) {
@@ -138,17 +135,21 @@ Node.prototype = {
 			result.push( newSegment );
 		};
 
-		for ( i = 0; i < this.mappings.length; i += 1 ) {
-			line = this.mappings[i];
+		let i = this.mappings.length;
+		let resolved = new Array( i );
 
-			result = [];
+		let j, line, result;
+
+		while ( i-- ) {
+			line = this.mappings[i];
+			resolved[i] = result = [];
 
 			for ( j = 0; j < line.length; j += 1 ) {
-				applySegment( line[j] );
+				applySegment( line[j], result );
 			}
-
-			resolved[i] = result;
 		}
+
+		let includeContent = options.includeContent !== false;
 
 		return new SourceMap({
 			file: path.basename( this.file ),
