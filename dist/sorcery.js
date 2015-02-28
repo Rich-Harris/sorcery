@@ -36,11 +36,11 @@ SourceMap.prototype = {
 	}
 };
 
-function getRelativePath(from, to) {
+var separator = /[\/\\]/;function getRelativePath(from, to) {
 	var fromParts, toParts, i;
 
-	fromParts = from.split("/");
-	toParts = to.split("/");
+	fromParts = from.split(separator);
+	toParts = to.split(separator);
 
 	fromParts.pop(); // get dirname
 
@@ -58,73 +58,92 @@ function getRelativePath(from, to) {
 }
 
 function encodeMappings(decoded) {
-	var mappings,
-	    sourceFileIndex = 0,
-	    // second field
-	sourceCodeLine = 0,
-	    // third field
-	sourceCodeColumn = 0,
-	    // fourth field
-	nameIndex = 0; // fifth field
+	var offsets = {
+		generatedCodeColumn: 0,
+		sourceFileIndex: 0, // second field
+		sourceCodeLine: 0, // third field
+		sourceCodeColumn: 0, // fourth field
+		nameIndex: 0 // fifth field
+	};
 
-	mappings = decoded.map(function (line) {
-		var generatedCodeColumn = 0; // first field - reset each time
-
-		return line.map(function (segment) {
-			var result;
-
-			if (!segment.length) {
-				return segment;
-			}
-
-			result = [segment[0] - generatedCodeColumn];
-			generatedCodeColumn = segment[0];
-
-			if (segment.length === 1) {
-				// only one field!
-				return result;
-			}
-
-			result[1] = segment[1] - sourceFileIndex;
-			result[2] = segment[2] - sourceCodeLine;
-			result[3] = segment[3] - sourceCodeColumn;
-
-			sourceFileIndex = segment[1];
-			sourceCodeLine = segment[2];
-			sourceCodeColumn = segment[3];
-
-			if (segment.length === 5) {
-				result[4] = segment[4] - nameIndex;
-				nameIndex = segment[4];
-			}
-
-			return vlq.encode(result);
-		}).join(",");
+	return decoded.map(function (line) {
+		offsets.generatedCodeColumn = 0; // first field - reset each time
+		return line.map(encodeSegment).join(",");
 	}).join(";");
 
-	return mappings;
+	function encodeSegment(segment) {
+		if (!segment.length) {
+			return segment;
+		}
+
+		var result = new Array(segment.length);
+
+		result[0] = segment[0] - offsets.generatedCodeColumn;
+		offsets.generatedCodeColumn = segment[0];
+
+		if (segment.length === 1) {
+			// only one field!
+			return result;
+		}
+
+		result[1] = segment[1] - offsets.sourceFileIndex;
+		result[2] = segment[2] - offsets.sourceCodeLine;
+		result[3] = segment[3] - offsets.sourceCodeColumn;
+
+		offsets.sourceFileIndex = segment[1];
+		offsets.sourceCodeLine = segment[2];
+		offsets.sourceCodeColumn = segment[3];
+
+		if (segment.length === 5) {
+			result[4] = segment[4] - offsets.nameIndex;
+			offsets.nameIndex = segment[4];
+		}
+
+		return vlq.encode(result);
+	}
 }
 
-function decodeMappings(mappings) {
-	var decoded,
-	    sourceFileIndex = 0,
-	    // second field
-	sourceCodeLine = 0,
-	    // third field
-	sourceCodeColumn = 0,
-	    // fourth field
-	nameIndex = 0; // fifth field
+function decodeSegments(encodedSegments) {
+	var i = encodedSegments.length;
+	var segments = new Array(i);
 
-	decoded = mappings.split(";").map(function (line) {
-		var generatedCodeColumn = 0,
-		    // first field - reset each time
+	while (i--) {
+		segments[i] = vlq.decode(encodedSegments[i]);
+	}
+
+	return segments;
+}function decodeMappings(mappings) {
+	var sourceFileIndex = 0; // second field
+	var sourceCodeLine = 0; // third field
+	var sourceCodeColumn = 0; // fourth field
+	var nameIndex = 0; // fifth field
+
+	var lines = mappings.split(";");
+	var numLines = lines.length;
+	var decoded = new Array(numLines);
+
+	var i = undefined,
+	    j = undefined,
+	    line = undefined,
+	    generatedCodeColumn = undefined,
+	    decodedLine = undefined,
+	    segments = undefined,
+	    segment = undefined,
+	    result = undefined;
+
+	for (i = 0; i < numLines; i += 1) {
+		line = lines[i];
+
+		generatedCodeColumn = 0; // first field - reset each time
 		decodedLine = [];
 
-		line.split(",").map(vlq.decode).forEach(function (segment) {
-			var result;
+		segments = decodeSegments(line.split(","));
+
+		for (j = 0; j < segments.length; j += 1) {
+			segment = segments[j];
 
 			if (!segment.length) {
-				return;
+				break;
 			}
 
 			generatedCodeColumn += segment[0];
@@ -134,7 +153,7 @@ function decodeMappings(mappings) {
 
 			if (segment.length === 1) {
 				// only one field!
-				return;
+				break;
 			}
 
 			sourceFileIndex += segment[1];
@@ -147,10 +166,10 @@ function decodeMappings(mappings) {
 				nameIndex += segment[4];
 				result.push(nameIndex);
 			}
-		});
+		}
 
-		return decodedLine;
-	});
+		decoded[i] = decodedLine;
+	}
 
 	return decoded;
 }
@@ -217,8 +236,6 @@ function getMapFromUrl(url, base, sync) {
 	}
 }
 
-var trace___slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } };
-
 /**
  * Traces a segment back to its origin
  * @param {object} node - an instance of Node
@@ -237,81 +254,58 @@ var trace___slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return
  */
 var trace__default = trace;
 function trace(node, lineIndex, columnIndex, name) {
-	var _arguments = arguments,
-	    _this = this,
-	    _shouldContinue,
-	    _result;
-	do {
-		_shouldContinue = false;
-		_result = (function (node, lineIndex, columnIndex, name) {
-			var segments;
+	var segments;
 
-			// If this node doesn't have a source map, we have
-			// to assume it is the original source
-			if (node.isOriginalSource) {
-				return {
-					source: node.file,
-					line: lineIndex + 1,
-					column: columnIndex || 0,
-					name: name
-				};
+	// If this node doesn't have a source map, we have
+	// to assume it is the original source
+	if (node.isOriginalSource) {
+		return {
+			source: node.file,
+			line: lineIndex + 1,
+			column: columnIndex || 0,
+			name: name
+		};
+	}
+
+	// Otherwise, we need to figure out what this position in
+	// the intermediate file corresponds to in *its* source
+	segments = node.mappings[lineIndex];
+
+	if (!segments || segments.length === 0) {
+		return null;
+	}
+
+	if (columnIndex != null) {
+		var len = segments.length;
+		var i = undefined;
+
+		for (i = 0; i < len; i += 1) {
+			var generatedCodeColumn = segments[i][0];
+
+			if (generatedCodeColumn > columnIndex) {
+				break;
 			}
 
-			// Otherwise, we need to figure out what this position in
-			// the intermediate file corresponds to in *its* source
-			segments = node.mappings[lineIndex];
+			if (generatedCodeColumn === columnIndex) {
+				var _sourceFileIndex = segments[i][1];
+				var _sourceCodeLine = segments[i][2];
+				var sourceCodeColumn = segments[i][3];
+				var _nameIndex = segments[i][4];
 
-			if (!segments || segments.length === 0) {
-				return null;
+				var _parent = node.sources[_sourceFileIndex];
+				return trace(_parent, _sourceCodeLine, sourceCodeColumn, node.map.names[_nameIndex] || name);
 			}
+		}
+	}
 
-			if (columnIndex != null) {
-				var len = segments.length;
-				var i = undefined;
+	// fall back to a line mapping
+	var sourceFileIndex = segments[0][1];
+	var sourceCodeLine = segments[0][2];
+	var nameIndex = segments[0][4];
 
-				for (i = 0; i < len; i += 1) {
-					var _segments$i = trace___slicedToArray(segments[i], 5);
-
-					var _generatedCodeColumn = _segments$i[0];
-					var _sourceFileIndex = _segments$i[1];
-					var _sourceCodeLine = _segments$i[2];
-					var _sourceCodeColumn = _segments$i[3];
-					var _nameIndex = _segments$i[4];
-
-
-					if (_generatedCodeColumn === columnIndex) {
-						var _parent = node.sources[_sourceFileIndex];
-						_arguments = [_parent, _sourceCodeLine, _sourceCodeColumn, node.map.names[_nameIndex] || name];
-						_this = undefined;
-						return _shouldContinue = true;
-					}
-
-					if (_generatedCodeColumn > columnIndex) {
-						break;
-					}
-				}
-			}
-
-			// fall back to a line mapping
-			var _segments$0 = trace___slicedToArray(segments[0], 5);
-
-			var generatedCodeColumn = _segments$0[0];
-			var sourceFileIndex = _segments$0[1];
-			var sourceCodeLine = _segments$0[2];
-			var sourceCodeColumn = _segments$0[3];
-			var nameIndex = _segments$0[4];
-
-
-			var parent = node.sources[sourceFileIndex];
-			_arguments = [parent, sourceCodeLine, null, node.map.names[nameIndex] || name];
-			_this = undefined;
-			return _shouldContinue = true;
-		}).apply(_this, _arguments);
-	} while (_shouldContinue);
-	return _result;
+	var parent = node.sources[sourceFileIndex];
+	return trace(parent, sourceCodeLine, null, node.map.names[nameIndex] || name);
 }
-
-var Node___slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } };
 
 var Node__Promise = sander.Promise;
 
@@ -401,58 +395,63 @@ Node.prototype = {
 	apply: function apply() {
 		var _this = this;
 		var options = arguments[0] === undefined ? {} : arguments[0];
-		var resolved,
-		    allNames = [],
-		    allSources = [],
-		    includeContent;
+		var allNames = [],
+		    allSources = [];
 
-		includeContent = options.includeContent !== false;
+		var applySegment = function (segment, result) {
+			var traced = trace__default(_this.sources[segment[1]], // source
+			segment[2], // source code line
+			segment[3], // source code column
+			_this.map.names[segment[4]]);
 
-		resolved = this.mappings.map(function (line) {
-			var result = [];
+			if (!traced) {
+				return;
+			}
 
-			line.forEach(function (segment) {
-				var _segment = Node___slicedToArray(segment, 4);
+			var sourceIndex = allSources.indexOf(traced.source);
+			if (! ~sourceIndex) {
+				sourceIndex = allSources.length;
+				allSources.push(traced.source);
+			}
 
-				var generatedCodeColumn = _segment[0];
-				var sourceFileIndex = _segment[1];
-				var sourceCodeLine = _segment[2];
-				var sourceCodeColumn = _segment[3];
-				var source;var traced;var newSegment;var sourceIndex;var nameIndex;
+			var newSegment = [segment[0], // generated code column
+			sourceIndex, traced.line - 1, traced.column];
 
-				source = _this.sources[sourceFileIndex];
-				traced = trace__default(source, sourceCodeLine, sourceCodeColumn, _this.map.names[segment[4]]);
+			var nameIndex;
 
-				if (!traced) {
-					return;
+			if (traced.name) {
+				nameIndex = allNames.indexOf(traced.name);
+				if (! ~nameIndex) {
+					nameIndex = allNames.length;
+					allNames.push(traced.name);
 				}
 
-				sourceIndex = allSources.indexOf(traced.source);
-				if (! ~sourceIndex) {
-					sourceIndex = allSources.length;
-					allSources.push(traced.source);
-				}
+				newSegment.push(nameIndex);
+			}
 
-				newSegment = [generatedCodeColumn, sourceIndex, traced.line - 1, traced.column];
+			result.push(newSegment);
+		};
 
-				if (traced.name) {
-					nameIndex = allNames.indexOf(traced.name);
-					if (! ~nameIndex) {
-						nameIndex = allNames.length;
-						allNames.push(traced.name);
-					}
+		var i = this.mappings.length;
+		var resolved = new Array(i);
 
-					newSegment.push(nameIndex);
-				}
+		var j = undefined,
+		    line = undefined,
+		    result = undefined;
 
-				result.push(newSegment);
-			});
+		while (i--) {
+			line = this.mappings[i];
+			resolved[i] = result = [];
 
-			return result;
-		});
+			for (j = 0; j < line.length; j += 1) {
+				applySegment(line[j], result);
+			}
+		}
+
+		var includeContent = options.includeContent !== false;
 
 		return new SourceMap({
-			file: this.file.split("/").pop(),
+			file: path.basename(this.file),
 			sources: allSources.map(function (source) {
 				return getRelativePath(options.base || _this.file, source);
 			}),

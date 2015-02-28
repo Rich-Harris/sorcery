@@ -1,5 +1,9 @@
 # changelog
 
+## 0.3.2
+
+* Significant (>2x) performance improvements (achieved by replacing `forEach` and `map` with `for`/`while` loops where appropriate, and avoiding hard-to-transpile destructuring)
+
 ## 0.3.1
 
 * Correct behaviour on Windows ([#3](https://github.com/Rich-Harris/sorcery/issues/3))

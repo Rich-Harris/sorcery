@@ -1,7 +1,7 @@
 {
   "name": "sorcery",
   "description": "Resolve a chain of sourcemaps back to the original source",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "Rich Harris",
   "repository": "https://github.com/Rich-Harris/sorcery",
   "main": "dist/sorcery.js",
@@ -10,7 +10,7 @@
   "dependencies": {
     "minimist": "^1.1.0",
     "sander": "^0.1.6",
-    "vlq": "^0.1.0"
+    "vlq": "^0.2.1"
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
