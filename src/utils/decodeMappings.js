@@ -1,21 +1,41 @@
 import * as vlq from 'vlq';
 
+function decodeSegments ( encodedSegments ) {
+	let i = encodedSegments.length;
+	let segments = new Array( i);
+
+	while ( i-- ) {
+		segments[i] = vlq.decode( encodedSegments[i] );
+	}
+
+	return segments;
+}
+
 export default function decodeMappings ( mappings ) {
-	var decoded,
-	sourceFileIndex = 0,   // second field
-	sourceCodeLine = 0,    // third field
-	sourceCodeColumn = 0,  // fourth field
-	nameIndex = 0;         // fifth field
+	let sourceFileIndex = 0;   // second field
+	let sourceCodeLine = 0;    // third field
+	let sourceCodeColumn = 0;  // fourth field
+	let nameIndex = 0;         // fifth field
 
-	decoded = mappings.split( ';' ).map( function ( line ) {
-		var generatedCodeColumn = 0, // first field - reset each time
-			decodedLine = [];
+	let lines = mappings.split( ';' );
+	let numLines = lines.length;
+	let decoded = new Array( numLines );
 
-		line.split( ',' ).map( vlq.decode ).forEach( function ( segment ) {
-			var result;
+	let i, j, line, generatedCodeColumn, decodedLine, segments, segment, result;
+
+	for ( i = 0; i < numLines; i += 1 ) {
+		line = lines[i];
+
+		generatedCodeColumn = 0; // first field - reset each time
+		decodedLine = [];
+
+		segments = decodeSegments( line.split( ',' ) );
+
+		for ( j = 0; j < segments.length; j += 1 ) {
+			segment = segments[j];
 
 			if ( !segment.length ) {
-				return;
+				break;
 			}
 
 			generatedCodeColumn += segment[0];
@@ -25,7 +45,7 @@ export default function decodeMappings ( mappings ) {
 
 			if ( segment.length === 1 ) {
 				// only one field!
-				return;
+				break;
 			}
 
 			sourceFileIndex  += segment[1];
@@ -38,10 +58,10 @@ export default function decodeMappings ( mappings ) {
 				nameIndex += segment[4];
 				result.push( nameIndex );
 			}
-		});
+		}
 
-		return decodedLine;
-	});
+		decoded[i] = decodedLine;
+	}
 
 	return decoded;
 }
