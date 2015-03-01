@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-var minimist = require( 'minimist' ),
-	showHelp = require( './showHelp' ),
-	command,
-	sorcery = require( '../' );
+var path = require( 'path' );
+var minimist = require( 'minimist' );
+var sander = require( 'sander' );
+var showHelp = require( './showHelp' );
+var command;
+var sorcery = require( '../' );
 
 command = minimist( process.argv.slice( 2 ), {
 	alias: {
@@ -33,10 +35,30 @@ else if ( !command.input ) {
 }
 
 else {
-	sorcery.load( command.input ).then( function ( chain ) {
-		return chain.write( command.output || command.input, {
-			inline: command.datauri,
-			includeContent: !command.excludeContent
+	sander.stat( command.input ).then( function ( stats ) {
+		if ( stats.isDirectory() ) {
+			return sander.lsr( command.input ).then( function ( files ) {
+				var promises = files.map( function ( file ) {
+					var input = path.join( command.input, file );
+					var output = path.join( command.output || command.input, file );
+
+					return sorcery.load( input ).then( function ( chain ) {
+						return chain.write( output, {
+							inline: command.datauri,
+							includeContent: !command.excludeContent
+						});
+					});
+				});
+
+				return sander.Promise.all( promises );
+			});
+		}
+
+		return sorcery.load( command.input ).then( function ( chain ) {
+			return chain.write( command.output || command.input, {
+				inline: command.datauri,
+				includeContent: !command.excludeContent
+			});
 		});
 	}).catch( function ( err ) {
 		setTimeout( function () {
