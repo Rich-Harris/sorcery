@@ -6,7 +6,7 @@ import encodeMappings from './utils/encodeMappings';
 import decodeMappings from './utils/decodeMappings';
 import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
-import trace from './utils/trace';
+import traceMapping from './utils/traceMapping';
 
 var Promise = sander.Promise;
 
@@ -20,6 +20,14 @@ var Node = function ( file, content ) {
 	this.sources = null;
 	this.isOriginalSource = null;
 	this.lines = null;
+
+	this._stats = {
+		decodingTime: 0,
+		encodingTime: 0,
+		tracingTime: 0,
+
+		untraceable: 0
+	};
 
 	this.sourcesContentByPath = {};
 };
@@ -43,7 +51,12 @@ Node.prototype = {
 				var promises, sourcesContent;
 
 				this.map = map;
+
+				let decodingStart = process.hrtime();
 				this.mappings = decodeMappings( map.mappings );
+				let decodingTime = process.hrtime( decodingStart );
+				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
+
 				sourcesContent = map.sourcesContent || [];
 
 				this.sources = map.sources.map( ( source, i ) => {
@@ -96,7 +109,7 @@ Node.prototype = {
 			allSources = [];
 
 		var applySegment = ( segment, result ) => {
-			var traced = trace(
+			var traced = traceMapping(
 				this.sources[ segment[1] ], // source
 				segment[2], // source code line
 				segment[3], // source code column
@@ -104,6 +117,7 @@ Node.prototype = {
 			);
 
 			if ( !traced ) {
+				this._stats.untraceable += 1;
 				return;
 			}
 
@@ -129,11 +143,14 @@ Node.prototype = {
 					allNames.push( traced.name );
 				}
 
-				newSegment.push( nameIndex );
+				newSegment[4] = nameIndex;
 			}
 
-			result.push( newSegment );
+			result[ result.length ] = newSegment;
 		};
+
+		// Trace mappings
+		let tracingStart = process.hrtime();
 
 		let i = this.mappings.length;
 		let resolved = new Array( i );
@@ -149,6 +166,15 @@ Node.prototype = {
 			}
 		}
 
+		let tracingTime = process.hrtime( tracingStart );
+		this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
+
+		// Encode mappings
+		let encodingStart = process.hrtime();
+		let mappings = encodeMappings( resolved );
+		let encodingTime = process.hrtime( encodingStart );
+		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
+
 		let includeContent = options.includeContent !== false;
 
 		return new SourceMap({
@@ -160,12 +186,24 @@ Node.prototype = {
 				return includeContent ? this.sourcesContentByPath[ source ] : null;
 			}),
 			names: allNames,
-			mappings: encodeMappings( resolved )
+			mappings
 		});
 	},
 
+	stat () {
+		return {
+			selfDecodingTime: this._stats.decodingTime / 1e6,
+			totalDecodingTime: ( this._stats.decodingTime + tally( this.sources, 'decodingTime' ) ) / 1e6,
+
+			encodingTime: this._stats.encodingTime / 1e6,
+			tracingTime: this._stats.tracingTime / 1e6,
+
+			untraceable: this._stats.untraceable
+		};
+	},
+
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
-		return trace( this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
+		return traceMapping( this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
 	},
 
 	write ( dest, options ) {
@@ -226,4 +264,10 @@ function getSourcesContent ( node ) {
 			node.sourcesContentByPath[ file ] = source.sourcesContentByPath[ file ];
 		});
 	});
+}
+
+function tally ( nodes, stat ) {
+	return nodes.reduce( ( total, node ) => {
+		return total + node._stats[ stat ];
+	}, 0 );
 }
