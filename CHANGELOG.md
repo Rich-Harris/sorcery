@@ -1,5 +1,10 @@
 # changelog
 
+## 0.3.3
+
+* Cache decodings more better performance
+* Add `node.stat()` method for rudimentary profiling
+
 ## 0.3.2
 
 * Significant (>2x) performance improvements (achieved by replacing `forEach` and `map` with `for`/`while` loops where appropriate, and avoiding hard-to-transpile destructuring)

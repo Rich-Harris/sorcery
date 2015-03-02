@@ -5,6 +5,7 @@ path = ('default' in path ? path['default'] : path);
 var sander = require('sander');
 sander = ('default' in sander ? sander['default'] : sander);
 var vlq = require('vlq');
+var buffer_crc32 = require('buffer-crc32');
 
 /**
  * Encodes a string as base64
@@ -103,6 +104,8 @@ function encodeMappings(decoded) {
 	}
 }
 
+var cache = {};
+
 function decodeSegments(encodedSegments) {
 	var i = encodedSegments.length;
 	var segments = new Array(i);
@@ -113,65 +116,71 @@ function decodeSegments(encodedSegments) {
 
 	return segments;
 }function decodeMappings(mappings) {
-	var sourceFileIndex = 0; // second field
-	var sourceCodeLine = 0; // third field
-	var sourceCodeColumn = 0; // fourth field
-	var nameIndex = 0; // fifth field
+	var checksum = buffer_crc32(mappings);
 
-	var lines = mappings.split(";");
-	var numLines = lines.length;
-	var decoded = new Array(numLines);
+	if (!cache[checksum]) {
+		var sourceFileIndex = 0; // second field
+		var sourceCodeLine = 0; // third field
+		var sourceCodeColumn = 0; // fourth field
+		var nameIndex = 0; // fifth field
 
-	var i = undefined,
-	    j = undefined,
-	    line = undefined,
-	    generatedCodeColumn = undefined,
-	    decodedLine = undefined,
-	    segments = undefined,
-	    segment = undefined,
-	    result = undefined;
+		var lines = mappings.split(";");
+		var numLines = lines.length;
+		var decoded = new Array(numLines);
 
-	for (i = 0; i < numLines; i += 1) {
-		line = lines[i];
+		var i = undefined,
+		    j = undefined,
+		    line = undefined,
+		    generatedCodeColumn = undefined,
+		    decodedLine = undefined,
+		    segments = undefined,
+		    segment = undefined,
+		    result = undefined;
 
-		generatedCodeColumn = 0; // first field - reset each time
-		decodedLine = [];
+		for (i = 0; i < numLines; i += 1) {
+			line = lines[i];
 
-		segments = decodeSegments(line.split(","));
+			generatedCodeColumn = 0; // first field - reset each time
+			decodedLine = [];
 
-		for (j = 0; j < segments.length; j += 1) {
-			segment = segments[j];
+			segments = decodeSegments(line.split(","));
 
-			if (!segment.length) {
-				break;
+			for (j = 0; j < segments.length; j += 1) {
+				segment = segments[j];
+
+				if (!segment.length) {
+					break;
+				}
+
+				generatedCodeColumn += segment[0];
+
+				result = [generatedCodeColumn];
+				decodedLine.push(result);
+
+				if (segment.length === 1) {
+					// only one field!
+					break;
+				}
+
+				sourceFileIndex += segment[1];
+				sourceCodeLine += segment[2];
+				sourceCodeColumn += segment[3];
+
+				result.push(sourceFileIndex, sourceCodeLine, sourceCodeColumn);
+
+				if (segment.length === 5) {
+					nameIndex += segment[4];
+					result.push(nameIndex);
+				}
 			}
 
-			generatedCodeColumn += segment[0];
-
-			result = [generatedCodeColumn];
-			decodedLine.push(result);
-
-			if (segment.length === 1) {
-				// only one field!
-				break;
-			}
-
-			sourceFileIndex += segment[1];
-			sourceCodeLine += segment[2];
-			sourceCodeColumn += segment[3];
-
-			result.push(sourceFileIndex, sourceCodeLine, sourceCodeColumn);
-
-			if (segment.length === 5) {
-				nameIndex += segment[4];
-				result.push(nameIndex);
-			}
+			decoded[i] = decodedLine;
 		}
 
-		decoded[i] = decodedLine;
+		cache[checksum] = decoded;
 	}
 
-	return decoded;
+	return cache[checksum];
 }
 
 function getSourceMappingUrl(str) {
@@ -252,8 +261,8 @@ function getMapFromUrl(url, base, sync) {
      @property {string || null} name - the name corresponding
      to the segment being traced
  */
-var trace__default = trace;
-function trace(node, lineIndex, columnIndex, name) {
+var traceMapping = traceMapping__trace;
+function traceMapping__trace(node, lineIndex, columnIndex, name) {
 	var segments;
 
 	// If this node doesn't have a source map, we have
@@ -293,7 +302,7 @@ function trace(node, lineIndex, columnIndex, name) {
 				var _nameIndex = segments[i][4];
 
 				var _parent = node.sources[_sourceFileIndex];
-				return trace(_parent, _sourceCodeLine, sourceCodeColumn, node.map.names[_nameIndex] || name);
+				return traceMapping__trace(_parent, _sourceCodeLine, sourceCodeColumn, node.map.names[_nameIndex] || name);
 			}
 		}
 	}
@@ -304,7 +313,7 @@ function trace(node, lineIndex, columnIndex, name) {
 	var nameIndex = segments[0][4];
 
 	var parent = node.sources[sourceFileIndex];
-	return trace(parent, sourceCodeLine, null, node.map.names[nameIndex] || name);
+	return traceMapping__trace(parent, sourceCodeLine, null, node.map.names[nameIndex] || name);
 }
 
 var Node__Promise = sander.Promise;
@@ -319,6 +328,14 @@ var Node = function (file, content) {
 	this.sources = null;
 	this.isOriginalSource = null;
 	this.lines = null;
+
+	this._stats = {
+		decodingTime: 0,
+		encodingTime: 0,
+		tracingTime: 0,
+
+		untraceable: 0
+	};
 
 	this.sourcesContentByPath = {};
 };
@@ -343,7 +360,12 @@ Node.prototype = {
 				var promises, sourcesContent;
 
 				_this.map = map;
+
+				var decodingStart = process.hrtime();
 				_this.mappings = decodeMappings(map.mappings);
+				var decodingTime = process.hrtime(decodingStart);
+				_this._stats.decodingTime = 1000000000 * decodingTime[0] + decodingTime[1];
+
 				sourcesContent = map.sourcesContent || [];
 
 				_this.sources = map.sources.map(function (source, i) {
@@ -399,12 +421,13 @@ Node.prototype = {
 		    allSources = [];
 
 		var applySegment = function (segment, result) {
-			var traced = trace__default(_this.sources[segment[1]], // source
+			var traced = traceMapping(_this.sources[segment[1]], // source
 			segment[2], // source code line
 			segment[3], // source code column
 			_this.map.names[segment[4]]);
 
 			if (!traced) {
+				_this._stats.untraceable += 1;
 				return;
 			}
 
@@ -426,11 +449,14 @@ Node.prototype = {
 					allNames.push(traced.name);
 				}
 
-				newSegment.push(nameIndex);
+				newSegment[4] = nameIndex;
 			}
 
-			result.push(newSegment);
+			result[result.length] = newSegment;
 		};
+
+		// Trace mappings
+		var tracingStart = process.hrtime();
 
 		var i = this.mappings.length;
 		var resolved = new Array(i);
@@ -448,6 +474,15 @@ Node.prototype = {
 			}
 		}
 
+		var tracingTime = process.hrtime(tracingStart);
+		this._stats.tracingTime = 1000000000 * tracingTime[0] + tracingTime[1];
+
+		// Encode mappings
+		var encodingStart = process.hrtime();
+		var mappings = encodeMappings(resolved);
+		var encodingTime = process.hrtime(encodingStart);
+		this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
+
 		var includeContent = options.includeContent !== false;
 
 		return new SourceMap({
@@ -459,23 +494,25 @@ Node.prototype = {
 				return includeContent ? _this.sourcesContentByPath[source] : null;
 			}),
 			names: allNames,
-			mappings: encodeMappings(resolved)
+			mappings: mappings
 		});
 	},
 
-	trace: (function (_trace) {
-		var _traceWrapper = function trace() {
-			return _trace.apply(this, arguments);
-		};
+	stat: function stat() {
+		return {
+			selfDecodingTime: this._stats.decodingTime / 1000000,
+			totalDecodingTime: (this._stats.decodingTime + tally(this.sources, "decodingTime")) / 1000000,
 
-		_traceWrapper.toString = function () {
-			return _trace.toString();
-		};
+			encodingTime: this._stats.encodingTime / 1000000,
+			tracingTime: this._stats.tracingTime / 1000000,
 
-		return _traceWrapper;
-	})(function (oneBasedLineIndex, zeroBasedColumnIndex) {
-		return trace__default(this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null);
-	}),
+			untraceable: this._stats.untraceable
+		};
+	},
+
+	trace: function Node__trace(oneBasedLineIndex, zeroBasedColumnIndex) {
+		return traceMapping(this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null);
+	},
 
 	write: function write(dest, options) {
 		var map, url, index, content, promises;
@@ -535,6 +572,12 @@ function getSourcesContent(node) {
 			node.sourcesContentByPath[file] = source.sourcesContentByPath[file];
 		});
 	});
+}
+
+function tally(nodes, stat) {
+	return nodes.reduce(function (total, node) {
+		return total + node._stats[stat];
+	}, 0);
 }
 
 function index__load(file) {
