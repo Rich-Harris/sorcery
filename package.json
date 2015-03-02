@@ -8,6 +8,7 @@
   "jsnext:main": "src/index.js",
   "license": "MIT",
   "dependencies": {
+    "buffer-crc32": "^0.2.5",
     "minimist": "^1.1.0",
     "sander": "^0.1.6",
     "vlq": "^0.2.1"
