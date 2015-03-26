@@ -176,6 +176,22 @@ describe( 'sorcery', function () {
 				});
 			});
 		});
+
+		it( 'adds a trailing newline after sourceMappingURL comment (#4)', function () {
+			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+				return chain.write( '.tmp/write-file/helloworld.min.js' ).then( function () {
+					return sander.readFile( '.tmp/write-file/helloworld.min.js' ).then( String ).then( function ( file ) {
+						var lines = file.split( '\n' );
+
+						// sourceMappingURL comment should be on penultimate line
+						assert.ok( /sourceMappingURL/.test( lines[ lines.length - 2 ] ) );
+
+						// last line should be empty
+						assert.equal( lines[ lines.length - 1 ], '' );
+					});
+				});
+			});
+		});
 	});
 
 	describe( 'sorcery (sync)', function () {
