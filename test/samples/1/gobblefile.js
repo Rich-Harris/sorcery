@@ -1,4 +1,5 @@
 var gobble = require( 'gobble' );
+var renameMapFiles = require( '../../renameMapFiles' );
 
 gobble.cwd( __dirname );
 
@@ -8,4 +9,4 @@ var min = js.transform( 'uglifyjs', {
 	ext: '.min.js'
 });
 
-module.exports = gobble([ src, js, min ]);
+module.exports = gobble([ src, js, min ]).transform( renameMapFiles );
