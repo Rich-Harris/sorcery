@@ -1,8 +1,13 @@
 # changelog
 
+## 0.3.4
+
+* Ensure trailing newline on `chain.write()` ([#4](https://github.com/Rich-Harris/sorcery/issues/4))
+* Upgrade dependencies
+
 ## 0.3.3
 
-* Cache decodings more better performance
+* Cache decodings for better performance
 * Add `node.stat()` method for rudimentary profiling
 
 ## 0.3.2

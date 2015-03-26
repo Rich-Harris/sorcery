@@ -533,7 +533,7 @@ Node.prototype = {
 		url = options.inline ? map.toUrl() : (options.absolutePath ? dest : path.basename(dest)) + ".map";
 
 		index = this.content.lastIndexOf("sourceMappingURL=") + 17;
-		content = this.content.substr(0, index) + this.content.substring(index).replace(/^\S+/, url);
+		content = this.content.substr(0, index) + this.content.substring(index).replace(/^\S+/, url) + "\n";
 
 		promises = [sander.writeFile(dest, content)];
 
