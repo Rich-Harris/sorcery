@@ -11,7 +11,7 @@ import traceMapping from './utils/traceMapping';
 var Promise = sander.Promise;
 
 var Node = function ( file, content ) {
-	this.file = path.resolve( file );
+	this.file = file ? path.resolve( file ) : null;
 	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 	// these get filled in later
@@ -60,7 +60,7 @@ Node.prototype = {
 				sourcesContent = map.sourcesContent || [];
 
 				this.sources = map.sources.map( ( source, i ) => {
-					return new Node( resolveSourcePath( this, source ), sourcesContent[i] );
+					return new Node( source ? resolveSourcePath( this, source ) : null, sourcesContent[i] );
 				});
 
 				promises = this.sources.map( load );

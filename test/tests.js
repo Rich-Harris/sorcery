@@ -92,6 +92,23 @@ describe( 'sorcery', function () {
 				assert.deepEqual( actual, expected );
 			});
 		});
+
+		it( 'uses inline sources if provided', function () {
+			return sorcery.load( '.tmp/samples/3/app.js' ).then( function ( chain ) {
+				var actual, expected;
+
+				actual = chain.trace( 4, 8 );
+
+				expected = {
+					source: path.resolve( 'samples/3/src/app.js' ),
+					line: 2,
+					column: 8,
+					name: null
+				};
+
+				assert.deepEqual( actual, expected );
+			});
+		});
 	});
 
 	describe( 'chain.apply()', function () {
