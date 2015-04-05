@@ -94,7 +94,7 @@ sorcery -i some/generated/code.min.js
 
 # append flattened sourcemap as an inline data URI
 # (will delete existing .map file, if applicable)
-sorcery -i -d some/generated/code.min.js
+sorcery -d -i some/generated/code.min.js
 
 # write to a new file (will create newfile.js and
 # newfile.js.map)
