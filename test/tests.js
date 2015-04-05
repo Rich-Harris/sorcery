@@ -124,7 +124,7 @@ describe( 'sorcery', function () {
 				assert.deepEqual( map.sources, [ '../../../samples/1/src/helloworld.coffee' ]);
 				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
-				loc = smc.originalPositionFor({ line: 1, column: 31 });
+				var loc = smc.originalPositionFor({ line: 1, column: 31 });
 				assert.equal( loc.source, '../../../samples/1/src/helloworld.coffee' );
 				assert.equal( loc.line, 2 );
 				assert.equal( loc.column, 8 );
@@ -148,7 +148,7 @@ describe( 'sorcery', function () {
 						assert.deepEqual( map.sources, [ '../../samples/1/src/helloworld.coffee' ]);
 						assert.deepEqual( map.sourcesContent, [ sander.readFileSync( __dirname, 'samples/1/src/helloworld.coffee' ).toString() ]);
 
-						loc = smc.originalPositionFor({ line: 1, column: 31 });
+						var loc = smc.originalPositionFor({ line: 1, column: 31 });
 						assert.equal( loc.source, '../../samples/1/src/helloworld.coffee' );
 						assert.equal( loc.line, 2 );
 						assert.equal( loc.column, 8 );
@@ -163,14 +163,14 @@ describe( 'sorcery', function () {
 				return sorcery.load( '.tmp/overwrite-file/helloworld.min.js' ).then( function ( chain ) {
 					return chain.write().then( function () {
 						return sander.readFile( '.tmp/overwrite-file/helloworld.min.js.map' ).then( String ).then( JSON.parse ).then( function ( map ) {
-							smc = new SourceMapConsumer( map );
+							var smc = new SourceMapConsumer( map );
 
 							assert.equal( map.version, 3 );
 							assert.deepEqual( map.file, 'helloworld.min.js' );
 							assert.deepEqual( map.sources, [ '../../samples/1/src/helloworld.coffee' ]);
 							assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
-							loc = smc.originalPositionFor({ line: 1, column: 31 });
+							var loc = smc.originalPositionFor({ line: 1, column: 31 });
 							assert.equal( loc.source, '../../samples/1/src/helloworld.coffee' );
 							assert.equal( loc.line, 2 );
 							assert.equal( loc.column, 8 );
