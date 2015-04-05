@@ -1,7 +1,7 @@
 {
   "name": "sorcery",
   "description": "Resolve a chain of sourcemaps back to the original source",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "author": "Rich Harris",
   "repository": "https://github.com/Rich-Harris/sorcery",
   "main": "dist/sorcery.js",
@@ -15,10 +15,11 @@
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
-    "gobble": "^0.7.9",
-    "gobble-babel": "^4.0.1",
+    "gobble": "^0.7.12",
+    "gobble-babel": "^5.0.0",
     "gobble-browserify": "^0.2.0",
     "gobble-coffee": "^0.2.1",
+    "gobble-esperanto": "^0.2.4",
     "gobble-esperanto-bundle": "^0.1.7",
     "gobble-uglifyjs": "^0.2.0",
     "mocha": "^2.1.0",

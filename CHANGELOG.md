@@ -1,5 +1,9 @@
 # changelog
 
+## 0.3.5
+
+* Better handling of inline data URIs
+
 ## 0.3.4
 
 * Ensure trailing newline on `chain.write()` ([#4](https://github.com/Rich-Harris/sorcery/issues/4))

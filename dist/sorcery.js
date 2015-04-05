@@ -13,6 +13,7 @@ var buffer_crc32 = require('buffer-crc32');
  * @returns {string}
  */
 
+
 function btoa(str) {
   return new Buffer(str).toString("base64");
 }
@@ -28,16 +29,17 @@ var SourceMap = function (properties) {
 };
 
 SourceMap.prototype = {
-	toString: function toString() {
+	toString: function () {
 		return JSON.stringify(this);
 	},
 
-	toUrl: function toUrl() {
+	toUrl: function () {
 		return "data:application/json;charset=utf-8;base64," + btoa(this.toString());
 	}
 };
 
-var separator = /[\/\\]/;function getRelativePath(from, to) {
+var separator = /[\/\\]/;
+function getRelativePath(from, to) {
 	var fromParts, toParts, i;
 
 	fromParts = from.split(separator);
@@ -115,7 +117,8 @@ function decodeSegments(encodedSegments) {
 	}
 
 	return segments;
-}function decodeMappings(mappings) {
+}
+function decodeMappings(mappings) {
 	var checksum = buffer_crc32(mappings);
 
 	if (!cache[checksum]) {
@@ -206,6 +209,7 @@ function getSourceMappingUrl(str) {
  * @returns {string}
  */
 
+
 function atob(base64) {
   return new Buffer(base64, "base64").toString("utf8");
 }
@@ -261,8 +265,9 @@ function getMapFromUrl(url, base, sync) {
      @property {string || null} name - the name corresponding
      to the segment being traced
  */
-var traceMapping = traceMapping__trace;
-function traceMapping__trace(node, lineIndex, columnIndex, name) {
+var traceMapping = trace;
+
+function trace(node, lineIndex, columnIndex, name) {
 	var segments;
 
 	// If this node doesn't have a source map, we have
@@ -302,7 +307,7 @@ function traceMapping__trace(node, lineIndex, columnIndex, name) {
 				var _nameIndex = segments[i][4];
 
 				var _parent = node.sources[_sourceFileIndex];
-				return traceMapping__trace(_parent, _sourceCodeLine, sourceCodeColumn, node.map.names[_nameIndex] || name);
+				return trace(_parent, _sourceCodeLine, sourceCodeColumn, node.map.names[_nameIndex] || name);
 			}
 		}
 	}
@@ -313,7 +318,7 @@ function traceMapping__trace(node, lineIndex, columnIndex, name) {
 	var nameIndex = segments[0][4];
 
 	var parent = node.sources[sourceFileIndex];
-	return traceMapping__trace(parent, sourceCodeLine, null, node.map.names[nameIndex] || name);
+	return trace(parent, sourceCodeLine, null, node.map.names[nameIndex] || name);
 }
 
 var Node__Promise = sander.Promise;
@@ -341,8 +346,9 @@ var Node = function (file, content) {
 };
 
 Node.prototype = {
-	_load: function _load() {
+	_load: function () {
 		var _this = this;
+
 		return getContent(this).then(function (content) {
 			var url;
 
@@ -382,8 +388,9 @@ Node.prototype = {
 		});
 	},
 
-	_loadSync: function _loadSync() {
+	_loadSync: function () {
 		var _this = this;
+
 		var url, map, sourcesContent;
 
 		if (!this.content) {
@@ -414,9 +421,11 @@ Node.prototype = {
 		return !this.isOriginalSource ? this : null;
 	},
 
-	apply: function apply() {
+	apply: function () {
 		var _this = this;
+
 		var options = arguments[0] === undefined ? {} : arguments[0];
+
 		var allNames = [],
 		    allSources = [];
 
@@ -498,7 +507,7 @@ Node.prototype = {
 		});
 	},
 
-	stat: function stat() {
+	stat: function () {
 		return {
 			selfDecodingTime: this._stats.decodingTime / 1000000,
 			totalDecodingTime: (this._stats.decodingTime + tally(this.sources, "decodingTime")) / 1000000,
@@ -510,11 +519,11 @@ Node.prototype = {
 		};
 	},
 
-	trace: function Node__trace(oneBasedLineIndex, zeroBasedColumnIndex) {
+	trace: function (oneBasedLineIndex, zeroBasedColumnIndex) {
 		return traceMapping(this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null);
 	},
 
-	write: function write(dest, options) {
+	write: function (dest, options) {
 		var map, url, index, content, promises;
 
 		if (typeof dest !== "string") {
@@ -561,6 +570,7 @@ function getContent(node) {
 
 function resolveSourcePath(node, source) {
 	// TODO handle sourceRoot
+	console.log( 'node.file, source', node.file, source );
 	return path.resolve(path.dirname(node.file), source);
 }
 
@@ -582,7 +592,9 @@ function tally(nodes, stat) {
 
 function index__load(file) {
 	return new Node(file)._load();
-}function loadSync(file) {
+}
+
+function loadSync(file) {
 	return new Node(file)._loadSync();
 }
 
