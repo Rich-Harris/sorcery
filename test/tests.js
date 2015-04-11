@@ -131,6 +131,26 @@ describe( 'sorcery', function () {
 				assert.equal( loc.name, 'log' );
 			});
 		});
+
+		it( 'handles sourceMappingURLs with spaces (#6)', function () {
+			return sorcery.load( '.tmp/samples/4/file with spaces.js' ).then( function ( chain ) {
+				var map, smc;
+
+				map = chain.apply();
+				smc = new SourceMapConsumer( map );
+
+				assert.equal( map.version, 3 );
+				assert.deepEqual( map.file, 'file with spaces.js' );
+				assert.deepEqual( map.sources, [ '../../../samples/4/src/file with spaces.js' ]);
+				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/4/src/file with spaces.js' ).toString() ]);
+
+				var loc = smc.originalPositionFor({ line: 4, column: 8 });
+				assert.equal( loc.source, '../../../samples/4/src/file with spaces.js' );
+				assert.equal( loc.line, 2 );
+				assert.equal( loc.column, 8 );
+				assert.equal( loc.name, null );
+			});
+		});
 	});
 
 	describe( 'chain.write()', function () {
