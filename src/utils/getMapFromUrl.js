@@ -27,7 +27,7 @@ export default function getMapFromUrl ( url, base, sync ) {
 		return sync ? map : sander.Promise.resolve( map );
 	}
 
-	url = path.resolve( path.dirname( base ), url );
+	url = path.resolve( path.dirname( base ), decodeURI( url ) );
 
 	if ( sync ) {
 		return JSON.parse( sander.readFileSync( url ).toString() );

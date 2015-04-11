@@ -229,6 +229,19 @@ describe( 'sorcery', function () {
 				});
 			});
 		});
+
+		it( 'ensures sourceMappingURL is encoded (#6)', function () {
+			return sorcery.load( '.tmp/samples/4/file with spaces.js' ).then( function ( chain ) {
+				chain.write( '.tmp/with-spaces/file with spaces.js' ).then( function () {
+					return sander.readFile( '.tmp/with-spaces/file with spaces.js' )
+						.then( String )
+						.then( function ( result ) {
+							var sourceMappingURL = /sourceMappingURL=([^\r\n]+)/.exec( result )[0];
+							assert.equal( sourceMappingURL, 'file%20with%20spaces.js.map' );
+						});
+				});
+			});
+		});
 	});
 
 	describe( 'sorcery (sync)', function () {
