@@ -1,5 +1,10 @@
 # changelog
 
+## 0.4.0
+
+* Handle sourceMappingURLs with spaces ([#6](https://github.com/Rich-Harris/sorcery/issues/6))
+* Encode URLs when writing sourceMappingURL comments
+
 ## 0.3.5
 
 * Better handling of inline data URIs
