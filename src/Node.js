@@ -8,22 +8,22 @@ import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
 import trace from './utils/trace';
 
-var Promise = sander.Promise;
+const Promise = sander.Promise;
 
-var Node = function ( file, content ) {
-	this.file = path.resolve( file );
-	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+export default class Node {
+	constructor ( file, content ) {
+		this.file = path.resolve( file );
+		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
-	// these get filled in later
-	this.map = null;
-	this.mappings = null;
-	this.sources = null;
-	this.isOriginalSource = null;
+		// these get filled in later
+		this.map = null;
+		this.mappings = null;
+		this.sources = null;
+		this.isOriginalSource = null;
 
-	this.sourcesContentByPath = {};
-};
+		this.sourcesContentByPath = {};
+	}
 
-Node.prototype = {
 	_load () {
 		return getContent( this ).then( content => {
 			var url;
@@ -56,7 +56,7 @@ Node.prototype = {
 				});
 			});
 		});
-	},
+	}
 
 	_loadSync () {
 		var url, map, sourcesContent;
@@ -85,7 +85,7 @@ Node.prototype = {
 		}
 
 		return !this.isOriginalSource ? this : null;
-	},
+	}
 
 	apply ( options = {} ) {
 		var resolved,
@@ -149,11 +149,11 @@ Node.prototype = {
 			names: allNames,
 			mappings: encodeMappings( resolved )
 		});
-	},
+	}
 
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
 		return trace( this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
-	},
+	}
 
 	write ( dest, options ) {
 		var map, url, index, content, promises;
@@ -184,9 +184,7 @@ Node.prototype = {
 
 		return Promise.all( promises );
 	}
-};
-
-export default Node;
+}
 
 function load ( node ) {
 	return node._load();
