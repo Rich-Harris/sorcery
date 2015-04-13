@@ -19,7 +19,6 @@ var Node = function ( file, content ) {
 	this.mappings = null;
 	this.sources = null;
 	this.isOriginalSource = null;
-	this.lines = null;
 
 	this.sourcesContentByPath = {};
 };
@@ -30,7 +29,6 @@ Node.prototype = {
 			var url;
 
 			this.content = content;
-			this.lines = content.split( '\n' );
 
 			url = getSourceMappingUrl( content );
 
@@ -66,8 +64,6 @@ Node.prototype = {
 		if ( !this.content ) {
 			this.content = sander.readFileSync( this.file ).toString();
 		}
-
-		this.lines = this.content.split( '\n' );
 
 		url = getSourceMappingUrl( this.content );
 
