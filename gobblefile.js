@@ -3,8 +3,18 @@ var gobble = require( 'gobble' );
 gobble.cwd( __dirname );
 
 module.exports = gobble( 'src' )
-.transform( '6to5', {
-	blacklist: [ 'es6.modules', 'useStrict' ],
+.transform( 'babel', {
+	whitelist: [
+		'es6.arrowFunctions',
+		'es6.blockScoping',
+		'es6.constants',
+		'es6.destructuring',
+		'es6.parameters.default',
+		'es6.parameters.rest',
+		'es6.properties.shorthand',
+		'es6.classes'
+	],
+	loose: [ 'es6.modules' ],
 	sourceMap: false
 })
 .transform( 'esperanto-bundle', {

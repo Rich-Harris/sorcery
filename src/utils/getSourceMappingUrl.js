@@ -9,7 +9,7 @@ export default function getSourceMappingUrl ( str ) {
 	}
 
 	substring = str.substring( index + 17 );
-	match = /^\S+/.exec( substring );
+	match = /^[^\r\n]+/.exec( substring );
 
 	url = match ? match[0] : null;
 	return url;

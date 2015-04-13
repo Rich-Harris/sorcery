@@ -41,33 +41,28 @@ export default function trace ( node, lineIndex, columnIndex, name  ) {
 		let i;
 
 		for ( i = 0; i < len; i += 1 ) {
-			let [
-				generatedCodeColumn,
-				sourceFileIndex,
-				sourceCodeLine,
-				sourceCodeColumn,
-				nameIndex
-			] = segments[i];
-
-			if ( generatedCodeColumn === columnIndex ) {
-				let parent = node.sources[ sourceFileIndex ];
-				return trace( parent, sourceCodeLine, sourceCodeColumn, node.map.names[ nameIndex ] || name );
-			}
+			let generatedCodeColumn = segments[i][0];
 
 			if ( generatedCodeColumn > columnIndex ) {
 				break;
+			}
+
+			if ( generatedCodeColumn === columnIndex ) {
+				let sourceFileIndex = segments[i][1];
+				let sourceCodeLine = segments[i][2];
+				let sourceCodeColumn = segments[i][3];
+				let nameIndex = segments[i][4];
+
+				let parent = node.sources[ sourceFileIndex ];
+				return trace( parent, sourceCodeLine, sourceCodeColumn, node.map.names[ nameIndex ] || name );
 			}
 		}
 	}
 
 	// fall back to a line mapping
-	let [
-		generatedCodeColumn,
-		sourceFileIndex,
-		sourceCodeLine,
-		sourceCodeColumn,
-		nameIndex
-	] = segments[0];
+	let sourceFileIndex = segments[0][1];
+	let sourceCodeLine = segments[0][2];
+	let nameIndex = segments[0][4];
 
 	let parent = node.sources[ sourceFileIndex ];
 	return trace( parent, sourceCodeLine, null, node.map.names[ nameIndex ] || name );

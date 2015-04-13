@@ -1,5 +1,32 @@
 # changelog
 
+## 0.4.0
+
+* Handle sourceMappingURLs with spaces ([#6](https://github.com/Rich-Harris/sorcery/issues/6))
+* Encode URLs when writing sourceMappingURL comments
+
+## 0.3.5
+
+* Better handling of inline data URIs
+
+## 0.3.4
+
+* Ensure trailing newline on `chain.write()` ([#4](https://github.com/Rich-Harris/sorcery/issues/4))
+* Upgrade dependencies
+
+## 0.3.3
+
+* Cache decodings for better performance
+* Add `node.stat()` method for rudimentary profiling
+
+## 0.3.2
+
+* Significant (>2x) performance improvements (achieved by replacing `forEach` and `map` with `for`/`while` loops where appropriate, and avoiding hard-to-transpile destructuring)
+
+## 0.3.1
+
+* Correct behaviour on Windows ([#3](https://github.com/Rich-Harris/sorcery/issues/3))
+
 ## 0.3.0
 
 * Handle browserify-style line mappings

@@ -1,22 +1,29 @@
 {
   "name": "sorcery",
   "description": "Resolve a chain of sourcemaps back to the original source",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "Rich Harris",
   "repository": "https://github.com/Rich-Harris/sorcery",
   "main": "dist/sorcery.js",
   "jsnext:main": "src/index.js",
   "license": "MIT",
   "dependencies": {
+    "buffer-crc32": "^0.2.5",
     "minimist": "^1.1.0",
-    "sander": "^0.1.6",
-    "vlq": "^0.1.0"
+    "sander": "^0.2.2",
+    "vlq": "^0.2.1"
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
-    "gobble": "^0.7.2",
-    "gobble-6to5": "^3.0.0",
+    "gobble": "^0.7.12",
+    "gobble-babel": "^5.0.0",
+    "gobble-browserify": "^0.2.0",
+    "gobble-coffee": "^0.2.1",
+    "gobble-esperanto": "^0.2.4",
     "gobble-esperanto-bundle": "^0.1.7",
+    "gobble-uglifyjs": "^0.2.0",
+    "mocha": "^2.1.0",
+    "promise-map-series": "^0.2.1",
     "source-map": "^0.1.40",
     "uglify-js": "^2.4.15"
   },
@@ -24,7 +31,7 @@
     "sorcery": "bin/index.js"
   },
   "scripts": {
-    "build": "mkdir -p .tmp; rm .tmp/*; set -e; npm test; rm dist/*; cp .tmp/* dist",
+    "build": "sh ./scripts/build.sh",
     "test": "mocha",
     "prepublish": "npm run build"
   },

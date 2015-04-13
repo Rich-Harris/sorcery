@@ -6,7 +6,7 @@ import encodeMappings from './utils/encodeMappings';
 import decodeMappings from './utils/decodeMappings';
 import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
-import trace from './utils/trace';
+import traceMapping from './utils/traceMapping';
 
 const Promise = sander.Promise;
 
@@ -15,11 +15,21 @@ export default class Node {
 		this.file = path.resolve( file );
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
+
 		// these get filled in later
 		this.map = null;
 		this.mappings = null;
 		this.sources = null;
 		this.isOriginalSource = null;
+
+
+		this._stats = {
+			decodingTime: 0,
+			encodingTime: 0,
+			tracingTime: 0,
+
+			untraceable: 0
+		};
 
 		this.sourcesContentByPath = {};
 	}
@@ -41,11 +51,16 @@ export default class Node {
 				var promises, sourcesContent;
 
 				this.map = map;
+
+				let decodingStart = process.hrtime();
 				this.mappings = decodeMappings( map.mappings );
+				let decodingTime = process.hrtime( decodingStart );
+				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
+
 				sourcesContent = map.sourcesContent || [];
 
 				this.sources = map.sources.map( ( source, i ) => {
-					return new Node( resolveSourcePath( this, source ), sourcesContent[i] );
+					return new Node( source ? resolveSourcePath( this, source ) : null, sourcesContent[i] );
 				});
 
 				promises = this.sources.map( load );
@@ -88,58 +103,80 @@ export default class Node {
 	}
 
 	apply ( options = {} ) {
-		var resolved,
-			allNames = [],
-			allSources = [],
-			includeContent;
+		var allNames = [],
+			allSources = [];
 
-		includeContent = options.includeContent !== false;
+		var applySegment = ( segment, result ) => {
+			var traced = traceMapping(
+				this.sources[ segment[1] ], // source
+				segment[2], // source code line
+				segment[3], // source code column
+				this.map.names[ segment[4] ]
+			);
 
-		resolved = this.mappings.map( line => {
-			var result = [];
+			if ( !traced ) {
+				this._stats.untraceable += 1;
+				return;
+			}
 
-			line.forEach( segment => {
-				var [
-						generatedCodeColumn,
-						sourceFileIndex,
-						sourceCodeLine,
-						sourceCodeColumn
-					] = segment,
-					source, traced, newSegment, sourceIndex, nameIndex;
+			var sourceIndex = allSources.indexOf( traced.source );
+			if ( !~sourceIndex ) {
+				sourceIndex = allSources.length;
+				allSources.push( traced.source );
+			}
 
-				source = this.sources[ sourceFileIndex ];
-				traced = trace( source, sourceCodeLine, sourceCodeColumn, this.map.names[ segment[4] ] );
+			var newSegment = [
+				segment[0], // generated code column
+				sourceIndex,
+				traced.line - 1,
+				traced.column
+			];
 
-				if ( !traced ) {
-					return;
+			var nameIndex;
+
+			if ( traced.name ) {
+				nameIndex = allNames.indexOf( traced.name );
+				if ( !~nameIndex ) {
+					nameIndex = allNames.length;
+					allNames.push( traced.name );
 				}
 
-				sourceIndex = allSources.indexOf( traced.source );
-				if ( !~sourceIndex ) {
-					sourceIndex = allSources.length;
-					allSources.push( traced.source );
-				}
+				newSegment[4] = nameIndex;
+			}
 
-				newSegment = [ generatedCodeColumn, sourceIndex, traced.line - 1, traced.column ];
+			result[ result.length ] = newSegment;
+		};
 
-				if ( traced.name ) {
-					nameIndex = allNames.indexOf( traced.name );
-					if ( !~nameIndex ) {
-						nameIndex = allNames.length;
-						allNames.push( traced.name );
-					}
+		// Trace mappings
+		let tracingStart = process.hrtime();
 
-					newSegment.push( nameIndex );
-				}
+		let i = this.mappings.length;
+		let resolved = new Array( i );
 
-				result.push( newSegment );
-			});
+		let j, line, result;
 
-			return result;
-		});
+		while ( i-- ) {
+			line = this.mappings[i];
+			resolved[i] = result = [];
+
+			for ( j = 0; j < line.length; j += 1 ) {
+				applySegment( line[j], result );
+			}
+		}
+
+		let tracingTime = process.hrtime( tracingStart );
+		this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
+
+		// Encode mappings
+		let encodingStart = process.hrtime();
+		let mappings = encodeMappings( resolved );
+		let encodingTime = process.hrtime( encodingStart );
+		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
+
+		let includeContent = options.includeContent !== false;
 
 		return new SourceMap({
-			file: this.file.split( '/' ).pop(),
+			file: path.basename( this.file ),
 			sources: allSources.map( ( source ) => {
 				return getRelativePath( options.base || this.file, source );
 			}),
@@ -147,12 +184,24 @@ export default class Node {
 				return includeContent ? this.sourcesContentByPath[ source ] : null;
 			}),
 			names: allNames,
-			mappings: encodeMappings( resolved )
+			mappings
 		});
 	}
 
+	stat () {
+		return {
+			selfDecodingTime: this._stats.decodingTime / 1e6,
+			totalDecodingTime: ( this._stats.decodingTime + tally( this.sources, 'decodingTime' ) ) / 1e6,
+
+			encodingTime: this._stats.encodingTime / 1e6,
+			tracingTime: this._stats.tracingTime / 1e6,
+
+			untraceable: this._stats.untraceable
+		};
+	}
+
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
-		return trace( this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
+		return traceMapping( this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
 	}
 
 	write ( dest, options ) {
@@ -174,7 +223,7 @@ export default class Node {
 		url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : path.basename( dest ) ) + '.map';
 
 		index = this.content.lastIndexOf( 'sourceMappingURL=' ) + 17;
-		content = this.content.substr( 0, index ) + this.content.substring( index ).replace( /^\S+/, url );
+		content = this.content.substr( 0, index ) + this.content.substring( index ).replace( /^[^\r\n]+/, encodeURI( url ) ) + '\n';
 
 		promises = [ sander.writeFile( dest, content ) ];
 
@@ -211,4 +260,10 @@ function getSourcesContent ( node ) {
 			node.sourcesContentByPath[ file ] = source.sourcesContentByPath[ file ];
 		});
 	});
+}
+
+function tally ( nodes, stat ) {
+	return nodes.reduce( ( total, node ) => {
+		return total + node._stats[ stat ];
+	}, 0 );
 }
