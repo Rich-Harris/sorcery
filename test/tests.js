@@ -56,6 +56,45 @@ describe( 'sorcery', function () {
 				assert.equal( chain, null );
 			});
 		});
+
+		it( 'allows user to specify content/sourcemaps', function () {
+			return sorcery.load( 'example.js', {
+				content: {
+					'example.js': `(function() {
+  var answer;
+
+  answer = 40 + 2;
+
+  console.log("the answer is " + answer);
+
+}).call(this);`,
+					'example.coffee': `answer = 40 + 2
+console.log "the answer is #{answer}"`
+				},
+				sourcemaps: {
+					'example.js': {
+						version: 3,
+						sources:[ 'example.coffee' ],
+						sourcesContent: [ null ],
+						names: [],
+						mappings: 'AAAA;AAAA,MAAA,MAAA;;AAAA,EAAA,MAAA,GAAS,EAAA,GAAK,CAAd,CAAA;;AAAA,EACA,OAAO,CAAC,GAAR,CAAa,gBAAA,GAAe,MAA5B,CADA,CAAA;AAAA'
+					}
+				}
+			}).then( function ( chain ) {
+				var actual, expected;
+
+				actual = chain.trace( 6, 10 );
+
+				expected = {
+					source: path.resolve( 'example.coffee' ),
+					line: 2,
+					column: 8,
+					name: null
+				};
+
+				assert.deepEqual( actual, expected );
+			})
+		});
 	});
 
 	describe( 'chain.trace()', function () {

@@ -1,19 +1,38 @@
+import { resolve } from 'path';
 import Node from './Node';
 import Chain from './Chain';
 
-export function load ( file ) {
-	const node = new Node({ file });
+export function load ( file, options ) {
+	const { node, sourcesContentByPath, sourceMapByPath } = init( file, options );
 
-	let sourcesContentByPath = {};
-	return node.load( sourcesContentByPath )
+	return node.load( sourcesContentByPath, sourceMapByPath )
 		.then( () => node.isOriginalSource ? null : new Chain( node, sourcesContentByPath ) );
 }
 
-export function loadSync ( file ) {
+export function loadSync ( file, options = {} ) {
+	const { node, sourcesContentByPath, sourceMapByPath } = init( file, options );
+
+	node.loadSync( sourcesContentByPath, sourceMapByPath );
+	return node.isOriginalSource ? null : new Chain( node, sourcesContentByPath );
+}
+
+function init ( file, options = {} ) {
 	const node = new Node({ file });
 
 	let sourcesContentByPath = {};
-	node.loadSync( sourcesContentByPath );
+	let sourceMapByPath = {};
 
-	return node.isOriginalSource ? null : new Chain( node, sourcesContentByPath );
+	if ( options.content ) {
+		Object.keys( options.content ).forEach( key => {
+			sourcesContentByPath[ resolve( key ) ] = options.content[ key ];
+		});
+	}
+
+	if ( options.sourcemaps ) {
+		Object.keys( options.sourcemaps ).forEach( key => {
+			sourceMapByPath[ resolve( key ) ] = options.sourcemaps[ key ];
+		});
+	}
+
+	return { node, sourcesContentByPath, sourceMapByPath };
 }

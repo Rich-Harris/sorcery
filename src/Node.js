@@ -3,6 +3,7 @@ import sander from 'sander';
 import decodeMappings from './utils/decodeMappings';
 import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
+import getMap from './utils/getMap';
 
 const Promise = sander.Promise;
 
@@ -26,21 +27,12 @@ export default class Node {
 		};
 	}
 
-	load ( sourcesContentByPath ) {
-		return getContent( this ).then( content => {
-			var url;
-
+	load ( sourcesContentByPath, sourceMapByPath ) {
+		return getContent( this, sourcesContentByPath ).then( content => {
 			this.content = sourcesContentByPath[ this.file ] = content;
 
-			url = getSourceMappingUrl( content );
-
-			if ( !url ) {
-				this.isOriginalSource = true;
-				return null;
-			}
-
-			return getMapFromUrl( url, this.file ).then( map => {
-				var promises, sourcesContent;
+			return getMap( this, sourceMapByPath ).then( map => {
+				if ( !map ) return null;
 
 				this.map = map;
 
@@ -49,7 +41,7 @@ export default class Node {
 				let decodingTime = process.hrtime( decodingStart );
 				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
 
-				sourcesContent = map.sourcesContent || [];
+				const sourcesContent = map.sourcesContent || [];
 
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
@@ -58,28 +50,26 @@ export default class Node {
 					});
 				});
 
-				promises = this.sources.map( node => node.load( sourcesContentByPath ) );
-
+				const promises = this.sources.map( node => node.load( sourcesContentByPath, sourceMapByPath ) );
 				return Promise.all( promises );
 			});
 		});
 	}
 
-	loadSync ( sourcesContentByPath ) {
-		var url, map, sourcesContent;
-
+	loadSync ( sourcesContentByPath, sourceMapByPath ) {
 		if ( !this.content ) {
 			this.content = sourcesContentByPath[ this.file ] = sander.readFileSync( this.file ).toString();
 		}
 
-		url = getSourceMappingUrl( this.content );
+		const map = getMap( this, sourceMapByPath, true );
 
-		if ( !url ) {
+		if ( !map ) {
 			this.isOriginalSource = true;
 		} else {
-			this.map = map = getMapFromUrl( url, this.file, true );
+			this.map = map;
 			this.mappings = decodeMappings( map.mappings );
-			sourcesContent = map.sourcesContent || [];
+
+			const sourcesContent = map.sourcesContent || [];
 
 			this.sources = map.sources.map( ( source, i ) => {
 				var node = new Node({
@@ -87,7 +77,7 @@ export default class Node {
 					content: sourcesContent[i]
 				});
 
-				node.loadSync( sourcesContentByPath );
+				node.loadSync( sourcesContentByPath, sourceMapByPath );
 
 				return node;
 			});
@@ -164,7 +154,11 @@ export default class Node {
 	}
 }
 
-function getContent ( node ) {
+function getContent ( node, sourcesContentByPath ) {
+	if ( node.file in sourcesContentByPath ) {
+		node.content = sourcesContentByPath[ node.file ];
+	}
+
 	if ( !node.content ) {
 		return sander.readFile( node.file ).then( String );
 	}
