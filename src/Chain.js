@@ -1,7 +1,6 @@
 import path from 'path';
 import sander from 'sander';
 import SourceMap from './SourceMap';
-import traceMapping from './utils/traceMapping';
 import getRelativePath from './utils/getRelativePath';
 import encodeMappings from './utils/encodeMappings';
 
@@ -15,7 +14,7 @@ export default class Chain {
 	stat () {
 		return {
 			selfDecodingTime: this._stats.decodingTime / 1e6,
-			totalDecodingTime: ( this._stats.decodingTime + tally( this.sources, 'decodingTime' ) ) / 1e6,
+			totalDecodingTime: ( this._stats.decodingTime + tally( this.node.sources, 'decodingTime' ) ) / 1e6,
 
 			encodingTime: this._stats.encodingTime / 1e6,
 			tracingTime: this._stats.tracingTime / 1e6,
@@ -29,8 +28,7 @@ export default class Chain {
 			allSources = [];
 
 		var applySegment = ( segment, result ) => {
-			var traced = traceMapping(
-				this.node.sources[ segment[1] ], // source
+			var traced = this.node.sources[ segment[1] ].trace( // source
 				segment[2], // source code line
 				segment[3], // source code column
 				this.node.map.names[ segment[4] ]
@@ -111,7 +109,7 @@ export default class Chain {
 	}
 
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
-		return traceMapping( this.node, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
+		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
 	}
 
 	write ( dest, options ) {

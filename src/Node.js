@@ -6,7 +6,6 @@ import encodeMappings from './utils/encodeMappings';
 import decodeMappings from './utils/decodeMappings';
 import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
-import traceMapping from './utils/traceMapping';
 
 const Promise = sander.Promise;
 
@@ -15,13 +14,11 @@ export default class Node {
 		this.file = path.resolve( file );
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
-
 		// these get filled in later
 		this.map = null;
 		this.mappings = null;
 		this.sources = null;
 		this.isOriginalSource = null;
-
 
 		this._stats = {
 			decodingTime: 0,
@@ -34,7 +31,7 @@ export default class Node {
 		this.sourcesContentByPath = {};
 	}
 
-	_load () {
+	load () {
 		return getContent( this ).then( content => {
 			var url;
 
@@ -73,7 +70,7 @@ export default class Node {
 		});
 	}
 
-	_loadSync () {
+	loadSync () {
 		var url, map, sourcesContent;
 
 		if ( !this.content ) {
@@ -91,7 +88,7 @@ export default class Node {
 
 			this.sources = map.sources.map( ( source, i ) => {
 				var node = new Node( resolveSourcePath( this, source ), sourcesContent[i] );
-				node._loadSync();
+				node.loadSync();
 
 				return node;
 			});
@@ -102,141 +99,78 @@ export default class Node {
 		return !this.isOriginalSource ? this : null;
 	}
 
-	apply ( options = {} ) {
-		var allNames = [],
-			allSources = [];
+	/**
+	 * Traces a segment back to its origin
+	 * @param {number} lineIndex - the zero-based line index of the
+	   segment as found in `this`
+	 * @param {number} columnIndex - the zero-based column index of the
+	   segment as found in `this`
+	 * @param {string || null} - if specified, the name that should be
+	   (eventually) returned, as it is closest to the generated code
+	 * @returns {object}
+	     @property {string} source - the filepath of the source
+	     @property {number} line - the one-based line index
+	     @property {number} column - the zero-based column index
+	     @property {string || null} name - the name corresponding
+	     to the segment being traced
+	 */
+	trace ( lineIndex, columnIndex, name ) {
+		var segments;
 
-		var applySegment = ( segment, result ) => {
-			var traced = traceMapping(
-				this.sources[ segment[1] ], // source
-				segment[2], // source code line
-				segment[3], // source code column
-				this.map.names[ segment[4] ]
-			);
+		// If this node doesn't have a source map, we have
+		// to assume it is the original source
+		if ( this.isOriginalSource ) {
+			return {
+				source: this.file,
+				line: lineIndex + 1,
+				column: columnIndex || 0,
+				name: name
+			};
+		}
 
-			if ( !traced ) {
-				this._stats.untraceable += 1;
-				return;
-			}
+		// Otherwise, we need to figure out what this position in
+		// the intermediate file corresponds to in *its* source
+		segments = this.mappings[ lineIndex ];
 
-			var sourceIndex = allSources.indexOf( traced.source );
-			if ( !~sourceIndex ) {
-				sourceIndex = allSources.length;
-				allSources.push( traced.source );
-			}
+		if ( !segments || segments.length === 0 ) {
+			return null;
+		}
 
-			var newSegment = [
-				segment[0], // generated code column
-				sourceIndex,
-				traced.line - 1,
-				traced.column
-			];
+		if ( columnIndex != null ) {
+			let len = segments.length;
+			let i;
 
-			var nameIndex;
+			for ( i = 0; i < len; i += 1 ) {
+				let generatedCodeColumn = segments[i][0];
 
-			if ( traced.name ) {
-				nameIndex = allNames.indexOf( traced.name );
-				if ( !~nameIndex ) {
-					nameIndex = allNames.length;
-					allNames.push( traced.name );
+				if ( generatedCodeColumn > columnIndex ) {
+					break;
 				}
 
-				newSegment[4] = nameIndex;
-			}
+				if ( generatedCodeColumn === columnIndex ) {
+					let sourceFileIndex = segments[i][1];
+					let sourceCodeLine = segments[i][2];
+					let sourceCodeColumn = segments[i][3];
+					let nameIndex = segments[i][4];
 
-			result[ result.length ] = newSegment;
-		};
-
-		// Trace mappings
-		let tracingStart = process.hrtime();
-
-		let i = this.mappings.length;
-		let resolved = new Array( i );
-
-		let j, line, result;
-
-		while ( i-- ) {
-			line = this.mappings[i];
-			resolved[i] = result = [];
-
-			for ( j = 0; j < line.length; j += 1 ) {
-				applySegment( line[j], result );
+					let parent = this.sources[ sourceFileIndex ];
+					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[ nameIndex ] || name );
+				}
 			}
 		}
 
-		let tracingTime = process.hrtime( tracingStart );
-		this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
+		// fall back to a line mapping
+		let sourceFileIndex = segments[0][1];
+		let sourceCodeLine = segments[0][2];
+		let nameIndex = segments[0][4];
 
-		// Encode mappings
-		let encodingStart = process.hrtime();
-		let mappings = encodeMappings( resolved );
-		let encodingTime = process.hrtime( encodingStart );
-		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
-
-		let includeContent = options.includeContent !== false;
-
-		return new SourceMap({
-			file: path.basename( this.file ),
-			sources: allSources.map( ( source ) => {
-				return getRelativePath( options.base || this.file, source );
-			}),
-			sourcesContent: allSources.map( ( source ) => {
-				return includeContent ? this.sourcesContentByPath[ source ] : null;
-			}),
-			names: allNames,
-			mappings
-		});
-	}
-
-	stat () {
-		return {
-			selfDecodingTime: this._stats.decodingTime / 1e6,
-			totalDecodingTime: ( this._stats.decodingTime + tally( this.sources, 'decodingTime' ) ) / 1e6,
-
-			encodingTime: this._stats.encodingTime / 1e6,
-			tracingTime: this._stats.tracingTime / 1e6,
-
-			untraceable: this._stats.untraceable
-		};
-	}
-
-	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
-		return traceMapping( this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
-	}
-
-	write ( dest, options ) {
-		var map, url, index, content, promises;
-
-		if ( typeof dest !== 'string' ) {
-			dest = this.file;
-			options = dest;
-		}
-
-		options = options || {};
-		dest = path.resolve( dest );
-
-		map = this.apply({
-			includeContent: options.includeContent,
-			base: dest
-		});
-
-		url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : path.basename( dest ) ) + '.map';
-
-		index = this.content.lastIndexOf( 'sourceMappingURL=' ) + 17;
-		content = this.content.substr( 0, index ) + this.content.substring( index ).replace( /^[^\r\n]+/, encodeURI( url ) ) + '\n';
-
-		promises = [ sander.writeFile( dest, content ) ];
-
-		if ( !options.inline ) {
-			promises.push( sander.writeFile( dest + '.map', map.toString() ) );
-		}
-
-		return Promise.all( promises );
+		let parent = this.sources[ sourceFileIndex ];
+		return parent.trace( sourceCodeLine, null, this.map.names[ nameIndex ] || name );
 	}
 }
 
 function load ( node ) {
-	return node._load();
+	return node.load();
 }
 
 function getContent ( node ) {
