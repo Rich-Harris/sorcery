@@ -14,7 +14,7 @@
      @property {string || null} name - the name corresponding
      to the segment being traced
  */
-export default function trace ( node, lineIndex, columnIndex, name  ) {
+export default function traceMapping ( node, lineIndex, columnIndex, name  ) {
 	var segments;
 
 	// If this node doesn't have a source map, we have
@@ -54,7 +54,7 @@ export default function trace ( node, lineIndex, columnIndex, name  ) {
 				let nameIndex = segments[i][4];
 
 				let parent = node.sources[ sourceFileIndex ];
-				return trace( parent, sourceCodeLine, sourceCodeColumn, node.map.names[ nameIndex ] || name );
+				return traceMapping( parent, sourceCodeLine, sourceCodeColumn, node.map.names[ nameIndex ] || name );
 			}
 		}
 	}
@@ -65,5 +65,5 @@ export default function trace ( node, lineIndex, columnIndex, name  ) {
 	let nameIndex = segments[0][4];
 
 	let parent = node.sources[ sourceFileIndex ];
-	return trace( parent, sourceCodeLine, null, node.map.names[ nameIndex ] || name );
+	return traceMapping( parent, sourceCodeLine, null, node.map.names[ nameIndex ] || name );
 }
