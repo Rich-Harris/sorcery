@@ -1,8 +1,5 @@
 import path from 'path';
 import sander from 'sander';
-import SourceMap from './SourceMap';
-import getRelativePath from './utils/getRelativePath';
-import encodeMappings from './utils/encodeMappings';
 import decodeMappings from './utils/decodeMappings';
 import getSourceMappingUrl from './utils/getSourceMappingUrl';
 import getMapFromUrl from './utils/getMapFromUrl';
@@ -10,7 +7,7 @@ import getMapFromUrl from './utils/getMapFromUrl';
 const Promise = sander.Promise;
 
 export default class Node {
-	constructor ( file, content ) {
+	constructor ({ file, content }) {
 		this.file = path.resolve( file );
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
@@ -27,15 +24,13 @@ export default class Node {
 
 			untraceable: 0
 		};
-
-		this.sourcesContentByPath = {};
 	}
 
-	load () {
+	load ( sourcesContentByPath ) {
 		return getContent( this ).then( content => {
 			var url;
 
-			this.content = content;
+			this.content = sourcesContentByPath[ this.file ] = content;
 
 			url = getSourceMappingUrl( content );
 
@@ -57,24 +52,24 @@ export default class Node {
 				sourcesContent = map.sourcesContent || [];
 
 				this.sources = map.sources.map( ( source, i ) => {
-					return new Node( source ? resolveSourcePath( this, source ) : null, sourcesContent[i] );
+					return new Node({
+						file: source ? resolveSourcePath( this, source ) : null,
+						content: sourcesContent[i]
+					});
 				});
 
-				promises = this.sources.map( load );
+				promises = this.sources.map( node => node.load( sourcesContentByPath ) );
 
-				return Promise.all( promises ).then( () => {
-					getSourcesContent( this );
-					return this;
-				});
+				return Promise.all( promises );
 			});
 		});
 	}
 
-	loadSync () {
+	loadSync ( sourcesContentByPath ) {
 		var url, map, sourcesContent;
 
 		if ( !this.content ) {
-			this.content = sander.readFileSync( this.file ).toString();
+			this.content = sourcesContentByPath[ this.file ] = sander.readFileSync( this.file ).toString();
 		}
 
 		url = getSourceMappingUrl( this.content );
@@ -87,16 +82,16 @@ export default class Node {
 			sourcesContent = map.sourcesContent || [];
 
 			this.sources = map.sources.map( ( source, i ) => {
-				var node = new Node( resolveSourcePath( this, source ), sourcesContent[i] );
-				node.loadSync();
+				var node = new Node({
+					file: resolveSourcePath( this, source ),
+					content: sourcesContent[i]
+				});
+
+				node.loadSync( sourcesContentByPath );
 
 				return node;
 			});
-
-			getSourcesContent( this );
 		}
-
-		return !this.isOriginalSource ? this : null;
 	}
 
 	/**
@@ -169,10 +164,6 @@ export default class Node {
 	}
 }
 
-function load ( node ) {
-	return node.load();
-}
-
 function getContent ( node ) {
 	if ( !node.content ) {
 		return sander.readFile( node.file ).then( String );
@@ -184,20 +175,4 @@ function getContent ( node ) {
 function resolveSourcePath ( node, source ) {
 	// TODO handle sourceRoot
 	return path.resolve( path.dirname( node.file ), source );
-}
-
-function getSourcesContent ( node ) {
-	node.sources.forEach( source => {
-		node.sourcesContentByPath[ source.file ] = source.content;
-
-		Object.keys( source.sourcesContentByPath ).forEach( file => {
-			node.sourcesContentByPath[ file ] = source.sourcesContentByPath[ file ];
-		});
-	});
-}
-
-function tally ( nodes, stat ) {
-	return nodes.reduce( ( total, node ) => {
-		return total + node._stats[ stat ];
-	}, 0 );
 }

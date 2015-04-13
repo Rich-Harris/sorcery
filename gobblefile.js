@@ -14,7 +14,7 @@ module.exports = gobble( 'src' )
 		'es6.properties.shorthand',
 		'es6.classes'
 	],
-	loose: [ 'es6.modules' ],
+	loose: [ 'es6.classes' ],
 	sourceMap: false
 })
 .transform( 'esperanto-bundle', {

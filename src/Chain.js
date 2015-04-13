@@ -5,8 +5,9 @@ import getRelativePath from './utils/getRelativePath';
 import encodeMappings from './utils/encodeMappings';
 
 export default class Chain {
-	constructor ( node ) {
+	constructor ( node, sourcesContentByPath ) {
 		this.node = node;
+		this.sourcesContentByPath = sourcesContentByPath;
 
 		this._stats = {};
 	}
@@ -101,7 +102,7 @@ export default class Chain {
 				return getRelativePath( options.base || this.node.file, source );
 			}),
 			sourcesContent: allSources.map( ( source ) => {
-				return includeContent ? this.node.sourcesContentByPath[ source ] : null;
+				return includeContent ? this.sourcesContentByPath[ source ] : null;
 			}),
 			names: allNames,
 			mappings
@@ -141,4 +142,10 @@ export default class Chain {
 
 		return Promise.all( promises );
 	}
+}
+
+function tally ( nodes, stat ) {
+	return nodes.reduce( ( total, node ) => {
+		return total + node._stats[ stat ];
+	}, 0 );
 }

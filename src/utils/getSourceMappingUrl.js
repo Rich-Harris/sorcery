@@ -2,7 +2,7 @@ export default function getSourceMappingUrl ( str ) {
 	var index, substring, url, match;
 
 	// assume we want the last occurence
-	index = str.lastIndexOf( 'sourceMappingURL' );
+	index = str.lastIndexOf( 'sourceMappingURL=' );
 
 	if ( index === -1 ) {
 		return null;
