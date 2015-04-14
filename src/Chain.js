@@ -4,6 +4,8 @@ import SourceMap from './SourceMap';
 import getRelativePath from './utils/getRelativePath';
 import encodeMappings from './utils/encodeMappings';
 
+const SOURCEMAP_COMMENT = /\s+\/\/#\s+sourceMappingURL=([^\r\n]+)/g;
+
 export default class Chain {
 	constructor ( node, sourcesContentByPath ) {
 		this.node = node;
@@ -114,8 +116,6 @@ export default class Chain {
 	}
 
 	write ( dest, options ) {
-		var map, url, index, content, promises;
-
 		if ( typeof dest !== 'string' ) {
 			dest = this.node.file;
 			options = dest;
@@ -124,17 +124,16 @@ export default class Chain {
 		options = options || {};
 		dest = path.resolve( dest );
 
-		map = this.apply({
+		const map = this.apply({
 			includeContent: options.includeContent,
 			base: dest
 		});
 
-		url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : path.basename( dest ) ) + '.map';
+		const url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : path.basename( dest ) ) + '.map';
 
-		index = this.node.content.lastIndexOf( 'sourceMappingURL=' ) + 17;
-		content = this.node.content.substr( 0, index ) + this.node.content.substring( index ).replace( /^[^\r\n]+/, encodeURI( url ) ) + '\n';
+		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + `\n//# sourceMappingURL=${encodeURI(url)}\n`;
 
-		promises = [ sander.writeFile( dest, content ) ];
+		let promises = [ sander.writeFile( dest, content ) ];
 
 		if ( !options.inline ) {
 			promises.push( sander.writeFile( dest + '.map', map.toString() ) );
