@@ -9,8 +9,12 @@ const Promise = sander.Promise;
 
 export default class Node {
 	constructor ({ file, content }) {
-		this.file = path.resolve( file );
+		this.file = file ? path.resolve( file ) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+
+		if ( !this.file && this.content === null ) {
+			throw new Error( 'A source must specify either file or content' );
+		}
 
 		// these get filled in later
 		this.map = null;
