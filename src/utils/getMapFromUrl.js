@@ -13,17 +13,15 @@ import atob from './atob';
  * @returns {object} - a version 3 sourcemap
  */
 export default function getMapFromUrl ( url, base, sync ) {
-	var json, map, match;
-
 	if ( /^data/.test( url ) ) {
-		match = /base64,(.+)$/.exec( url );
+		const match = /base64,(.+)$/.exec( url );
 
 		if ( !match ) {
 			throw new Error( 'sourceMappingURL is not base64-encoded' );
 		}
 
-		json = atob( match[1] );
-		map = JSON.parse( json );
+		const json = atob( match[1] );
+		const map = JSON.parse( json );
 		return sync ? map : sander.Promise.resolve( map );
 	}
 

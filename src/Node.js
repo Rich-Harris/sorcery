@@ -1,8 +1,6 @@
 import path from 'path';
 import sander from 'sander';
 import decodeMappings from './utils/decodeMappings';
-import getSourceMappingUrl from './utils/getSourceMappingUrl';
-import getMapFromUrl from './utils/getMapFromUrl';
 import getMap from './utils/getMap';
 
 const Promise = sander.Promise;
@@ -66,6 +64,7 @@ export default class Node {
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
+		let sourcesContent;
 
 		if ( !map ) {
 			this.isOriginalSource = true;
@@ -73,16 +72,15 @@ export default class Node {
 			this.map = map;
 			this.mappings = decodeMappings( map.mappings );
 
-			const sourcesContent = map.sourcesContent || [];
+			sourcesContent = map.sourcesContent || [];
 
 			this.sources = map.sources.map( ( source, i ) => {
-				var node = new Node({
+				const node = new Node({
 					file: resolveSourcePath( this, source ),
 					content: sourcesContent[i]
 				});
 
 				node.loadSync( sourcesContentByPath, sourceMapByPath );
-
 				return node;
 			});
 		}
@@ -104,8 +102,6 @@ export default class Node {
 	     to the segment being traced
 	 */
 	trace ( lineIndex, columnIndex, name ) {
-		var segments;
-
 		// If this node doesn't have a source map, we have
 		// to assume it is the original source
 		if ( this.isOriginalSource ) {
@@ -119,7 +115,7 @@ export default class Node {
 
 		// Otherwise, we need to figure out what this position in
 		// the intermediate file corresponds to in *its* source
-		segments = this.mappings[ lineIndex ];
+		const segments = this.mappings[ lineIndex ];
 
 		if ( !segments || segments.length === 0 ) {
 			return null;

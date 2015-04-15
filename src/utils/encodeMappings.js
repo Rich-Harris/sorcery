@@ -1,7 +1,7 @@
 import * as vlq from 'vlq';
 
 export default function encodeMappings ( decoded ) {
-	var offsets = {
+	let offsets = {
 		generatedCodeColumn: 0,
 		sourceFileIndex: 0,   // second field
 		sourceCodeLine: 0,    // third field
