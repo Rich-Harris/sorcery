@@ -1,122 +1,11 @@
 'use strict';
 
 var path = require('path');
-path = ('default' in path ? path['default'] : path);
+var path__default = ('default' in path ? path['default'] : path);
 var sander = require('sander');
-sander = ('default' in sander ? sander['default'] : sander);
-var vlq = require('vlq');
+var sander__default = ('default' in sander ? sander['default'] : sander);
 var buffer_crc32 = require('buffer-crc32');
-
-/**
- * Encodes a string as base64
- * @param {string} str - the string to encode
- * @returns {string}
- */
-
-
-function btoa(str) {
-  return new Buffer(str).toString('base64');
-}
-
-var SourceMap___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
-
-var SourceMap___createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var SourceMap = (function () {
-	function SourceMap(properties) {
-		SourceMap___classCallCheck(this, SourceMap);
-
-		this.version = 3;
-
-		this.file = properties.file;
-		this.sources = properties.sources;
-		this.sourcesContent = properties.sourcesContent;
-		this.names = properties.names;
-		this.mappings = properties.mappings;
-	}
-
-	SourceMap___createClass(SourceMap, [{
-		key: 'toString',
-		value: function toString() {
-			return JSON.stringify(this);
-		}
-	}, {
-		key: 'toUrl',
-		value: function toUrl() {
-			return 'data:application/json;charset=utf-8;base64,' + btoa(this.toString());
-		}
-	}]);
-
-	return SourceMap;
-})();
-
-var separator = /[\/\\]/;
-function getRelativePath(from, to) {
-	var fromParts, toParts, i;
-
-	fromParts = from.split(separator);
-	toParts = to.split(separator);
-
-	fromParts.pop(); // get dirname
-
-	while (fromParts[0] === toParts[0]) {
-		fromParts.shift();
-		toParts.shift();
-	}
-
-	if (fromParts.length) {
-		i = fromParts.length;
-		while (i--) fromParts[i] = '..';
-	}
-
-	return fromParts.concat(toParts).join('/');
-}
-
-function encodeMappings(decoded) {
-	var offsets = {
-		generatedCodeColumn: 0,
-		sourceFileIndex: 0, // second field
-		sourceCodeLine: 0, // third field
-		sourceCodeColumn: 0, // fourth field
-		nameIndex: 0 // fifth field
-	};
-
-	return decoded.map(function (line) {
-		offsets.generatedCodeColumn = 0; // first field - reset each time
-		return line.map(encodeSegment).join(',');
-	}).join(';');
-
-	function encodeSegment(segment) {
-		if (!segment.length) {
-			return segment;
-		}
-
-		var result = new Array(segment.length);
-
-		result[0] = segment[0] - offsets.generatedCodeColumn;
-		offsets.generatedCodeColumn = segment[0];
-
-		if (segment.length === 1) {
-			// only one field!
-			return result;
-		}
-
-		result[1] = segment[1] - offsets.sourceFileIndex;
-		result[2] = segment[2] - offsets.sourceCodeLine;
-		result[3] = segment[3] - offsets.sourceCodeColumn;
-
-		offsets.sourceFileIndex = segment[1];
-		offsets.sourceCodeLine = segment[2];
-		offsets.sourceCodeColumn = segment[3];
-
-		if (segment.length === 5) {
-			result[4] = segment[4] - offsets.nameIndex;
-			offsets.nameIndex = segment[4];
-		}
-
-		return vlq.encode(result);
-	}
-}
+var vlq = require('vlq');
 
 var cache = {};
 
@@ -198,23 +87,6 @@ function decodeMappings(mappings) {
 	return cache[checksum];
 }
 
-function getSourceMappingUrl(str) {
-	var index, substring, url, match;
-
-	// assume we want the last occurence
-	index = str.lastIndexOf('sourceMappingURL');
-
-	if (index === -1) {
-		return null;
-	}
-
-	substring = str.substring(index + 17);
-	match = /^[^\r\n]+/.exec(substring);
-
-	url = match ? match[0] : null;
-	return url;
-}
-
 /**
  * Decodes a base64 string
  * @param {string} base64 - the string to decode
@@ -238,113 +110,77 @@ function atob(base64) {
  */
 
 function getMapFromUrl(url, base, sync) {
-	var json, map, match;
-
 	if (/^data/.test(url)) {
-		match = /base64,(.+)$/.exec(url);
+		var match = /base64,(.+)$/.exec(url);
 
 		if (!match) {
 			throw new Error('sourceMappingURL is not base64-encoded');
 		}
 
-		json = atob(match[1]);
-		map = JSON.parse(json);
-		return sync ? map : sander.Promise.resolve(map);
+		var json = atob(match[1]);
+		var map = JSON.parse(json);
+		return sync ? map : sander__default.Promise.resolve(map);
 	}
 
-	url = path.resolve(path.dirname(base), decodeURI(url));
+	url = path__default.resolve(path__default.dirname(base), decodeURI(url));
 
 	if (sync) {
-		return JSON.parse(sander.readFileSync(url).toString());
+		return JSON.parse(sander__default.readFileSync(url).toString());
 	} else {
-		return sander.readFile(url).then(String).then(JSON.parse);
+		return sander__default.readFile(url).then(String).then(JSON.parse);
 	}
 }
 
-/**
- * Traces a segment back to its origin
- * @param {object} node - an instance of Node
- * @param {number} lineIndex - the zero-based line index of the
-   segment as found in `node`
- * @param {number} columnIndex - the zero-based column index of the
-   segment as found in `node`
- * @param {string || null} - if specified, the name that should be
-   (eventually) returned, as it is closest to the generated code
- * @returns {object}
-     @property {string} source - the filepath of the source
-     @property {number} line - the one-based line index
-     @property {number} column - the zero-based column index
-     @property {string || null} name - the name corresponding
-     to the segment being traced
- */
-var traceMapping = trace;
+function getSourceMappingUrl(str) {
+	var index, substring, url, match;
 
-function trace(node, lineIndex, columnIndex, name) {
-	var segments;
+	// assume we want the last occurence
+	index = str.lastIndexOf('sourceMappingURL=');
 
-	// If this node doesn't have a source map, we have
-	// to assume it is the original source
-	if (node.isOriginalSource) {
-		return {
-			source: node.file,
-			line: lineIndex + 1,
-			column: columnIndex || 0,
-			name: name
-		};
-	}
-
-	// Otherwise, we need to figure out what this position in
-	// the intermediate file corresponds to in *its* source
-	segments = node.mappings[lineIndex];
-
-	if (!segments || segments.length === 0) {
+	if (index === -1) {
 		return null;
 	}
 
-	if (columnIndex != null) {
-		var len = segments.length;
-		var i = undefined;
+	substring = str.substring(index + 17);
+	match = /^[^\r\n]+/.exec(substring);
 
-		for (i = 0; i < len; i += 1) {
-			var generatedCodeColumn = segments[i][0];
+	url = match ? match[0] : null;
+	return url;
+}
 
-			if (generatedCodeColumn > columnIndex) {
-				break;
-			}
+function getMap(node, sourceMapByPath, sync) {
+	if (node.file in sourceMapByPath) {
+		var map = sourceMapByPath[node.file];
+		return sync ? map : sander.Promise.resolve(map);
+	} else {
+		var url = getSourceMappingUrl(node.content);
 
-			if (generatedCodeColumn === columnIndex) {
-				var _sourceFileIndex = segments[i][1];
-				var _sourceCodeLine = segments[i][2];
-				var sourceCodeColumn = segments[i][3];
-				var _nameIndex = segments[i][4];
-
-				var _parent = node.sources[_sourceFileIndex];
-				return trace(_parent, _sourceCodeLine, sourceCodeColumn, node.map.names[_nameIndex] || name);
-			}
+		if (!url) {
+			node.isOriginalSource = true;
+			return sync ? null : sander.Promise.resolve(null);
 		}
+
+		return getMapFromUrl(url, node.file, sync);
 	}
-
-	// fall back to a line mapping
-	var sourceFileIndex = segments[0][1];
-	var sourceCodeLine = segments[0][2];
-	var nameIndex = segments[0][4];
-
-	var parent = node.sources[sourceFileIndex];
-	return trace(parent, sourceCodeLine, null, node.map.names[nameIndex] || name);
 }
 
 var Node___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
-var Node___createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var Node__Promise = sander.Promise;
+var Node__Promise = sander__default.Promise;
 
 var Node = (function () {
-	function Node(file, content) {
+	function Node(_ref) {
+		var file = _ref.file;
+		var content = _ref.content;
+
 		Node___classCallCheck(this, Node);
 
-		this.file = path.resolve(file);
+		this.file = file ? path__default.resolve(file) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+
+		if (!this.file && this.content === null) {
+			throw new Error('A source must specify either file or content');
+		}
 
 		// these get filled in later
 		this.map = null;
@@ -359,234 +195,151 @@ var Node = (function () {
 
 			untraceable: 0
 		};
-
-		this.sourcesContentByPath = {};
 	}
 
-	Node___createClass(Node, [{
-		key: '_load',
-		value: function _load() {
-			var _this = this;
+	Node.prototype.load = function load(sourcesContentByPath, sourceMapByPath) {
+		var _this = this;
 
-			return getContent(this).then(function (content) {
-				var url;
+		return getContent(this, sourcesContentByPath).then(function (content) {
+			_this.content = sourcesContentByPath[_this.file] = content;
 
-				_this.content = content;
+			return getMap(_this, sourceMapByPath).then(function (map) {
+				if (!map) return null;
 
-				url = getSourceMappingUrl(content);
+				_this.map = map;
 
-				if (!url) {
-					_this.isOriginalSource = true;
-					return null;
-				}
+				var decodingStart = process.hrtime();
+				_this.mappings = decodeMappings(map.mappings);
+				var decodingTime = process.hrtime(decodingStart);
+				_this._stats.decodingTime = 1000000000 * decodingTime[0] + decodingTime[1];
 
-				return getMapFromUrl(url, _this.file).then(function (map) {
-					var promises, sourcesContent;
+				var sourcesContent = map.sourcesContent || [];
 
-					_this.map = map;
-
-					var decodingStart = process.hrtime();
-					_this.mappings = decodeMappings(map.mappings);
-					var decodingTime = process.hrtime(decodingStart);
-					_this._stats.decodingTime = 1000000000 * decodingTime[0] + decodingTime[1];
-
-					sourcesContent = map.sourcesContent || [];
-
-					_this.sources = map.sources.map(function (source, i) {
-						return new Node(source ? resolveSourcePath(_this, source) : null, sourcesContent[i]);
-					});
-
-					promises = _this.sources.map(Node__load);
-
-					return Node__Promise.all(promises).then(function () {
-						getSourcesContent(_this);
-						return _this;
+				_this.sources = map.sources.map(function (source, i) {
+					return new Node({
+						file: source ? resolveSourcePath(_this, source) : null,
+						content: sourcesContent[i]
 					});
 				});
+
+				var promises = _this.sources.map(function (node) {
+					return node.load(sourcesContentByPath, sourceMapByPath);
+				});
+				return Node__Promise.all(promises);
 			});
+		});
+	};
+
+	Node.prototype.loadSync = function loadSync(sourcesContentByPath, sourceMapByPath) {
+		var _this2 = this;
+
+		if (!this.content) {
+			this.content = sourcesContentByPath[this.file] = sander__default.readFileSync(this.file).toString();
 		}
-	}, {
-		key: '_loadSync',
-		value: function _loadSync() {
-			var _this2 = this;
 
-			var url, map, sourcesContent;
+		var map = getMap(this, sourceMapByPath, true);
+		var sourcesContent = undefined;
 
-			if (!this.content) {
-				this.content = sander.readFileSync(this.file).toString();
-			}
+		if (!map) {
+			this.isOriginalSource = true;
+		} else {
+			this.map = map;
+			this.mappings = decodeMappings(map.mappings);
 
-			url = getSourceMappingUrl(this.content);
+			sourcesContent = map.sourcesContent || [];
 
-			if (!url) {
-				this.isOriginalSource = true;
-			} else {
-				this.map = map = getMapFromUrl(url, this.file, true);
-				this.mappings = decodeMappings(map.mappings);
-				sourcesContent = map.sourcesContent || [];
-
-				this.sources = map.sources.map(function (source, i) {
-					var node = new Node(resolveSourcePath(_this2, source), sourcesContent[i]);
-					node._loadSync();
-
-					return node;
+			this.sources = map.sources.map(function (source, i) {
+				var node = new Node({
+					file: resolveSourcePath(_this2, source),
+					content: sourcesContent[i]
 				});
 
-				getSourcesContent(this);
-			}
-
-			return !this.isOriginalSource ? this : null;
-		}
-	}, {
-		key: 'apply',
-		value: function apply() {
-			var _this3 = this;
-
-			var options = arguments[0] === undefined ? {} : arguments[0];
-
-			var allNames = [],
-			    allSources = [];
-
-			var applySegment = function (segment, result) {
-				var traced = traceMapping(_this3.sources[segment[1]], // source
-				segment[2], // source code line
-				segment[3], // source code column
-				_this3.map.names[segment[4]]);
-
-				if (!traced) {
-					_this3._stats.untraceable += 1;
-					return;
-				}
-
-				var sourceIndex = allSources.indexOf(traced.source);
-				if (! ~sourceIndex) {
-					sourceIndex = allSources.length;
-					allSources.push(traced.source);
-				}
-
-				var newSegment = [segment[0], // generated code column
-				sourceIndex, traced.line - 1, traced.column];
-
-				var nameIndex;
-
-				if (traced.name) {
-					nameIndex = allNames.indexOf(traced.name);
-					if (! ~nameIndex) {
-						nameIndex = allNames.length;
-						allNames.push(traced.name);
-					}
-
-					newSegment[4] = nameIndex;
-				}
-
-				result[result.length] = newSegment;
-			};
-
-			// Trace mappings
-			var tracingStart = process.hrtime();
-
-			var i = this.mappings.length;
-			var resolved = new Array(i);
-
-			var j = undefined,
-			    line = undefined,
-			    result = undefined;
-
-			while (i--) {
-				line = this.mappings[i];
-				resolved[i] = result = [];
-
-				for (j = 0; j < line.length; j += 1) {
-					applySegment(line[j], result);
-				}
-			}
-
-			var tracingTime = process.hrtime(tracingStart);
-			this._stats.tracingTime = 1000000000 * tracingTime[0] + tracingTime[1];
-
-			// Encode mappings
-			var encodingStart = process.hrtime();
-			var mappings = encodeMappings(resolved);
-			var encodingTime = process.hrtime(encodingStart);
-			this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
-
-			var includeContent = options.includeContent !== false;
-
-			return new SourceMap({
-				file: path.basename(this.file),
-				sources: allSources.map(function (source) {
-					return getRelativePath(options.base || _this3.file, source);
-				}),
-				sourcesContent: allSources.map(function (source) {
-					return includeContent ? _this3.sourcesContentByPath[source] : null;
-				}),
-				names: allNames,
-				mappings: mappings
+				node.loadSync(sourcesContentByPath, sourceMapByPath);
+				return node;
 			});
 		}
-	}, {
-		key: 'stat',
-		value: function stat() {
+	};
+
+	/**
+  * Traces a segment back to its origin
+  * @param {number} lineIndex - the zero-based line index of the
+    segment as found in `this`
+  * @param {number} columnIndex - the zero-based column index of the
+    segment as found in `this`
+  * @param {string || null} - if specified, the name that should be
+    (eventually) returned, as it is closest to the generated code
+  * @returns {object}
+      @property {string} source - the filepath of the source
+      @property {number} line - the one-based line index
+      @property {number} column - the zero-based column index
+      @property {string || null} name - the name corresponding
+      to the segment being traced
+  */
+
+	Node.prototype.trace = function trace(lineIndex, columnIndex, name) {
+		// If this node doesn't have a source map, we have
+		// to assume it is the original source
+		if (this.isOriginalSource) {
 			return {
-				selfDecodingTime: this._stats.decodingTime / 1000000,
-				totalDecodingTime: (this._stats.decodingTime + tally(this.sources, 'decodingTime')) / 1000000,
-
-				encodingTime: this._stats.encodingTime / 1000000,
-				tracingTime: this._stats.tracingTime / 1000000,
-
-				untraceable: this._stats.untraceable
+				source: this.file,
+				line: lineIndex + 1,
+				column: columnIndex || 0,
+				name: name
 			};
 		}
-	}, {
-		key: 'trace',
-		value: function trace(oneBasedLineIndex, zeroBasedColumnIndex) {
-			return traceMapping(this, oneBasedLineIndex - 1, zeroBasedColumnIndex, null);
+
+		// Otherwise, we need to figure out what this position in
+		// the intermediate file corresponds to in *its* source
+		var segments = this.mappings[lineIndex];
+
+		if (!segments || segments.length === 0) {
+			return null;
 		}
-	}, {
-		key: 'write',
-		value: function write(dest, options) {
-			var map, url, index, content, promises;
 
-			if (typeof dest !== 'string') {
-				dest = this.file;
-				options = dest;
+		if (columnIndex != null) {
+			var len = segments.length;
+			var i = undefined;
+
+			for (i = 0; i < len; i += 1) {
+				var generatedCodeColumn = segments[i][0];
+
+				if (generatedCodeColumn > columnIndex) {
+					break;
+				}
+
+				if (generatedCodeColumn === columnIndex) {
+					var _sourceFileIndex = segments[i][1];
+					var _sourceCodeLine = segments[i][2];
+					var sourceCodeColumn = segments[i][3];
+					var _nameIndex = segments[i][4];
+
+					var _parent = this.sources[_sourceFileIndex];
+					return _parent.trace(_sourceCodeLine, sourceCodeColumn, this.map.names[_nameIndex] || name);
+				}
 			}
-
-			options = options || {};
-			dest = path.resolve(dest);
-
-			map = this.apply({
-				includeContent: options.includeContent,
-				base: dest
-			});
-
-			url = options.inline ? map.toUrl() : (options.absolutePath ? dest : path.basename(dest)) + '.map';
-
-			index = this.content.lastIndexOf('sourceMappingURL=') + 17;
-			content = this.content.substr(0, index) + this.content.substring(index).replace(/^[^\r\n]+/, encodeURI(url)) + '\n';
-
-			promises = [sander.writeFile(dest, content)];
-
-			if (!options.inline) {
-				promises.push(sander.writeFile(dest + '.map', map.toString()));
-			}
-
-			return Node__Promise.all(promises);
 		}
-	}]);
+
+		// fall back to a line mapping
+		var sourceFileIndex = segments[0][1];
+		var sourceCodeLine = segments[0][2];
+		var nameIndex = segments[0][4];
+
+		var parent = this.sources[sourceFileIndex];
+		return parent.trace(sourceCodeLine, null, this.map.names[nameIndex] || name);
+	};
 
 	return Node;
 })();
 
 
 
-function Node__load(node) {
-	return node._load();
-}
+function getContent(node, sourcesContentByPath) {
+	if (node.file in sourcesContentByPath) {
+		node.content = sourcesContentByPath[node.file];
+	}
 
-function getContent(node) {
 	if (!node.content) {
-		return sander.readFile(node.file).then(String);
+		return sander__default.readFile(node.file).then(String);
 	}
 
 	return Node__Promise.resolve(node.content);
@@ -594,18 +347,237 @@ function getContent(node) {
 
 function resolveSourcePath(node, source) {
 	// TODO handle sourceRoot
-	return path.resolve(path.dirname(node.file), source);
+	return path__default.resolve(path__default.dirname(node.file), source);
 }
 
-function getSourcesContent(node) {
-	node.sources.forEach(function (source) {
-		node.sourcesContentByPath[source.file] = source.content;
+/**
+ * Encodes a string as base64
+ * @param {string} str - the string to encode
+ * @returns {string}
+ */
 
-		Object.keys(source.sourcesContentByPath).forEach(function (file) {
-			node.sourcesContentByPath[file] = source.sourcesContentByPath[file];
+
+function btoa(str) {
+  return new Buffer(str).toString('base64');
+}
+
+var SourceMap___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+
+var SourceMap = (function () {
+	function SourceMap(properties) {
+		SourceMap___classCallCheck(this, SourceMap);
+
+		this.version = 3;
+
+		this.file = properties.file;
+		this.sources = properties.sources;
+		this.sourcesContent = properties.sourcesContent;
+		this.names = properties.names;
+		this.mappings = properties.mappings;
+	}
+
+	SourceMap.prototype.toString = function toString() {
+		return JSON.stringify(this);
+	};
+
+	SourceMap.prototype.toUrl = function toUrl() {
+		return 'data:application/json;charset=utf-8;base64,' + btoa(this.toString());
+	};
+
+	return SourceMap;
+})();
+
+function encodeMappings(decoded) {
+	var offsets = {
+		generatedCodeColumn: 0,
+		sourceFileIndex: 0, // second field
+		sourceCodeLine: 0, // third field
+		sourceCodeColumn: 0, // fourth field
+		nameIndex: 0 // fifth field
+	};
+
+	return decoded.map(function (line) {
+		offsets.generatedCodeColumn = 0; // first field - reset each time
+		return line.map(encodeSegment).join(',');
+	}).join(';');
+
+	function encodeSegment(segment) {
+		if (!segment.length) {
+			return segment;
+		}
+
+		var result = new Array(segment.length);
+
+		result[0] = segment[0] - offsets.generatedCodeColumn;
+		offsets.generatedCodeColumn = segment[0];
+
+		if (segment.length === 1) {
+			// only one field!
+			return result;
+		}
+
+		result[1] = segment[1] - offsets.sourceFileIndex;
+		result[2] = segment[2] - offsets.sourceCodeLine;
+		result[3] = segment[3] - offsets.sourceCodeColumn;
+
+		offsets.sourceFileIndex = segment[1];
+		offsets.sourceCodeLine = segment[2];
+		offsets.sourceCodeColumn = segment[3];
+
+		if (segment.length === 5) {
+			result[4] = segment[4] - offsets.nameIndex;
+			offsets.nameIndex = segment[4];
+		}
+
+		return vlq.encode(result);
+	}
+}
+
+var Chain___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+
+var SOURCEMAP_COMMENT = /\s+\/\/#\s+sourceMappingURL=([^\r\n]+)/g;
+
+var Chain = (function () {
+	function Chain(node, sourcesContentByPath) {
+		Chain___classCallCheck(this, Chain);
+
+		this.node = node;
+		this.sourcesContentByPath = sourcesContentByPath;
+
+		this._stats = {};
+	}
+
+	Chain.prototype.stat = function stat() {
+		return {
+			selfDecodingTime: this._stats.decodingTime / 1000000,
+			totalDecodingTime: (this._stats.decodingTime + tally(this.node.sources, 'decodingTime')) / 1000000,
+
+			encodingTime: this._stats.encodingTime / 1000000,
+			tracingTime: this._stats.tracingTime / 1000000,
+
+			untraceable: this._stats.untraceable
+		};
+	};
+
+	Chain.prototype.apply = function apply() {
+		var _this = this;
+
+		var options = arguments[0] === undefined ? {} : arguments[0];
+
+		var allNames = [];
+		var allSources = [];
+
+		var applySegment = function (segment, result) {
+			var traced = _this.node.sources[segment[1]].trace( // source
+			segment[2], // source code line
+			segment[3], // source code column
+			_this.node.map.names[segment[4]]);
+
+			if (!traced) {
+				_this._stats.untraceable += 1;
+				return;
+			}
+
+			var sourceIndex = allSources.indexOf(traced.source);
+			if (! ~sourceIndex) {
+				sourceIndex = allSources.length;
+				allSources.push(traced.source);
+			}
+
+			var newSegment = [segment[0], // generated code column
+			sourceIndex, traced.line - 1, traced.column];
+
+			if (traced.name) {
+				var nameIndex = allNames.indexOf(traced.name);
+				if (! ~nameIndex) {
+					nameIndex = allNames.length;
+					allNames.push(traced.name);
+				}
+
+				newSegment[4] = nameIndex;
+			}
+
+			result[result.length] = newSegment;
+		};
+
+		// Trace mappings
+		var tracingStart = process.hrtime();
+
+		var i = this.node.mappings.length;
+		var resolved = new Array(i);
+
+		var j = undefined,
+		    line = undefined,
+		    result = undefined;
+
+		while (i--) {
+			line = this.node.mappings[i];
+			resolved[i] = result = [];
+
+			for (j = 0; j < line.length; j += 1) {
+				applySegment(line[j], result);
+			}
+		}
+
+		var tracingTime = process.hrtime(tracingStart);
+		this._stats.tracingTime = 1000000000 * tracingTime[0] + tracingTime[1];
+
+		// Encode mappings
+		var encodingStart = process.hrtime();
+		var mappings = encodeMappings(resolved);
+		var encodingTime = process.hrtime(encodingStart);
+		this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
+
+		var includeContent = options.includeContent !== false;
+
+		return new SourceMap({
+			file: path.basename(this.node.file),
+			sources: allSources.map(function (source) {
+				return path.relative(options.base || path.dirname(_this.node.file), source);
+			}),
+			sourcesContent: allSources.map(function (source) {
+				return includeContent ? _this.sourcesContentByPath[source] : null;
+			}),
+			names: allNames,
+			mappings: mappings
 		});
-	});
-}
+	};
+
+	Chain.prototype.trace = function trace(oneBasedLineIndex, zeroBasedColumnIndex) {
+		return this.node.trace(oneBasedLineIndex - 1, zeroBasedColumnIndex, null);
+	};
+
+	Chain.prototype.write = function write(dest, options) {
+		if (typeof dest !== 'string') {
+			options = dest;
+			dest = this.node.file;
+		}
+
+		options = options || {};
+		dest = path.resolve(dest);
+
+		var map = this.apply({
+			includeContent: options.includeContent,
+			base: options.base ? path.resolve(options.base) : path.dirname(dest)
+		});
+
+		var url = options.inline ? map.toUrl() : (options.absolutePath ? dest : path.basename(dest)) + '.map';
+
+		var content = this.node.content.replace(SOURCEMAP_COMMENT, '') + `\n//# sourceMappingURL=${ encodeURI(url) }\n`;
+
+		var promises = [sander__default.writeFile(dest, content)];
+
+		if (!options.inline) {
+			promises.push(sander__default.writeFile(dest + '.map', map.toString()));
+		}
+
+		return Promise.all(promises);
+	};
+
+	return Chain;
+})();
+
+
 
 function tally(nodes, stat) {
 	return nodes.reduce(function (total, node) {
@@ -613,13 +585,53 @@ function tally(nodes, stat) {
 	}, 0);
 }
 
-function index__load(file) {
-	return new Node(file)._load();
+function load(file, options) {
+	var _init = init(file, options);
+
+	var node = _init.node;
+	var sourcesContentByPath = _init.sourcesContentByPath;
+	var sourceMapByPath = _init.sourceMapByPath;
+
+	return node.load(sourcesContentByPath, sourceMapByPath).then(function () {
+		return node.isOriginalSource ? null : new Chain(node, sourcesContentByPath);
+	});
 }
 
 function loadSync(file) {
-	return new Node(file)._loadSync();
+	var options = arguments[1] === undefined ? {} : arguments[1];
+
+	var _init2 = init(file, options);
+
+	var node = _init2.node;
+	var sourcesContentByPath = _init2.sourcesContentByPath;
+	var sourceMapByPath = _init2.sourceMapByPath;
+
+	node.loadSync(sourcesContentByPath, sourceMapByPath);
+	return node.isOriginalSource ? null : new Chain(node, sourcesContentByPath);
 }
 
-exports.load = index__load;
+function init(file) {
+	var options = arguments[1] === undefined ? {} : arguments[1];
+
+	var node = new Node({ file: file });
+
+	var sourcesContentByPath = {};
+	var sourceMapByPath = {};
+
+	if (options.content) {
+		Object.keys(options.content).forEach(function (key) {
+			sourcesContentByPath[path.resolve(key)] = options.content[key];
+		});
+	}
+
+	if (options.sourcemaps) {
+		Object.keys(options.sourcemaps).forEach(function (key) {
+			sourceMapByPath[path.resolve(key)] = options.sourcemaps[key];
+		});
+	}
+
+	return { node: node, sourcesContentByPath: sourcesContentByPath, sourceMapByPath: sourceMapByPath };
+}
+
+exports.load = load;
 exports.loadSync = loadSync;

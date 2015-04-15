@@ -7,5 +7,5 @@ set -e
 
 npm test
 
-rm dist/*
-cp .tmp/* dist
+rm -rf dist
+mv .tmp dist

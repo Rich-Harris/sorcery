@@ -1,5 +1,12 @@
 # changelog
 
+## 0.5.0
+
+* Allow user to supply content and sourcemaps, if available ([#8](https://github.com/Rich-Harris/sorcery/issues/8))
+* Remove all existing sourceMappingURL comments
+* Allow `base` to be specified on `chain.write()`, i.e. `chain.write({ base: somethingOtherThanDest })`
+* Internal refactor
+
 ## 0.4.0
 
 * Handle sourceMappingURLs with spaces ([#6](https://github.com/Rich-Harris/sorcery/issues/6))
