@@ -63,6 +63,33 @@ var map = chain.apply();
 var loc = chain.trace( x, y );
 ```
 
+#### Advanced options
+
+You can pass an optional second argument to `sorcery.load()` and `sorcery.loadSync()`, with zero or more of the following properties:
+
+* `content` - a map of `filename: contents` pairs. `filename` will be resolved against the current working directory if needs be
+* `sourcemaps` - a map of `filename: sourcemap` pairs, where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself.
+
+For example:
+
+```js
+sorcery.load( 'some/generated/code.min.js', {
+  content: {
+    'some/minified/code.min.js': '...',
+    'some/transpiled/code.js': '...',
+    'some/original/code.js': '...'
+  },
+  sourcemaps: {
+    'some/minified/code.min.js': {...},
+    'some/transpiled/code.js': {...}
+  }
+}).then( chain => {
+  /* ... */
+});
+```
+
+Any files not found will be read from the filesystem as normal.
+
 ### On the command line
 
 First, install sorcery globally:
