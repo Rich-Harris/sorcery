@@ -1,7 +1,6 @@
-import path from 'path';
+import { basename, dirname, relative, resolve } from 'path';
 import sander from 'sander';
 import SourceMap from './SourceMap';
-import getRelativePath from './utils/getRelativePath';
 import encodeMappings from './utils/encodeMappings';
 
 const SOURCEMAP_COMMENT = /\s+\/\/#\s+sourceMappingURL=([^\r\n]+)/g;
@@ -27,11 +26,11 @@ export default class Chain {
 	}
 
 	apply ( options = {} ) {
-		var allNames = [],
-			allSources = [];
+		let allNames = [];
+		let allSources = [];
 
-		var applySegment = ( segment, result ) => {
-			var traced = this.node.sources[ segment[1] ].trace( // source
+		const applySegment = ( segment, result ) => {
+			const traced = this.node.sources[ segment[1] ].trace( // source
 				segment[2], // source code line
 				segment[3], // source code column
 				this.node.map.names[ segment[4] ]
@@ -42,23 +41,21 @@ export default class Chain {
 				return;
 			}
 
-			var sourceIndex = allSources.indexOf( traced.source );
+			let sourceIndex = allSources.indexOf( traced.source );
 			if ( !~sourceIndex ) {
 				sourceIndex = allSources.length;
 				allSources.push( traced.source );
 			}
 
-			var newSegment = [
+			let newSegment = [
 				segment[0], // generated code column
 				sourceIndex,
 				traced.line - 1,
 				traced.column
 			];
 
-			var nameIndex;
-
 			if ( traced.name ) {
-				nameIndex = allNames.indexOf( traced.name );
+				let nameIndex = allNames.indexOf( traced.name );
 				if ( !~nameIndex ) {
 					nameIndex = allNames.length;
 					allNames.push( traced.name );
@@ -99,13 +96,9 @@ export default class Chain {
 		let includeContent = options.includeContent !== false;
 
 		return new SourceMap({
-			file: path.basename( this.node.file ),
-			sources: allSources.map( ( source ) => {
-				return getRelativePath( options.base || this.node.file, source );
-			}),
-			sourcesContent: allSources.map( ( source ) => {
-				return includeContent ? this.sourcesContentByPath[ source ] : null;
-			}),
+			file: basename( this.node.file ),
+			sources: allSources.map( source => relative( options.base || dirname( this.node.file ), source ) ),
+			sourcesContent: allSources.map( source => includeContent ? this.sourcesContentByPath[ source ] : null ),
 			names: allNames,
 			mappings
 		});
@@ -117,19 +110,19 @@ export default class Chain {
 
 	write ( dest, options ) {
 		if ( typeof dest !== 'string' ) {
-			dest = this.node.file;
 			options = dest;
+			dest = this.node.file;
 		}
 
 		options = options || {};
-		dest = path.resolve( dest );
+		dest = resolve( dest );
 
 		const map = this.apply({
 			includeContent: options.includeContent,
-			base: dest
+			base: options.base ? resolve( options.base ) : dirname( dest )
 		});
 
-		const url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : path.basename( dest ) ) + '.map';
+		const url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : basename( dest ) ) + '.map';
 
 		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + `\n//# sourceMappingURL=${encodeURI(url)}\n`;
 

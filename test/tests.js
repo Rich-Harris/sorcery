@@ -281,6 +281,21 @@ console.log "the answer is #{answer}"`
 				});
 			});
 		});
+
+		it( 'allows the base to be specified as something other than the destination file', function () {
+			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+				return chain.write( '.tmp/write-file/helloworld.min.js', {
+					base: 'x/y/z'
+				}).then( function () {
+					return sander.readFile( '.tmp/write-file/helloworld.min.js.map' )
+						.then( String )
+						.then( JSON.parse )
+						.then( function ( map ) {
+							assert.deepEqual( map.sources, [ '../../../samples/1/src/helloworld.coffee' ] );
+						});
+				});
+			});
+		});
 	});
 
 	describe( 'sorcery (sync)', function () {
