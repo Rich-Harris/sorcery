@@ -1,5 +1,11 @@
 # changelog
 
+## 0.5.1
+
+* Fix build definition to prevent ES6-only features appearing in dist files
+* Hook up to Travis CI
+* Update tests to not use gobble (since latest gobble uses sorcery by default)
+
 ## 0.5.0
 
 * Allow user to supply content and sourcemaps, if available ([#8](https://github.com/Rich-Harris/sorcery/issues/8))

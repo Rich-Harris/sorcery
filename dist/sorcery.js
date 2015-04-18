@@ -4,8 +4,8 @@ var path = require('path');
 var path__default = ('default' in path ? path['default'] : path);
 var sander = require('sander');
 var sander__default = ('default' in sander ? sander['default'] : sander);
-var buffer_crc32 = require('buffer-crc32');
 var vlq = require('vlq');
+var buffer_crc32 = require('buffer-crc32');
 
 var utils_decodeMappings = decodeMappings;
 var cache = {};
