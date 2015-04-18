@@ -60,16 +60,16 @@ describe( 'sorcery', function () {
 		it( 'allows user to specify content/sourcemaps', function () {
 			return sorcery.load( 'example.js', {
 				content: {
-					'example.js': `(function() {
-  var answer;
-
-  answer = 40 + 2;
-
-  console.log("the answer is " + answer);
-
-}).call(this);`,
-					'example.coffee': `answer = 40 + 2
-console.log "the answer is #{answer}"`
+					'example.js': '(function() {\
+  var answer;\
+\
+  answer = 40 + 2;\
+\
+  console.log("the answer is " + answer);\
+\
+}).call(this);',
+					'example.coffee': 'answer = 40 + 2\
+console.log "the answer is #{answer}"'
 				},
 				sourcemaps: {
 					'example.js': {
