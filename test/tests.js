@@ -1,8 +1,11 @@
 var path = require( 'path' );
+var exec = require( 'child_process' ).exec;
 var sander = require( 'sander' );
 var assert = require( 'assert' );
 var promiseMapSeries = require( 'promise-map-series' );
 var SourceMapConsumer = require( 'source-map' ).SourceMapConsumer;
+
+var Promise = sander.Promise;
 
 process.chdir( __dirname );
 
@@ -28,18 +31,27 @@ describe( 'sorcery', function () {
 				});
 
 				return promiseMapSeries( filtered, function ( dir ) {
-					var buildDefinitionPath = path.resolve( 'samples', dir, 'gobblefile.js' );
+					process.chdir( path.join( __dirname, 'samples', dir ) );
 
-					return require( buildDefinitionPath ).build({
-						dest: path.resolve( '.tmp/samples', dir ),
-						gobbledir: path.resolve( '.gobble-build', dir ),
-						force: true
+					return new Promise( function ( fulfil, reject ) {
+						exec( 'sh ./build.sh', function ( err, stdout, stderr ) {
+							if ( err ) {
+								reject( err );
+							} else {
+								console.log( stdout );
+								console.error( stderr );
+								console.log( 'ran %s build script', dir );
+								fulfil();
+							}
+						});
 					});
 				});
 			});
 		}
 
-		return buildLib().then( buildSamples );
+		return buildLib().then( buildSamples ).then( function () {
+			process.chdir( __dirname );
+		});
 	});
 
 	beforeEach( function () {
@@ -52,7 +64,7 @@ describe( 'sorcery', function () {
 
 	describe( 'sorcery.load()', function () {
 		it( 'resolves to null if target has no sourcemap', function () {
-			return sorcery.load( '.tmp/samples/1/helloworld.coffee', function ( chain ) {
+			return sorcery.load( 'samples/1/src/helloworld.coffee', function ( chain ) {
 				assert.equal( chain, null );
 			});
 		});
@@ -99,13 +111,13 @@ console.log "the answer is #{answer}"'
 
 	describe( 'chain.trace()', function () {
 		it( 'follows a mapping back to its origin', function () {
-			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( function ( chain ) {
 				var actual, expected;
 
 				actual = chain.trace( 1, 31 );
 
 				expected = {
-					source: path.resolve( 'samples/1/src/helloworld.coffee' ),
+					source: path.resolve( 'samples/1/tmp/helloworld.coffee' ),
 					line: 2,
 					column: 8,
 					name: 'log'
@@ -116,13 +128,13 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'handles browserify-style line mappings', function () {
-			return sorcery.load( '.tmp/samples/2/bundle.min.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/2/tmp/bundle.min.js' ).then( function ( chain ) {
 				var actual, expected;
 
-				actual = chain.trace( 1, 531 );
+				actual = chain.trace( 1, 487 );
 
 				expected = {
-					source: path.resolve( 'samples/2/src/a.js' ),
+					source: path.resolve( 'samples/2/tmp/a.js' ),
 					line: 2,
 					column: 0,
 					name: 'log'
@@ -133,26 +145,20 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'uses inline sources if provided', function () {
-			return sorcery.load( '.tmp/samples/3/app.js' ).then( function ( chain ) {
-				var actual, expected;
+			return sorcery.load( 'samples/3/tmp/app.esperanto.js' ).then( function ( chain ) {
+				var actual = chain.trace( 4, 8 );
 
-				actual = chain.trace( 4, 8 );
-
-				expected = {
-					source: path.resolve( 'samples/3/src/app.js' ),
-					line: 2,
-					column: 8,
-					name: null
-				};
-
-				assert.deepEqual( actual, expected );
+				assert.strictEqual( actual.line, 2 );
+				assert.strictEqual( actual.column, 8 );
+				assert.strictEqual( actual.name, null );
+				assert.ok( /app\.js$/.test( actual.source ) );
 			});
 		});
 	});
 
 	describe( 'chain.apply()', function () {
 		it( 'creates a flattened sourcemap', function () {
-			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( function ( chain ) {
 				var map, smc;
 
 				map = chain.apply();
@@ -160,11 +166,11 @@ console.log "the answer is #{answer}"'
 
 				assert.equal( map.version, 3 );
 				assert.deepEqual( map.file, 'helloworld.min.js' );
-				assert.deepEqual( map.sources, [ '../../../samples/1/src/helloworld.coffee' ]);
+				assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
 				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
 				var loc = smc.originalPositionFor({ line: 1, column: 31 });
-				assert.equal( loc.source, '../../../samples/1/src/helloworld.coffee' );
+				assert.equal( loc.source, 'helloworld.coffee' );
 				assert.equal( loc.line, 2 );
 				assert.equal( loc.column, 8 );
 				assert.equal( loc.name, 'log' );
@@ -172,19 +178,19 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'handles sourceMappingURLs with spaces (#6)', function () {
-			return sorcery.load( '.tmp/samples/4/file with spaces.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( function ( chain ) {
 				var map, smc;
 
 				map = chain.apply();
 				smc = new SourceMapConsumer( map );
 
 				assert.equal( map.version, 3 );
-				assert.deepEqual( map.file, 'file with spaces.js' );
-				assert.deepEqual( map.sources, [ '../../../samples/4/src/file with spaces.js' ]);
+				assert.deepEqual( map.file, 'file with spaces.esperanto.js' );
+				assert.deepEqual( map.sources, [ 'file with spaces.js' ]);
 				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/4/src/file with spaces.js' ).toString() ]);
 
 				var loc = smc.originalPositionFor({ line: 4, column: 8 });
-				assert.equal( loc.source, '../../../samples/4/src/file with spaces.js' );
+				assert.equal( loc.source, 'file with spaces.js' );
 				assert.equal( loc.line, 2 );
 				assert.equal( loc.column, 8 );
 				assert.equal( loc.name, null );
@@ -194,7 +200,7 @@ console.log "the answer is #{answer}"'
 
 	describe( 'chain.write()', function () {
 		it( 'writes a file and accompanying sourcemap', function () {
-			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( function ( chain ) {
 				return chain.write( '.tmp/write-file/helloworld.min.js' ).then( function () {
 					return sorcery.load( '.tmp/write-file/helloworld.min.js' ).then( function ( chain ) {
 						var map, smc;
@@ -204,11 +210,11 @@ console.log "the answer is #{answer}"'
 
 						assert.equal( map.version, 3 );
 						assert.deepEqual( map.file, 'helloworld.min.js' );
-						assert.deepEqual( map.sources, [ '../../samples/1/src/helloworld.coffee' ]);
-						assert.deepEqual( map.sourcesContent, [ sander.readFileSync( __dirname, 'samples/1/src/helloworld.coffee' ).toString() ]);
+						assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
+						assert.deepEqual( map.sourcesContent, [ sander.readFileSync( __dirname, 'samples/1/tmp/helloworld.coffee' ).toString() ]);
 
 						var loc = smc.originalPositionFor({ line: 1, column: 31 });
-						assert.equal( loc.source, '../../samples/1/src/helloworld.coffee' );
+						assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
 						assert.equal( loc.line, 2 );
 						assert.equal( loc.column, 8 );
 						assert.equal( loc.name, 'log' );
@@ -218,7 +224,7 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'overwrites existing file', function () {
-			return sander.copydir( '.tmp/samples/1' ).to( '.tmp/overwrite-file' ).then( function () {
+			return sander.copydir( 'samples/1/tmp' ).to( '.tmp/overwrite-file' ).then( function () {
 				return sorcery.load( '.tmp/overwrite-file/helloworld.min.js' ).then( function ( chain ) {
 					return chain.write().then( function () {
 						return sander.readFile( '.tmp/overwrite-file/helloworld.min.js.map' ).then( String ).then( JSON.parse ).then( function ( map ) {
@@ -226,11 +232,11 @@ console.log "the answer is #{answer}"'
 
 							assert.equal( map.version, 3 );
 							assert.deepEqual( map.file, 'helloworld.min.js' );
-							assert.deepEqual( map.sources, [ '../../samples/1/src/helloworld.coffee' ]);
+							assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
 							assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
 							var loc = smc.originalPositionFor({ line: 1, column: 31 });
-							assert.equal( loc.source, '../../samples/1/src/helloworld.coffee' );
+							assert.equal( loc.source, 'helloworld.coffee' );
 							assert.equal( loc.line, 2 );
 							assert.equal( loc.column, 8 );
 							assert.equal( loc.name, 'log' );
@@ -241,7 +247,7 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'allows sourceMappingURL to be an absolute path', function () {
-			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( function ( chain ) {
 				return chain.write( 'tmp/helloworld.min.js', {
 					absolutePath: true
 				}).then( function () {
@@ -254,7 +260,7 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'adds a trailing newline after sourceMappingURL comment (#4)', function () {
-			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( function ( chain ) {
 				return chain.write( '.tmp/write-file/helloworld.min.js' ).then( function () {
 					return sander.readFile( '.tmp/write-file/helloworld.min.js' ).then( String ).then( function ( file ) {
 						var lines = file.split( '\n' );
@@ -270,7 +276,7 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'ensures sourceMappingURL is encoded (#6)', function () {
-			return sorcery.load( '.tmp/samples/4/file with spaces.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( function ( chain ) {
 				chain.write( '.tmp/with-spaces/file with spaces.js' ).then( function () {
 					return sander.readFile( '.tmp/with-spaces/file with spaces.js' )
 						.then( String )
@@ -283,7 +289,7 @@ console.log "the answer is #{answer}"'
 		});
 
 		it( 'allows the base to be specified as something other than the destination file', function () {
-			return sorcery.load( '.tmp/samples/1/helloworld.min.js' ).then( function ( chain ) {
+			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( function ( chain ) {
 				return chain.write( '.tmp/write-file/helloworld.min.js', {
 					base: 'x/y/z'
 				}).then( function () {
@@ -291,7 +297,7 @@ console.log "the answer is #{answer}"'
 						.then( String )
 						.then( JSON.parse )
 						.then( function ( map ) {
-							assert.deepEqual( map.sources, [ '../../../samples/1/src/helloworld.coffee' ] );
+							assert.deepEqual( map.sources, [ '../../../samples/1/tmp/helloworld.coffee' ] );
 						});
 				});
 			});
@@ -303,12 +309,12 @@ console.log "the answer is #{answer}"'
 			it( 'follows a mapping back to its origin', function () {
 				var chain, actual, expected;
 
-				chain = sorcery.loadSync( '.tmp/samples/1/helloworld.min.js' );
+				chain = sorcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
 
 				actual = chain.trace( 1, 31 );
 
 				expected = {
-					source: path.resolve( 'samples/1/src/helloworld.coffee' ),
+					source: path.resolve( 'samples/1/tmp/helloworld.coffee' ),
 					line: 2,
 					column: 8,
 					name: 'log'

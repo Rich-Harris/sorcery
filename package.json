@@ -14,18 +14,17 @@
     "vlq": "^0.2.1"
   },
   "devDependencies": {
-    "coffee-script": "^1.8.0",
+    "babel": "^5.1.10",
+    "browserify": "^9.0.8",
+    "coffee-script": "^1.9.2",
+    "esperanto": "^0.6.29",
     "gobble": "^0.7.12",
     "gobble-babel": "^5.0.0",
-    "gobble-browserify": "^0.2.0",
-    "gobble-coffee": "^0.2.1",
-    "gobble-esperanto": "^0.2.4",
     "gobble-esperanto-bundle": "^0.1.7",
-    "gobble-uglifyjs": "^0.2.0",
     "mocha": "^2.1.0",
     "promise-map-series": "^0.2.1",
     "source-map": "^0.1.40",
-    "uglify-js": "^2.4.15"
+    "uglify-js": "^2.4.20"
   },
   "bin": {
     "sorcery": "bin/index.js"

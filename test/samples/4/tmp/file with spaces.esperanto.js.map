@@ -1,0 +1,1 @@
+{"version":3,"file":"file with spaces.esperanto.js","sources":["file with spaces.babel.js"],"sourcesContent":["var answer = 40 + 2;\nconsole.log(\"the answer is \" + answer);\n\n//# sourceMappingURL=file with spaces.babel.js.map"],"names":[],"mappings":"AAAA;;AAAA,IAAI,SAAS,KAAK;AAClB,QAAQ,IAAI,mBAAmB"}

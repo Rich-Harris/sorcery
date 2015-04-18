@@ -1,0 +1,1 @@
+{"version":3,"sources":["file with spaces.js"],"names":[],"mappings":"AAAA,IAAM,MAAM,GAAG,EAAE,GAAG,CAAC,CAAA;AACrB,OAAO,CAAC,GAAG,oBAAmB,MAAM,CAAI,CAAC","file":"file with spaces.babel.js","sourcesContent":["const answer = 40 + 2\nconsole.log( `the answer is ${answer}` );\n"]}

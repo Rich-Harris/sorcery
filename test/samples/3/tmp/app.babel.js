@@ -1,0 +1,4 @@
+var answer = 40 + 2;
+console.log("the answer is " + answer);
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImFwcC5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxJQUFNLE1BQU0sR0FBRyxFQUFFLEdBQUcsQ0FBQyxDQUFBO0FBQ3JCLE9BQU8sQ0FBQyxHQUFHLG9CQUFtQixNQUFNLENBQUksQ0FBQyIsImZpbGUiOiJhcHAuYmFiZWwuanMiLCJzb3VyY2VzQ29udGVudCI6WyJjb25zdCBhbnN3ZXIgPSA0MCArIDJcbmNvbnNvbGUubG9nKCBgdGhlIGFuc3dlciBpcyAke2Fuc3dlcn1gICk7XG4iXX0=
