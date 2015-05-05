@@ -154,6 +154,23 @@ console.log "the answer is #{answer}"'
 				assert.ok( /app\.js$/.test( actual.source ) );
 			});
 		});
+
+		it( 'handles CSS sourcemap comments', function () {
+			return sorcery.load( 'samples/5/tmp/styles.css' ).then( function ( chain ) {
+				var actual, expected;
+
+				actual = chain.trace( 1, 8 );
+
+				expected = {
+					source: path.resolve( 'samples/5/tmp/styles.less' ),
+					line: 5,
+					column: 2,
+					name: null
+				};
+
+				assert.deepEqual( actual, expected );
+			});
+		});
 	});
 
 	describe( 'chain.apply()', function () {
