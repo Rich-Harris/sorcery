@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.2
+
+* Handle CSS sourcemap comments
+
 ## 0.5.1
 
 * Fix build definition to prevent ES6-only features appearing in dist files
