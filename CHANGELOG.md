@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.4
+
+* sourceMappingURLs are correctly encoded
+
 ## 0.5.3
 
 * Better CSS sourcemap handling (old comments are removed, new comments are block-style)
