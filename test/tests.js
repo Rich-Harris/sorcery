@@ -34,16 +34,23 @@ describe( 'sorcery', function () {
 					process.chdir( path.join( __dirname, 'samples', dir ) );
 
 					return new Promise( function ( fulfil, reject ) {
-						exec( 'sh ./build.sh', function ( err, stdout, stderr ) {
-							if ( err ) {
-								reject( err );
-							} else {
-								console.log( stdout );
-								console.error( stderr );
-								console.log( 'ran %s build script', dir );
+						// check it exists
+						sander.readFile( 'build.sh' )
+							.then( function () {
+								exec( 'sh ./build.sh', function ( err, stdout, stderr ) {
+									if ( err ) {
+										reject( err );
+									} else {
+										console.log( stdout );
+										console.error( stderr );
+										console.log( 'ran %s build script', dir );
+										fulfil();
+									}
+								});
+							}, function () {
+								// file doesn't exist, nothing to build
 								fulfil();
-							}
-						});
+							});
 					});
 				});
 			});
@@ -327,6 +334,18 @@ console.log "the answer is #{answer}"'
 						.then( String )
 						.then( function ( css ) {
 							assert.ok( ~css.indexOf( '/*# sourceMappingURL=styles.css.map */' ) );
+						});
+				});
+			});
+		});
+
+		it( 'decodes/encodes URIs', function () {
+			return sorcery.load( 'samples/6/file with spaces.js' ).then( function ( chain ) {
+				return chain.write( '.tmp/write-file/file with spaces.js' ).then( function () {
+					return sander.readFile( '.tmp/write-file/file with spaces.js' )
+						.then( String )
+						.then( function ( js ) {
+							assert.ok( ~js.indexOf( '//# sourceMappingURL=file%20with%20spaces.js.map' ) );
 						});
 				});
 			});

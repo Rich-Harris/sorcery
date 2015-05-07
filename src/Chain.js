@@ -7,8 +7,8 @@ let SOURCEMAPPING_URL = 'sourceMa';
 SOURCEMAPPING_URL += 'ppingURL';
 
 const SOURCEMAP_COMMENT = new RegExp( `\n*(?:` +
-	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\\s'"]+)|` +      // js
-	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^\\s'"]+)\\s\\*\\/)` + // css
+	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^'"]+)|` +      // js
+	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
 `\\s*$`, 'g' );
 
 export default class Chain {
@@ -150,6 +150,7 @@ function tally ( nodes, stat ) {
 
 function sourcemapComment ( url, dest ) {
 	const ext = extname( dest );
+	url = encodeURI( url );
 
 	if ( ext === '.css' ) {
 		return `\n/*# ${SOURCEMAPPING_URL}=${url} */\n`;
