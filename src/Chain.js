@@ -1,9 +1,15 @@
-import { basename, dirname, relative, resolve } from 'path';
+import { basename, dirname, extname, relative, resolve } from 'path';
 import sander from 'sander';
 import SourceMap from './SourceMap';
 import encodeMappings from './utils/encodeMappings';
 
-const SOURCEMAP_COMMENT = /\s+\/\/#\s+sourceMappingURL=([^\r\n]+)/g;
+let SOURCEMAPPING_URL = 'sourceMa';
+SOURCEMAPPING_URL += 'ppingURL';
+
+const SOURCEMAP_COMMENT = new RegExp( `(?:` +
+	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\\s'"]+)|` +      // js
+	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^\\s'"]+)\\s\\*\\/)` + // css
+`\\s*$`, 'g' );
 
 export default class Chain {
 	constructor ( node, sourcesContentByPath ) {
@@ -124,7 +130,7 @@ export default class Chain {
 
 		const url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : basename( dest ) ) + '.map';
 
-		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + `\n//# sourceMappingURL=${encodeURI(url)}\n`;
+		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, dest );
 
 		let promises = [ sander.writeFile( dest, content ) ];
 
@@ -140,4 +146,14 @@ function tally ( nodes, stat ) {
 	return nodes.reduce( ( total, node ) => {
 		return total + node._stats[ stat ];
 	}, 0 );
+}
+
+function sourcemapComment ( url, dest ) {
+	const ext = extname( dest );
+
+	if ( ext === '.css' ) {
+		return `\n/*# ${SOURCEMAPPING_URL}=${url} */\n`;
+	}
+
+	return `\n//# ${SOURCEMAPPING_URL}=${url}\n`;
 }

@@ -319,6 +319,18 @@ console.log "the answer is #{answer}"'
 				});
 			});
 		});
+
+		it( 'writes a block comment to CSS files', function () {
+			return sorcery.load( 'samples/5/tmp/styles.css' ).then( function ( chain ) {
+				return chain.write( '.tmp/write-file/styles.css' ).then( function () {
+					return sander.readFile( '.tmp/write-file/styles.css' )
+						.then( String )
+						.then( function ( css ) {
+							assert.ok( ~css.indexOf( '/*# sourceMappingURL=styles.css.map */' ) );
+						});
+				});
+			});
+		});
 	});
 
 	describe( 'sorcery (sync)', function () {
