@@ -6,7 +6,7 @@ import encodeMappings from './utils/encodeMappings';
 let SOURCEMAPPING_URL = 'sourceMa';
 SOURCEMAPPING_URL += 'ppingURL';
 
-const SOURCEMAP_COMMENT = new RegExp( `(?:` +
+const SOURCEMAP_COMMENT = new RegExp( `\n*(?:` +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\\s'"]+)|` +      // js
 	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^\\s'"]+)\\s\\*\\/)` + // css
 `\\s*$`, 'g' );
