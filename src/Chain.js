@@ -1,5 +1,5 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
-import sander from 'sander';
+import { writeFile } from 'sander';
 import SourceMap from './SourceMap';
 import encodeMappings from './utils/encodeMappings';
 
@@ -132,10 +132,10 @@ export default class Chain {
 
 		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, dest );
 
-		let promises = [ sander.writeFile( dest, content ) ];
+		let promises = [ writeFile( dest, content ) ];
 
 		if ( !options.inline ) {
-			promises.push( sander.writeFile( dest + '.map', map.toString() ) );
+			promises.push( writeFile( dest + '.map', map.toString() ) );
 		}
 
 		return Promise.all( promises );

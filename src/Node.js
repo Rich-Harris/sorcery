@@ -1,13 +1,11 @@
-import path from 'path';
-import sander from 'sander';
+import { dirname, resolve } from 'path';
+import { readFile, readFileSync, Promise } from 'sander';
 import decodeMappings from './utils/decodeMappings';
 import getMap from './utils/getMap';
 
-const Promise = sander.Promise;
-
 export default class Node {
 	constructor ({ file, content }) {
-		this.file = file ? path.resolve( file ) : null;
+		this.file = file ? resolve( file ) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 		if ( !this.file && this.content === null ) {
@@ -60,7 +58,7 @@ export default class Node {
 
 	loadSync ( sourcesContentByPath, sourceMapByPath ) {
 		if ( !this.content ) {
-			this.content = sourcesContentByPath[ this.file ] = sander.readFileSync( this.file ).toString();
+			this.content = sourcesContentByPath[ this.file ] = readFileSync( this.file ).toString();
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
@@ -155,17 +153,22 @@ export default class Node {
 }
 
 function getContent ( node, sourcesContentByPath ) {
+	console.log( '\ngetting content for %s', node.file );
 	if ( node.file in sourcesContentByPath ) {
+		console.log( 'is in sourcesContentByPath' );
 		node.content = sourcesContentByPath[ node.file ];
 	}
 
 	if ( !node.content ) {
-		return sander.readFile( node.file ).then( String );
+		console.log( 'not in sourcesContentByPath' );
+		return readFile( node.file ).then( String );
 	}
+
+	console.log( 'has content (%s)', node.content.length );
 
 	return Promise.resolve( node.content );
 }
 
 function resolveSourcePath ( node, sourceRoot, source ) {
-	return path.resolve( path.dirname( node.file ), sourceRoot || '', source );
+	return resolve( dirname( node.file ), sourceRoot || '', source );
 }

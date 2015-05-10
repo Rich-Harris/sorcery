@@ -1,5 +1,5 @@
-import path from 'path';
-import sander from 'sander';
+import { dirname, resolve } from 'path';
+import { readFile, readFileSync, Promise } from 'sander';
 import atob from './atob';
 
 /**
@@ -22,14 +22,14 @@ export default function getMapFromUrl ( url, base, sync ) {
 
 		const json = atob( match[1] );
 		const map = JSON.parse( json );
-		return sync ? map : sander.Promise.resolve( map );
+		return sync ? map : Promise.resolve( map );
 	}
 
-	url = path.resolve( path.dirname( base ), decodeURI( url ) );
+	url = resolve( dirname( base ), decodeURI( url ) );
 
 	if ( sync ) {
-		return JSON.parse( sander.readFileSync( url ).toString() );
+		return JSON.parse( readFileSync( url ).toString() );
 	} else {
-		return sander.readFile( url ).then( String ).then( JSON.parse );
+		return readFile( url ).then( String ).then( JSON.parse );
 	}
 }
