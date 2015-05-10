@@ -1,9 +1,7 @@
 'use strict';
 
 var path = require('path');
-var path__default = ('default' in path ? path['default'] : path);
 var sander = require('sander');
-var sander__default = ('default' in sander ? sander['default'] : sander);
 var buffer_crc32 = require('buffer-crc32');
 var vlq = require('vlq');
 
@@ -119,15 +117,15 @@ function getMapFromUrl(url, base, sync) {
 
 		var json = atob(match[1]);
 		var map = JSON.parse(json);
-		return sync ? map : sander__default.Promise.resolve(map);
+		return sync ? map : sander.Promise.resolve(map);
 	}
 
-	url = path__default.resolve(path__default.dirname(base), decodeURI(url));
+	url = path.resolve(path.dirname(base), decodeURI(url));
 
 	if (sync) {
-		return JSON.parse(sander__default.readFileSync(url).toString());
+		return JSON.parse(sander.readFileSync(url).toString());
 	} else {
-		return sander__default.readFile(url).then(String).then(JSON.parse);
+		return sander.readFile(url).then(String).then(JSON.parse);
 	}
 }
 
@@ -173,8 +171,6 @@ function getMap(node, sourceMapByPath, sync) {
 
 var Node___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
-var Node__Promise = sander__default.Promise;
-
 var Node = (function () {
 	function Node(_ref) {
 		var file = _ref.file;
@@ -182,7 +178,7 @@ var Node = (function () {
 
 		Node___classCallCheck(this, Node);
 
-		this.file = file ? path__default.resolve(file) : null;
+		this.file = file ? path.resolve(file) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 		if (!this.file && this.content === null) {
@@ -232,7 +228,7 @@ var Node = (function () {
 				var promises = _this.sources.map(function (node) {
 					return node.load(sourcesContentByPath, sourceMapByPath);
 				});
-				return Node__Promise.all(promises);
+				return sander.Promise.all(promises);
 			});
 		});
 	};
@@ -241,7 +237,7 @@ var Node = (function () {
 		var _this2 = this;
 
 		if (!this.content) {
-			this.content = sourcesContentByPath[this.file] = sander__default.readFileSync(this.file).toString();
+			this.content = sourcesContentByPath[this.file] = sander.readFileSync(this.file).toString();
 		}
 
 		var map = getMap(this, sourceMapByPath, true);
@@ -341,19 +337,24 @@ var Node = (function () {
 
 
 function getContent(node, sourcesContentByPath) {
+	console.log('\ngetting content for %s', node.file);
 	if (node.file in sourcesContentByPath) {
+		console.log('is in sourcesContentByPath');
 		node.content = sourcesContentByPath[node.file];
 	}
 
 	if (!node.content) {
-		return sander__default.readFile(node.file).then(String);
+		console.log('not in sourcesContentByPath');
+		return sander.readFile(node.file).then(String);
 	}
 
-	return Node__Promise.resolve(node.content);
+	console.log('has content (%s)', node.content.length);
+
+	return sander.Promise.resolve(node.content);
 }
 
 function resolveSourcePath(node, sourceRoot, source) {
-	return path__default.resolve(path__default.dirname(node.file), sourceRoot || '', source);
+	return path.resolve(path.dirname(node.file), sourceRoot || '', source);
 }
 
 /**
@@ -576,10 +577,10 @@ var Chain = (function () {
 
 		var content = this.node.content.replace(SOURCEMAP_COMMENT, '') + sourcemapComment(url, dest);
 
-		var promises = [sander__default.writeFile(dest, content)];
+		var promises = [sander.writeFile(dest, content)];
 
 		if (!options.inline) {
-			promises.push(sander__default.writeFile(dest + '.map', map.toString()));
+			promises.push(sander.writeFile(dest + '.map', map.toString()));
 		}
 
 		return Promise.all(promises);
