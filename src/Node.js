@@ -153,18 +153,13 @@ export default class Node {
 }
 
 function getContent ( node, sourcesContentByPath ) {
-	console.log( '\ngetting content for %s', node.file );
 	if ( node.file in sourcesContentByPath ) {
-		console.log( 'is in sourcesContentByPath' );
 		node.content = sourcesContentByPath[ node.file ];
 	}
 
 	if ( !node.content ) {
-		console.log( 'not in sourcesContentByPath' );
 		return readFile( node.file ).then( String );
 	}
-
-	console.log( 'has content (%s)', node.content.length );
 
 	return Promise.resolve( node.content );
 }
