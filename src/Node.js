@@ -47,7 +47,7 @@ export default class Node {
 
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
-						file: source ? resolveSourcePath( this, source ) : null,
+						file: source ? resolveSourcePath( this, map.sourceRoot, source ) : null,
 						content: sourcesContent[i]
 					});
 				});
@@ -76,7 +76,7 @@ export default class Node {
 
 			this.sources = map.sources.map( ( source, i ) => {
 				const node = new Node({
-					file: resolveSourcePath( this, source ),
+					file: resolveSourcePath( this, map.sourceRoot, source ),
 					content: sourcesContent[i]
 				});
 
@@ -166,7 +166,6 @@ function getContent ( node, sourcesContentByPath ) {
 	return Promise.resolve( node.content );
 }
 
-function resolveSourcePath ( node, source ) {
-	// TODO handle sourceRoot
-	return path.resolve( path.dirname( node.file ), source );
+function resolveSourcePath ( node, sourceRoot, source ) {
+	return path.resolve( path.dirname( node.file ), sourceRoot || '', source );
 }

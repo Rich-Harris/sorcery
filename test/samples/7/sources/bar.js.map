@@ -1,0 +1,7 @@
+{
+	"version": 3,
+	"file": "bar.js",
+	"sources": [ "baz.js" ],
+	"names": [],
+	"mappings": "AAAA"
+}

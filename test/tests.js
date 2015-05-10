@@ -1,29 +1,21 @@
+require( 'source-map-support' ).install();
+
 var path = require( 'path' );
 var exec = require( 'child_process' ).exec;
 var sander = require( 'sander' );
 var assert = require( 'assert' );
 var promiseMapSeries = require( 'promise-map-series' );
 var SourceMapConsumer = require( 'source-map' ).SourceMapConsumer;
+var sorcery = require( '../' );
 
 var Promise = sander.Promise;
 
 process.chdir( __dirname );
 
 describe( 'sorcery', function () {
-	var sorcery;
-
 	this.timeout( 20000 );
 
 	before( function () {
-		function buildLib () {
-			return require( '../gobblefile' ).build({
-				dest: path.resolve( __dirname, '../.tmp' ),
-				force: true
-			}).then( function () {
-				sorcery = require( '../.tmp/sorcery' );
-			});
-		}
-
 		function buildSamples () {
 			return sander.readdir( 'samples' ).then( function ( samples ) {
 				var filtered = samples.filter( function ( dir ) {
@@ -56,7 +48,7 @@ describe( 'sorcery', function () {
 			});
 		}
 
-		return buildLib().then( buildSamples ).then( function () {
+		return buildSamples().then( function () {
 			process.chdir( __dirname );
 		});
 	});
@@ -172,6 +164,21 @@ console.log "the answer is #{answer}"'
 					source: path.resolve( 'samples/5/tmp/styles.less' ),
 					line: 5,
 					column: 2,
+					name: null
+				};
+
+				assert.deepEqual( actual, expected );
+			});
+		});
+
+		it( 'resolves source paths using sourceRoot where applicable', function () {
+			return sorcery.load( 'samples/7/foo.js' ).then( function ( chain ) {
+				var actual = chain.trace( 1, 0 );
+
+				var expected = {
+					source: path.resolve( 'samples/7/sources/baz.js' ),
+					line: 1,
+					column: 0,
 					name: null
 				};
 
