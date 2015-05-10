@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.5
+
+* sourceRoot is respected
+
 ## 0.5.4
 
 * sourceMappingURLs are correctly encoded

@@ -7,7 +7,6 @@ var sander__default = ('default' in sander ? sander['default'] : sander);
 var buffer_crc32 = require('buffer-crc32');
 var vlq = require('vlq');
 
-var utils_decodeMappings = decodeMappings;
 var cache = {};
 
 function decodeSegments(encodedSegments) {
@@ -93,7 +92,7 @@ function decodeMappings(mappings) {
  * @param {string} base64 - the string to decode
  * @returns {string}
  */
-var utils_atob = atob;
+
 
 function atob(base64) {
   return new Buffer(base64, 'base64').toString('utf8');
@@ -109,7 +108,7 @@ function atob(base64) {
    return the sourcemap
  * @returns {object} - a version 3 sourcemap
  */
-var utils_getMapFromUrl = getMapFromUrl;
+
 function getMapFromUrl(url, base, sync) {
 	if (/^data/.test(url)) {
 		var match = /base64,(.+)$/.exec(url);
@@ -118,7 +117,7 @@ function getMapFromUrl(url, base, sync) {
 			throw new Error('sourceMappingURL is not base64-encoded');
 		}
 
-		var json = utils_atob(match[1]);
+		var json = atob(match[1]);
 		var map = JSON.parse(json);
 		return sync ? map : sander__default.Promise.resolve(map);
 	}
@@ -131,8 +130,6 @@ function getMapFromUrl(url, base, sync) {
 		return sander__default.readFile(url).then(String).then(JSON.parse);
 	}
 }
-
-var utils_getSourceMappingUrl = getSourceMappingUrl;
 
 function getSourceMappingUrl(str) {
 	var index, substring, url, match;
@@ -158,33 +155,32 @@ function getSourceMappingUrl(str) {
 	return url;
 }
 
-var utils_getMap = getMap;
 function getMap(node, sourceMapByPath, sync) {
 	if (node.file in sourceMapByPath) {
 		var map = sourceMapByPath[node.file];
 		return sync ? map : sander.Promise.resolve(map);
 	} else {
-		var url = utils_getSourceMappingUrl(node.content);
+		var url = getSourceMappingUrl(node.content);
 
 		if (!url) {
 			node.isOriginalSource = true;
 			return sync ? null : sander.Promise.resolve(null);
 		}
 
-		return utils_getMapFromUrl(url, node.file, sync);
+		return getMapFromUrl(url, node.file, sync);
 	}
 }
 
-var _Node___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+var Node___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
-var _Node__Promise = sander__default.Promise;
+var Node__Promise = sander__default.Promise;
 
 var Node = (function () {
 	function Node(_ref) {
 		var file = _ref.file;
 		var content = _ref.content;
 
-		_Node___classCallCheck(this, Node);
+		Node___classCallCheck(this, Node);
 
 		this.file = file ? path__default.resolve(file) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
@@ -214,13 +210,13 @@ var Node = (function () {
 		return getContent(this, sourcesContentByPath).then(function (content) {
 			_this.content = sourcesContentByPath[_this.file] = content;
 
-			return utils_getMap(_this, sourceMapByPath).then(function (map) {
+			return getMap(_this, sourceMapByPath).then(function (map) {
 				if (!map) return null;
 
 				_this.map = map;
 
 				var decodingStart = process.hrtime();
-				_this.mappings = utils_decodeMappings(map.mappings);
+				_this.mappings = decodeMappings(map.mappings);
 				var decodingTime = process.hrtime(decodingStart);
 				_this._stats.decodingTime = 1000000000 * decodingTime[0] + decodingTime[1];
 
@@ -228,7 +224,7 @@ var Node = (function () {
 
 				_this.sources = map.sources.map(function (source, i) {
 					return new Node({
-						file: source ? resolveSourcePath(_this, source) : null,
+						file: source ? resolveSourcePath(_this, map.sourceRoot, source) : null,
 						content: sourcesContent[i]
 					});
 				});
@@ -236,7 +232,7 @@ var Node = (function () {
 				var promises = _this.sources.map(function (node) {
 					return node.load(sourcesContentByPath, sourceMapByPath);
 				});
-				return _Node__Promise.all(promises);
+				return Node__Promise.all(promises);
 			});
 		});
 	};
@@ -248,20 +244,20 @@ var Node = (function () {
 			this.content = sourcesContentByPath[this.file] = sander__default.readFileSync(this.file).toString();
 		}
 
-		var map = utils_getMap(this, sourceMapByPath, true);
+		var map = getMap(this, sourceMapByPath, true);
 		var sourcesContent = undefined;
 
 		if (!map) {
 			this.isOriginalSource = true;
 		} else {
 			this.map = map;
-			this.mappings = utils_decodeMappings(map.mappings);
+			this.mappings = decodeMappings(map.mappings);
 
 			sourcesContent = map.sourcesContent || [];
 
 			this.sources = map.sources.map(function (source, i) {
 				var node = new Node({
-					file: resolveSourcePath(_this2, source),
+					file: resolveSourcePath(_this2, map.sourceRoot, source),
 					content: sourcesContent[i]
 				});
 
@@ -342,7 +338,7 @@ var Node = (function () {
 	return Node;
 })();
 
-var _Node = Node;
+
 
 function getContent(node, sourcesContentByPath) {
 	if (node.file in sourcesContentByPath) {
@@ -353,12 +349,11 @@ function getContent(node, sourcesContentByPath) {
 		return sander__default.readFile(node.file).then(String);
 	}
 
-	return _Node__Promise.resolve(node.content);
+	return Node__Promise.resolve(node.content);
 }
 
-function resolveSourcePath(node, source) {
-	// TODO handle sourceRoot
-	return path__default.resolve(path__default.dirname(node.file), source);
+function resolveSourcePath(node, sourceRoot, source) {
+	return path__default.resolve(path__default.dirname(node.file), sourceRoot || '', source);
 }
 
 /**
@@ -366,17 +361,17 @@ function resolveSourcePath(node, source) {
  * @param {string} str - the string to encode
  * @returns {string}
  */
-var utils_btoa = btoa;
+
 
 function btoa(str) {
   return new Buffer(str).toString('base64');
 }
 
-var _SourceMap___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+var SourceMap___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
 var SourceMap = (function () {
 	function SourceMap(properties) {
-		_SourceMap___classCallCheck(this, SourceMap);
+		SourceMap___classCallCheck(this, SourceMap);
 
 		this.version = 3;
 
@@ -392,15 +387,12 @@ var SourceMap = (function () {
 	};
 
 	SourceMap.prototype.toUrl = function toUrl() {
-		return 'data:application/json;charset=utf-8;base64,' + utils_btoa(this.toString());
+		return 'data:application/json;charset=utf-8;base64,' + btoa(this.toString());
 	};
 
 	return SourceMap;
 })();
 
-var _SourceMap = SourceMap;
-
-var utils_encodeMappings = encodeMappings;
 function encodeMappings(decoded) {
 	var offsets = {
 		generatedCodeColumn: 0,
@@ -447,7 +439,7 @@ function encodeMappings(decoded) {
 	}
 }
 
-var _Chain___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+var Chain___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
 var SOURCEMAPPING_URL = 'sourceMa';
 SOURCEMAPPING_URL += 'ppingURL';
@@ -458,7 +450,7 @@ var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_
 
 var Chain = (function () {
 	function Chain(node, sourcesContentByPath) {
-		_Chain___classCallCheck(this, Chain);
+		Chain___classCallCheck(this, Chain);
 
 		this.node = node;
 		this.sourcesContentByPath = sourcesContentByPath;
@@ -543,13 +535,13 @@ var Chain = (function () {
 
 		// Encode mappings
 		var encodingStart = process.hrtime();
-		var mappings = utils_encodeMappings(resolved);
+		var mappings = encodeMappings(resolved);
 		var encodingTime = process.hrtime(encodingStart);
 		this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
 
 		var includeContent = options.includeContent !== false;
 
-		return new _SourceMap({
+		return new SourceMap({
 			file: path.basename(this.node.file),
 			sources: allSources.map(function (source) {
 				return path.relative(options.base || path.dirname(_this.node.file), source);
@@ -596,7 +588,7 @@ var Chain = (function () {
 	return Chain;
 })();
 
-var _Chain = Chain;
+
 
 function tally(nodes, stat) {
 	return nodes.reduce(function (total, node) {
@@ -623,7 +615,7 @@ function load(file, options) {
 	var sourceMapByPath = _init.sourceMapByPath;
 
 	return node.load(sourcesContentByPath, sourceMapByPath).then(function () {
-		return node.isOriginalSource ? null : new _Chain(node, sourcesContentByPath);
+		return node.isOriginalSource ? null : new Chain(node, sourcesContentByPath);
 	});
 }
 
@@ -637,13 +629,13 @@ function loadSync(file) {
 	var sourceMapByPath = _init2.sourceMapByPath;
 
 	node.loadSync(sourcesContentByPath, sourceMapByPath);
-	return node.isOriginalSource ? null : new _Chain(node, sourcesContentByPath);
+	return node.isOriginalSource ? null : new Chain(node, sourcesContentByPath);
 }
 
 function init(file) {
 	var options = arguments[1] === undefined ? {} : arguments[1];
 
-	var node = new _Node({ file: file });
+	var node = new Node({ file: file });
 
 	var sourcesContentByPath = {};
 	var sourceMapByPath = {};
@@ -665,3 +657,4 @@ function init(file) {
 
 exports.load = load;
 exports.loadSync = loadSync;
+//# sourceMappingURL=/www/sorcery/.gobble-build/02-esperantoBundle/1/sorcery.js.map
