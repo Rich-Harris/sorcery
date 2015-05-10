@@ -36,7 +36,7 @@
     "build": "gobble build -f dist",
     "pretest": "npm run build",
     "test": "mocha",
-    "prepublish": "npm run build"
+    "prepublish": "npm test"
   },
   "files": [
     "src/",
