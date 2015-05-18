@@ -35,6 +35,7 @@
   "scripts": {
     "build": "gobble build -f dist",
     "pretest": "npm run build",
+    "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",
     "prepublish": "npm test"
   },

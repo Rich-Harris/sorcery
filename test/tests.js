@@ -15,44 +15,6 @@ process.chdir( __dirname );
 describe( 'sorcery', function () {
 	this.timeout( 20000 );
 
-	before( function () {
-		function buildSamples () {
-			return sander.readdir( 'samples' ).then( function ( samples ) {
-				var filtered = samples.filter( function ( dir ) {
-					return /^\d+$/.test( dir );
-				});
-
-				return promiseMapSeries( filtered, function ( dir ) {
-					process.chdir( path.join( __dirname, 'samples', dir ) );
-
-					return new Promise( function ( fulfil, reject ) {
-						// check it exists
-						sander.readFile( 'build.sh' )
-							.then( function () {
-								exec( 'sh ./build.sh', function ( err, stdout, stderr ) {
-									if ( err ) {
-										reject( err );
-									} else {
-										console.log( stdout );
-										console.error( stderr );
-										console.log( 'ran %s build script', dir );
-										fulfil();
-									}
-								});
-							}, function () {
-								// file doesn't exist, nothing to build
-								fulfil();
-							});
-					});
-				});
-			});
-		}
-
-		return buildSamples().then( function () {
-			process.chdir( __dirname );
-		});
-	});
-
 	beforeEach( function () {
 		return sander.rimraf( 'tmp' );
 	});
