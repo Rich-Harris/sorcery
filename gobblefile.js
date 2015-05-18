@@ -18,9 +18,8 @@ module.exports = gobble( 'src' )
 		loose: [ 'es6.classes' ],
 		sourceMap: true
 	})
-	.transform( 'esperanto-bundle', {
+	.transform( 'rollup', {
 		entry: 'index',
 		dest: 'sorcery',
-		type: 'cjs',
-		strict: true
+		format: 'cjs'
 	});
