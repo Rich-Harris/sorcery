@@ -2,6 +2,7 @@ import { basename, dirname, extname, relative, resolve } from 'path';
 import { writeFile } from 'sander';
 import SourceMap from './SourceMap';
 import encodeMappings from './utils/encodeMappings';
+import slash from './utils/slash';
 
 let SOURCEMAPPING_URL = 'sourceMa';
 SOURCEMAPPING_URL += 'ppingURL';
@@ -103,7 +104,7 @@ export default class Chain {
 
 		return new SourceMap({
 			file: basename( this.node.file ),
-			sources: allSources.map( source => relative( options.base || dirname( this.node.file ), source ) ),
+			sources: allSources.map( source => slash( relative( options.base || dirname( this.node.file ), source ) ) ),
 			sourcesContent: allSources.map( source => includeContent ? this.sourcesContentByPath[ source ] : null ),
 			names: allNames,
 			mappings
