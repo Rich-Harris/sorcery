@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.0
+
+* Use [rollup](https://github.com/rich-harris/rollup) for building, instead of esperanto
+
 ## 0.5.5
 
 * sourceRoot is respected

@@ -1,9 +1,253 @@
 'use strict';
 
-var path = require('path');
 var sander = require('sander');
-var buffer_crc32 = require('buffer-crc32');
+var path = require('path');
 var vlq = require('vlq');
+var crc32 = require('buffer-crc32');
+
+var SOURCEMAPPING_URL = 'sourceMa';
+SOURCEMAPPING_URL += 'ppingURL';
+
+function sourcemapComment(url, dest) {
+	var ext = path.extname(dest);
+	url = encodeURI(url);
+
+	if (ext === '.css') {
+		return '\n/*# ' + SOURCEMAPPING_URL + '=' + url + ' */\n';
+	}
+
+	return '\n//# ' + SOURCEMAPPING_URL + '=' + url + '\n';
+}
+
+var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)|') + ( // js
+'\\/\\*#?\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
+'\\s*$', 'g'); // js
+
+function btoa(str) {
+  return new Buffer(str).toString('base64');
+}var __classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+
+var SourceMap = (function () {
+	function SourceMap(properties) {
+		__classCallCheck(this, SourceMap);
+
+		this.version = 3;
+
+		this.file = properties.file;
+		this.sources = properties.sources;
+		this.sourcesContent = properties.sourcesContent;
+		this.names = properties.names;
+		this.mappings = properties.mappings;
+	}
+
+	SourceMap.prototype.toString = function toString() {
+		return JSON.stringify(this);
+	};
+
+	SourceMap.prototype.toUrl = function toUrl() {
+		return 'data:application/json;charset=utf-8;base64,' + btoa(this.toString());
+	};
+
+	return SourceMap;
+})();
+
+function encodeMappings(decoded) {
+	var offsets = {
+		generatedCodeColumn: 0,
+		sourceFileIndex: 0, // second field
+		sourceCodeLine: 0, // third field
+		sourceCodeColumn: 0, // fourth field
+		nameIndex: 0 // fifth field
+	};
+
+	return decoded.map(function (line) {
+		offsets.generatedCodeColumn = 0; // first field - reset each time
+		return line.map(encodeSegment).join(',');
+	}).join(';');
+
+	function encodeSegment(segment) {
+		if (!segment.length) {
+			return segment;
+		}
+
+		var result = new Array(segment.length);
+
+		result[0] = segment[0] - offsets.generatedCodeColumn;
+		offsets.generatedCodeColumn = segment[0];
+
+		if (segment.length === 1) {
+			// only one field!
+			return result;
+		}
+
+		result[1] = segment[1] - offsets.sourceFileIndex;
+		result[2] = segment[2] - offsets.sourceCodeLine;
+		result[3] = segment[3] - offsets.sourceCodeColumn;
+
+		offsets.sourceFileIndex = segment[1];
+		offsets.sourceCodeLine = segment[2];
+		offsets.sourceCodeColumn = segment[3];
+
+		if (segment.length === 5) {
+			result[4] = segment[4] - offsets.nameIndex;
+			offsets.nameIndex = segment[4];
+		}
+
+		return vlq.encode(result);
+	}
+}
+
+function tally(nodes, stat) {
+	return nodes.reduce(function (total, node) {
+		return total + node._stats[stat];
+	}, 0);
+}
+
+var ___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };// css
+
+var Chain = (function () {
+	function Chain(node, sourcesContentByPath) {
+		___classCallCheck(this, Chain);
+
+		this.node = node;
+		this.sourcesContentByPath = sourcesContentByPath;
+
+		this._stats = {};
+	}
+
+	Chain.prototype.stat = function stat() {
+		return {
+			selfDecodingTime: this._stats.decodingTime / 1000000,
+			totalDecodingTime: (this._stats.decodingTime + tally(this.node.sources, 'decodingTime')) / 1000000,
+
+			encodingTime: this._stats.encodingTime / 1000000,
+			tracingTime: this._stats.tracingTime / 1000000,
+
+			untraceable: this._stats.untraceable
+		};
+	};
+
+	Chain.prototype.apply = function apply() {
+		var _this = this;
+
+		var options = arguments[0] === undefined ? {} : arguments[0];
+
+		var allNames = [];
+		var allSources = [];
+
+		var applySegment = function (segment, result) {
+			var traced = _this.node.sources[segment[1]].trace( // source
+			segment[2], // source code line
+			segment[3], // source code column
+			_this.node.map.names[segment[4]]);
+
+			if (!traced) {
+				_this._stats.untraceable += 1;
+				return;
+			}
+
+			var sourceIndex = allSources.indexOf(traced.source);
+			if (! ~sourceIndex) {
+				sourceIndex = allSources.length;
+				allSources.push(traced.source);
+			}
+
+			var newSegment = [segment[0], // generated code column
+			sourceIndex, traced.line - 1, traced.column];
+
+			if (traced.name) {
+				var nameIndex = allNames.indexOf(traced.name);
+				if (! ~nameIndex) {
+					nameIndex = allNames.length;
+					allNames.push(traced.name);
+				}
+
+				newSegment[4] = nameIndex;
+			}
+
+			result[result.length] = newSegment;
+		};
+
+		// Trace mappings
+		var tracingStart = process.hrtime();
+
+		var i = this.node.mappings.length;
+		var resolved = new Array(i);
+
+		var j = undefined,
+		    line = undefined,
+		    result = undefined;
+
+		while (i--) {
+			line = this.node.mappings[i];
+			resolved[i] = result = [];
+
+			for (j = 0; j < line.length; j += 1) {
+				applySegment(line[j], result);
+			}
+		}
+
+		var tracingTime = process.hrtime(tracingStart);
+		this._stats.tracingTime = 1000000000 * tracingTime[0] + tracingTime[1];
+
+		// Encode mappings
+		var encodingStart = process.hrtime();
+		var mappings = encodeMappings(resolved);
+		var encodingTime = process.hrtime(encodingStart);
+		this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
+
+		var includeContent = options.includeContent !== false;
+
+		return new SourceMap({
+			file: path.basename(this.node.file),
+			sources: allSources.map(function (source) {
+				return path.relative(options.base || path.dirname(_this.node.file), source);
+			}),
+			sourcesContent: allSources.map(function (source) {
+				return includeContent ? _this.sourcesContentByPath[source] : null;
+			}),
+			names: allNames,
+			mappings: mappings
+		});
+	};
+
+	Chain.prototype.trace = function trace(oneBasedLineIndex, zeroBasedColumnIndex) {
+		return this.node.trace(oneBasedLineIndex - 1, zeroBasedColumnIndex, null);
+	};
+
+	Chain.prototype.write = function write(dest, options) {
+		if (typeof dest !== 'string') {
+			options = dest;
+			dest = this.node.file;
+		}
+
+		options = options || {};
+		dest = path.resolve(dest);
+
+		var map = this.apply({
+			includeContent: options.includeContent,
+			base: options.base ? path.resolve(options.base) : path.dirname(dest)
+		});
+
+		var url = options.inline ? map.toUrl() : (options.absolutePath ? dest : path.basename(dest)) + '.map';
+
+		var content = this.node.content.replace(SOURCEMAP_COMMENT, '') + sourcemapComment(url, dest);
+
+		var promises = [sander.writeFile(dest, content)];
+
+		if (!options.inline) {
+			promises.push(sander.writeFile(dest + '.map', map.toString()));
+		}
+
+		return Promise.all(promises);
+	};
+
+	return Chain;
+})(); // source
+
+function resolveSourcePath(node, sourceRoot, source) {
+	return path.resolve(path.dirname(node.file), sourceRoot || '', source);
+}
 
 var cache = {};
 
@@ -18,7 +262,7 @@ function decodeSegments(encodedSegments) {
 	return segments;
 }
 function decodeMappings(mappings) {
-	var checksum = buffer_crc32(mappings);
+	var checksum = crc32(mappings);
 
 	if (!cache[checksum]) {
 		var sourceFileIndex = 0; // second field
@@ -85,28 +329,9 @@ function decodeMappings(mappings) {
 	return cache[checksum];
 }
 
-/**
- * Decodes a base64 string
- * @param {string} base64 - the string to decode
- * @returns {string}
- */
-
-
 function atob(base64) {
   return new Buffer(base64, 'base64').toString('utf8');
 }
-
-/**
- * Turns a sourceMappingURL into a sourcemap
- * @param {string} url - the URL (i.e. sourceMappingURL=url). Can
-   be a base64-encoded data URI
- * @param {string} base - the URL against which relative URLS
-   should be resolved
- * @param {boolean} sync - if `true`, return a promise, otherwise
-   return the sourcemap
- * @returns {object} - a version 3 sourcemap
- */
-
 function getMapFromUrl(url, base, sync) {
 	if (/^data/.test(url)) {
 		var match = /base64,(.+)$/.exec(url);
@@ -152,7 +377,6 @@ function getSourceMappingUrl(str) {
 
 	return url;
 }
-
 function getMap(node, sourceMapByPath, sync) {
 	if (node.file in sourceMapByPath) {
 		var map = sourceMapByPath[node.file];
@@ -169,14 +393,26 @@ function getMap(node, sourceMapByPath, sync) {
 	}
 }
 
-var Node___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+function getContent(node, sourcesContentByPath) {
+	if (node.file in sourcesContentByPath) {
+		node.content = sourcesContentByPath[node.file];
+	}
+
+	if (!node.content) {
+		return sander.readFile(node.file).then(String);
+	}
+
+	return sander.Promise.resolve(node.content);
+}
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
 var Node = (function () {
 	function Node(_ref) {
 		var file = _ref.file;
 		var content = _ref.content;
 
-		Node___classCallCheck(this, Node);
+		_classCallCheck(this, Node);
 
 		this.file = file ? path.resolve(file) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
@@ -332,282 +568,34 @@ var Node = (function () {
 	};
 
 	return Node;
-})();
+})(); // sometimes exists in sourcesContent, sometimes doesn't
 
 
 
-function getContent(node, sourcesContentByPath) {
-	console.log('\ngetting content for %s', node.file);
-	if (node.file in sourcesContentByPath) {
-		console.log('is in sourcesContentByPath');
-		node.content = sourcesContentByPath[node.file];
-	}
-
-	if (!node.content) {
-		console.log('not in sourcesContentByPath');
-		return sander.readFile(node.file).then(String);
-	}
-
-	console.log('has content (%s)', node.content.length);
-
-	return sander.Promise.resolve(node.content);
-}
-
-function resolveSourcePath(node, sourceRoot, source) {
-	return path.resolve(path.dirname(node.file), sourceRoot || '', source);
-}
-
-/**
- * Encodes a string as base64
- * @param {string} str - the string to encode
- * @returns {string}
- */
 
 
-function btoa(str) {
-  return new Buffer(str).toString('base64');
-}
+function init(file) {
+	var options = arguments[1] === undefined ? {} : arguments[1];
 
-var SourceMap___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+	var node = new Node({ file: file });
 
-var SourceMap = (function () {
-	function SourceMap(properties) {
-		SourceMap___classCallCheck(this, SourceMap);
+	var sourcesContentByPath = {};
+	var sourceMapByPath = {};
 
-		this.version = 3;
-
-		this.file = properties.file;
-		this.sources = properties.sources;
-		this.sourcesContent = properties.sourcesContent;
-		this.names = properties.names;
-		this.mappings = properties.mappings;
-	}
-
-	SourceMap.prototype.toString = function toString() {
-		return JSON.stringify(this);
-	};
-
-	SourceMap.prototype.toUrl = function toUrl() {
-		return 'data:application/json;charset=utf-8;base64,' + btoa(this.toString());
-	};
-
-	return SourceMap;
-})();
-
-function encodeMappings(decoded) {
-	var offsets = {
-		generatedCodeColumn: 0,
-		sourceFileIndex: 0, // second field
-		sourceCodeLine: 0, // third field
-		sourceCodeColumn: 0, // fourth field
-		nameIndex: 0 // fifth field
-	};
-
-	return decoded.map(function (line) {
-		offsets.generatedCodeColumn = 0; // first field - reset each time
-		return line.map(encodeSegment).join(',');
-	}).join(';');
-
-	function encodeSegment(segment) {
-		if (!segment.length) {
-			return segment;
-		}
-
-		var result = new Array(segment.length);
-
-		result[0] = segment[0] - offsets.generatedCodeColumn;
-		offsets.generatedCodeColumn = segment[0];
-
-		if (segment.length === 1) {
-			// only one field!
-			return result;
-		}
-
-		result[1] = segment[1] - offsets.sourceFileIndex;
-		result[2] = segment[2] - offsets.sourceCodeLine;
-		result[3] = segment[3] - offsets.sourceCodeColumn;
-
-		offsets.sourceFileIndex = segment[1];
-		offsets.sourceCodeLine = segment[2];
-		offsets.sourceCodeColumn = segment[3];
-
-		if (segment.length === 5) {
-			result[4] = segment[4] - offsets.nameIndex;
-			offsets.nameIndex = segment[4];
-		}
-
-		return vlq.encode(result);
-	}
-}
-
-var Chain___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
-
-var SOURCEMAPPING_URL = 'sourceMa';
-SOURCEMAPPING_URL += 'ppingURL';
-
-var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)|') + ( // js
-'\\/\\*#?\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
-'\\s*$', 'g');
-
-var Chain = (function () {
-	function Chain(node, sourcesContentByPath) {
-		Chain___classCallCheck(this, Chain);
-
-		this.node = node;
-		this.sourcesContentByPath = sourcesContentByPath;
-
-		this._stats = {};
-	}
-
-	Chain.prototype.stat = function stat() {
-		return {
-			selfDecodingTime: this._stats.decodingTime / 1000000,
-			totalDecodingTime: (this._stats.decodingTime + tally(this.node.sources, 'decodingTime')) / 1000000,
-
-			encodingTime: this._stats.encodingTime / 1000000,
-			tracingTime: this._stats.tracingTime / 1000000,
-
-			untraceable: this._stats.untraceable
-		};
-	};
-
-	Chain.prototype.apply = function apply() {
-		var _this = this;
-
-		var options = arguments[0] === undefined ? {} : arguments[0];
-
-		var allNames = [];
-		var allSources = [];
-
-		var applySegment = function (segment, result) {
-			var traced = _this.node.sources[segment[1]].trace( // source
-			segment[2], // source code line
-			segment[3], // source code column
-			_this.node.map.names[segment[4]]);
-
-			if (!traced) {
-				_this._stats.untraceable += 1;
-				return;
-			}
-
-			var sourceIndex = allSources.indexOf(traced.source);
-			if (! ~sourceIndex) {
-				sourceIndex = allSources.length;
-				allSources.push(traced.source);
-			}
-
-			var newSegment = [segment[0], // generated code column
-			sourceIndex, traced.line - 1, traced.column];
-
-			if (traced.name) {
-				var nameIndex = allNames.indexOf(traced.name);
-				if (! ~nameIndex) {
-					nameIndex = allNames.length;
-					allNames.push(traced.name);
-				}
-
-				newSegment[4] = nameIndex;
-			}
-
-			result[result.length] = newSegment;
-		};
-
-		// Trace mappings
-		var tracingStart = process.hrtime();
-
-		var i = this.node.mappings.length;
-		var resolved = new Array(i);
-
-		var j = undefined,
-		    line = undefined,
-		    result = undefined;
-
-		while (i--) {
-			line = this.node.mappings[i];
-			resolved[i] = result = [];
-
-			for (j = 0; j < line.length; j += 1) {
-				applySegment(line[j], result);
-			}
-		}
-
-		var tracingTime = process.hrtime(tracingStart);
-		this._stats.tracingTime = 1000000000 * tracingTime[0] + tracingTime[1];
-
-		// Encode mappings
-		var encodingStart = process.hrtime();
-		var mappings = encodeMappings(resolved);
-		var encodingTime = process.hrtime(encodingStart);
-		this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
-
-		var includeContent = options.includeContent !== false;
-
-		return new SourceMap({
-			file: path.basename(this.node.file),
-			sources: allSources.map(function (source) {
-				return path.relative(options.base || path.dirname(_this.node.file), source);
-			}),
-			sourcesContent: allSources.map(function (source) {
-				return includeContent ? _this.sourcesContentByPath[source] : null;
-			}),
-			names: allNames,
-			mappings: mappings
+	if (options.content) {
+		Object.keys(options.content).forEach(function (key) {
+			sourcesContentByPath[path.resolve(key)] = options.content[key];
 		});
-	};
-
-	Chain.prototype.trace = function trace(oneBasedLineIndex, zeroBasedColumnIndex) {
-		return this.node.trace(oneBasedLineIndex - 1, zeroBasedColumnIndex, null);
-	};
-
-	Chain.prototype.write = function write(dest, options) {
-		if (typeof dest !== 'string') {
-			options = dest;
-			dest = this.node.file;
-		}
-
-		options = options || {};
-		dest = path.resolve(dest);
-
-		var map = this.apply({
-			includeContent: options.includeContent,
-			base: options.base ? path.resolve(options.base) : path.dirname(dest)
-		});
-
-		var url = options.inline ? map.toUrl() : (options.absolutePath ? dest : path.basename(dest)) + '.map';
-
-		var content = this.node.content.replace(SOURCEMAP_COMMENT, '') + sourcemapComment(url, dest);
-
-		var promises = [sander.writeFile(dest, content)];
-
-		if (!options.inline) {
-			promises.push(sander.writeFile(dest + '.map', map.toString()));
-		}
-
-		return Promise.all(promises);
-	};
-
-	return Chain;
-})();
-
-
-
-function tally(nodes, stat) {
-	return nodes.reduce(function (total, node) {
-		return total + node._stats[stat];
-	}, 0);
-}
-
-function sourcemapComment(url, dest) {
-	var ext = path.extname(dest);
-	url = encodeURI(url);
-
-	if (ext === '.css') {
-		return '\n/*# ' + SOURCEMAPPING_URL + '=' + url + ' */\n';
 	}
 
-	return '\n//# ' + SOURCEMAPPING_URL + '=' + url + '\n';
-}
+	if (options.sourcemaps) {
+		Object.keys(options.sourcemaps).forEach(function (key) {
+			sourceMapByPath[path.resolve(key)] = options.sourcemaps[key];
+		});
+	}
 
+	return { node: node, sourcesContentByPath: sourcesContentByPath, sourceMapByPath: sourceMapByPath };
+}
 function load(file, options) {
 	var _init = init(file, options);
 
@@ -633,29 +621,6 @@ function loadSync(file) {
 	return node.isOriginalSource ? null : new Chain(node, sourcesContentByPath);
 }
 
-function init(file) {
-	var options = arguments[1] === undefined ? {} : arguments[1];
-
-	var node = new Node({ file: file });
-
-	var sourcesContentByPath = {};
-	var sourceMapByPath = {};
-
-	if (options.content) {
-		Object.keys(options.content).forEach(function (key) {
-			sourcesContentByPath[path.resolve(key)] = options.content[key];
-		});
-	}
-
-	if (options.sourcemaps) {
-		Object.keys(options.sourcemaps).forEach(function (key) {
-			sourceMapByPath[path.resolve(key)] = options.sourcemaps[key];
-		});
-	}
-
-	return { node: node, sourcesContentByPath: sourcesContentByPath, sourceMapByPath: sourceMapByPath };
-}
-
 exports.load = load;
 exports.loadSync = loadSync;
-//# sourceMappingURL=/www/sorcery/.gobble-build/02-esperantoBundle/1/sorcery.js.map
+//# sourceMappingURL=sorcery.js.map
