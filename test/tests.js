@@ -25,7 +25,7 @@ describe( 'sorcery', function () {
 
 	describe( 'sorcery.load()', function () {
 		it( 'resolves to null if target has no sourcemap', function () {
-			return sorcery.load( 'samples/1/src/helloworld.coffee', function ( chain ) {
+			return sorcery.load( 'samples/1/src/helloworld.coffee' ).then( function ( chain ) {
 				assert.equal( chain, null );
 			});
 		});
