@@ -1,5 +1,5 @@
-import * as crc32 from 'buffer-crc32';
-import * as vlq from 'vlq';
+import crc32 from 'buffer-crc32';
+import { decode } from 'vlq';
 
 let cache = {};
 
@@ -8,7 +8,7 @@ function decodeSegments ( encodedSegments ) {
 	let segments = new Array( i);
 
 	while ( i-- ) {
-		segments[i] = vlq.decode( encodedSegments[i] );
+		segments[i] = decode( encodedSegments[i] );
 	}
 
 	return segments;

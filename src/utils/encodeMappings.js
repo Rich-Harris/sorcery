@@ -1,4 +1,4 @@
-import * as vlq from 'vlq';
+import { encode } from 'vlq';
 
 export default function encodeMappings ( decoded ) {
 	let offsets = {
@@ -42,6 +42,6 @@ export default function encodeMappings ( decoded ) {
 			offsets.nameIndex = segment[4];
 		}
 
-		return vlq.encode( result );
+		return encode( result );
 	}
 }

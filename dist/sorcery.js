@@ -4,6 +4,7 @@ var sander = require('sander');
 var path = require('path');
 var vlq = require('vlq');
 var crc32 = require('buffer-crc32');
+crc32 = 'default' in crc32 ? crc32['default'] : crc32;
 
 var SOURCEMAPPING_URL = 'sourceMa';
 SOURCEMAPPING_URL += 'ppingURL';
