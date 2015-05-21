@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.1
+
+* Handle URLs that look a bit like data URIs
+
 ## 0.6.0
 
 * Use [rollup](https://github.com/rich-harris/rollup) for building, instead of esperanto

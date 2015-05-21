@@ -334,7 +334,8 @@ function atob(base64) {
   return new Buffer(base64, 'base64').toString('utf8');
 }
 function getMapFromUrl(url, base, sync) {
-	if (/^data/.test(url)) {
+	if (/^data:/.test(url)) {
+		// TODO beef this up
 		var match = /base64,(.+)$/.exec(url);
 
 		if (!match) {
