@@ -13,7 +13,7 @@ import atob from './atob';
  * @returns {object} - a version 3 sourcemap
  */
 export default function getMapFromUrl ( url, base, sync ) {
-	if ( /^data/.test( url ) ) {
+	if ( /^data:/.test( url ) ) { // TODO beef this up
 		const match = /base64,(.+)$/.exec( url );
 
 		if ( !match ) {

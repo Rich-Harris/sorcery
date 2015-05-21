@@ -68,6 +68,21 @@ console.log "the answer is #{answer}"'
 				assert.deepEqual( actual, expected );
 			})
 		});
+
+		it( 'handles URLs that look a bit like data URIs', function () {
+			return sorcery.load( 'samples/8/datafile.js' ).then( function ( chain ) {
+				var actual = chain.trace( 1, 0 );
+
+				var expected = {
+					source: path.resolve( 'samples/8/source.js' ),
+					line: 1,
+					column: 0,
+					name: null
+				};
+
+				assert.deepEqual( actual, expected );
+			});
+		});
 	});
 
 	describe( 'chain.trace()', function () {
