@@ -14,7 +14,7 @@ command = minimist( process.argv.slice( 2 ), {
 		v: 'version',
 		h: 'help',
 		d: 'datauri',
-		x: 'exclude'
+		x: 'excludeContent'
 	}
 });
 
