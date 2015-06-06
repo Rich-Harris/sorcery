@@ -2,7 +2,6 @@
 
 var sander = require('sander');
 var path = require('path');
-var vlq = require('vlq');
 var crc32 = require('buffer-crc32');
 crc32 = 'default' in crc32 ? crc32['default'] : crc32;
 
@@ -22,11 +21,15 @@ function sourcemapComment(url, dest) {
 
 var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)|') + ( // js
 '\\/\\*#?\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
-'\\s*$', 'g'); // js
+'\\s*$', 'g');/**
+ * Encodes a string as base64
+ * @param {string} str - the string to encode
+ * @returns {string}
+ */
 
 function btoa(str) {
   return new Buffer(str).toString('base64');
-}var __classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+}function __classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var SourceMap = (function () {
 	function SourceMap(properties) {
@@ -51,6 +54,53 @@ var SourceMap = (function () {
 
 	return SourceMap;
 })();
+
+var integerToChar = {};
+
+var charToInteger = {};
+
+'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split( '' ).forEach( function ( char, i ) {
+	charToInteger[ char ] = i;
+	integerToChar[ i ] = char;
+});
+
+function encodeInteger ( num ) {
+	var result = '', clamped;
+
+	if ( num < 0 ) {
+		num = ( -num << 1 ) | 1;
+	} else {
+		num <<= 1;
+	}
+
+	do {
+		clamped = num & 31;
+		num >>= 5;
+
+		if ( num > 0 ) {
+			clamped |= 32;
+		}
+
+		result += integerToChar[ clamped ];
+	} while ( num > 0 );
+
+	return result;
+}
+
+function encode ( value ) {
+	var result, i;
+
+	if ( typeof value === 'number' ) {
+		result = encodeInteger( value );
+	} else {
+		result = '';
+		for ( i = 0; i < value.length; i += 1 ) {
+			result += encodeInteger( value[i] );
+		}
+	}
+
+	return result;
+}
 
 function encodeMappings(decoded) {
 	var offsets = {
@@ -94,7 +144,7 @@ function encodeMappings(decoded) {
 			offsets.nameIndex = segment[4];
 		}
 
-		return vlq.encode(result);
+		return encode(result);
 	}
 }
 
@@ -104,7 +154,7 @@ function tally(nodes, stat) {
 	}, 0);
 }
 
-var ___classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };// css
+function ___classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Chain = (function () {
 	function Chain(node, sourcesContentByPath) {
@@ -244,7 +294,7 @@ var Chain = (function () {
 	};
 
 	return Chain;
-})(); // source
+})();
 
 function resolveSourcePath(node, sourceRoot, source) {
 	return path.resolve(path.dirname(node.file), sourceRoot || '', source);
@@ -252,12 +302,50 @@ function resolveSourcePath(node, sourceRoot, source) {
 
 var cache = {};
 
+function decode ( string ) {
+	var result = [],
+		len = string.length,
+		i,
+		hasContinuationBit,
+		shift = 0,
+		value = 0,
+		integer,
+		shouldNegate;
+
+	for ( i = 0; i < len; i += 1 ) {
+		integer = charToInteger[ string[i] ];
+
+		if ( integer === undefined ) {
+			throw new Error( 'Invalid character (' + string[i] + ')' );
+		}
+
+		hasContinuationBit = integer & 32;
+
+		integer &= 31;
+		value += integer << shift;
+
+		if ( hasContinuationBit ) {
+			shift += 5;
+		} else {
+			shouldNegate = value & 1;
+			value >>= 1;
+
+			result.push( shouldNegate ? -value : value );
+
+			// reset
+			value = shift = 0;
+		}
+	}
+
+	return result;
+}
+
 function decodeSegments(encodedSegments) {
 	var i = encodedSegments.length;
 	var segments = new Array(i);
 
 	while (i--) {
-		segments[i] = vlq.decode(encodedSegments[i]);
+		segments[i] = decode(encodedSegments[i]);
 	}
 
 	return segments;
@@ -328,11 +416,24 @@ function decodeMappings(mappings) {
 	}
 
 	return cache[checksum];
-}
-
+}/**
+ * Decodes a base64 string
+ * @param {string} base64 - the string to decode
+ * @returns {string}
+ */
 function atob(base64) {
   return new Buffer(base64, 'base64').toString('utf8');
-}
+}/**
+ * Turns a sourceMappingURL into a sourcemap
+ * @param {string} url - the URL (i.e. sourceMappingURL=url). Can
+   be a base64-encoded data URI
+ * @param {string} base - the URL against which relative URLS
+   should be resolved
+ * @param {boolean} sync - if `true`, return a promise, otherwise
+   return the sourcemap
+ * @returns {object} - a version 3 sourcemap
+ */
+
 function getMapFromUrl(url, base, sync) {
 	if (/^data:/.test(url)) {
 		// TODO beef this up
@@ -407,7 +508,7 @@ function getContent(node, sourcesContentByPath) {
 	return sander.Promise.resolve(node.content);
 }
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Node = (function () {
 	function Node(_ref) {
@@ -570,34 +671,8 @@ var Node = (function () {
 	};
 
 	return Node;
-})(); // sometimes exists in sourcesContent, sometimes doesn't
+})();
 
-
-
-
-
-function init(file) {
-	var options = arguments[1] === undefined ? {} : arguments[1];
-
-	var node = new Node({ file: file });
-
-	var sourcesContentByPath = {};
-	var sourceMapByPath = {};
-
-	if (options.content) {
-		Object.keys(options.content).forEach(function (key) {
-			sourcesContentByPath[path.resolve(key)] = options.content[key];
-		});
-	}
-
-	if (options.sourcemaps) {
-		Object.keys(options.sourcemaps).forEach(function (key) {
-			sourceMapByPath[path.resolve(key)] = options.sourcemaps[key];
-		});
-	}
-
-	return { node: node, sourcesContentByPath: sourcesContentByPath, sourceMapByPath: sourceMapByPath };
-}
 function load(file, options) {
 	var _init = init(file, options);
 
@@ -623,6 +698,28 @@ function loadSync(file) {
 	return node.isOriginalSource ? null : new Chain(node, sourcesContentByPath);
 }
 
+function init(file) {
+	var options = arguments[1] === undefined ? {} : arguments[1];
+
+	var node = new Node({ file: file });
+
+	var sourcesContentByPath = {};
+	var sourceMapByPath = {};
+
+	if (options.content) {
+		Object.keys(options.content).forEach(function (key) {
+			sourcesContentByPath[path.resolve(key)] = options.content[key];
+		});
+	}
+
+	if (options.sourcemaps) {
+		Object.keys(options.sourcemaps).forEach(function (key) {
+			sourceMapByPath[path.resolve(key)] = options.sourcemaps[key];
+		});
+	}
+
+	return { node: node, sourcesContentByPath: sourcesContentByPath, sourceMapByPath: sourceMapByPath };
+}
+
 exports.load = load;
 exports.loadSync = loadSync;
-//# sourceMappingURL=sorcery.js.map
