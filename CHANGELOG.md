@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.2
+
+* Handle segments of length 1 (normal segments have a length of 4 or 5) ([#10](https://github.com/Rich-Harris/sorcery/issues/10))
+
 ## 0.6.1
 
 * Handle URLs that look a bit like data URIs

@@ -21,15 +21,19 @@ function sourcemapComment(url, dest) {
 
 var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)|') + ( // js
 '\\/\\*#?\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
-'\\s*$', 'g');/**
+'\\s*$', 'g');
+
+
+/**
  * Encodes a string as base64
  * @param {string} str - the string to encode
  * @returns {string}
  */
-
 function btoa(str) {
   return new Buffer(str).toString('base64');
-}function __classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+}
+
+function __classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var SourceMap = (function () {
 	function SourceMap(properties) {
@@ -187,6 +191,8 @@ var Chain = (function () {
 		var allSources = [];
 
 		var applySegment = function (segment, result) {
+			if (segment.length < 4) return;
+
 			var traced = _this.node.sources[segment[1]].trace( // source
 			segment[2], // source code line
 			segment[3], // source code column
@@ -416,14 +422,20 @@ function decodeMappings(mappings) {
 	}
 
 	return cache[checksum];
-}/**
+}
+
+
+/**
  * Decodes a base64 string
  * @param {string} base64 - the string to decode
  * @returns {string}
  */
 function atob(base64) {
   return new Buffer(base64, 'base64').toString('utf8');
-}/**
+}
+
+
+/**
  * Turns a sourceMappingURL into a sourcemap
  * @param {string} url - the URL (i.e. sourceMappingURL=url). Can
    be a base64-encoded data URI
@@ -433,7 +445,6 @@ function atob(base64) {
    return the sourcemap
  * @returns {object} - a version 3 sourcemap
  */
-
 function getMapFromUrl(url, base, sync) {
 	if (/^data:/.test(url)) {
 		// TODO beef this up
@@ -480,6 +491,7 @@ function getSourceMappingUrl(str) {
 
 	return url;
 }
+
 function getMap(node, sourceMapByPath, sync) {
 	if (node.file in sourceMapByPath) {
 		var map = sourceMapByPath[node.file];
@@ -650,6 +662,8 @@ var Node = (function () {
 				}
 
 				if (generatedCodeColumn === columnIndex) {
+					if (segments[i].length < 4) return null;
+
 					var _sourceFileIndex = segments[i][1];
 					var _sourceCodeLine = segments[i][2];
 					var sourceCodeColumn = segments[i][3];
