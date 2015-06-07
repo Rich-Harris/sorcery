@@ -261,7 +261,7 @@ console.log "the answer is #{answer}"'
 				}).then( function () {
 					return sander.readFile( 'tmp/helloworld.min.js' ).then( String ).then( function ( generated ) {
 						var mappingURL = /sourceMappingURL=([^\s]+)/.exec( generated )[1];
-						assert.equal( mappingURL, path.resolve( 'tmp/helloworld.min.js.map' ) );
+						assert.equal( mappingURL, encodeURI( path.resolve( 'tmp/helloworld.min.js.map' ) ) );
 					});
 				});
 			});
