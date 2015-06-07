@@ -131,6 +131,8 @@ export default class Node {
 				}
 
 				if ( generatedCodeColumn === columnIndex ) {
+					if ( segments[i].length < 4 ) return null;
+
 					let sourceFileIndex = segments[i][1];
 					let sourceCodeLine = segments[i][2];
 					let sourceCodeColumn = segments[i][3];

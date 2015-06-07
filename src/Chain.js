@@ -36,6 +36,8 @@ export default class Chain {
 		let allSources = [];
 
 		const applySegment = ( segment, result ) => {
+			if ( segment.length < 4 ) return;
+
 			const traced = this.node.sources[ segment[1] ].trace( // source
 				segment[2], // source code line
 				segment[3], // source code column

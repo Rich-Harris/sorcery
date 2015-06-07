@@ -83,6 +83,13 @@ console.log "the answer is #{answer}"'
 				assert.deepEqual( actual, expected );
 			});
 		});
+
+		it( 'handles segments of length 1', function () {
+			return sorcery.load( 'samples/8/datafile.js' ).then( function ( chain ) {
+				// this will throw if 1-length segments are rejected
+				var map = chain.apply();
+			});
+		});
 	});
 
 	describe( 'chain.trace()', function () {
