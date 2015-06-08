@@ -23,6 +23,11 @@ var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_
 '\\/\\*#?\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
 '\\s*$', 'g');
 
+function slash(path) {
+  if (typeof path === 'string') return path.replace(/\\/g, '/');
+  return path;
+}
+
 
 /**
  * Encodes a string as base64
@@ -258,7 +263,7 @@ var Chain = (function () {
 		return new SourceMap({
 			file: path.basename(this.node.file),
 			sources: allSources.map(function (source) {
-				return path.relative(options.base || path.dirname(_this.node.file), source);
+				return slash(path.relative(options.base || path.dirname(_this.node.file), source));
 			}),
 			sourcesContent: allSources.map(function (source) {
 				return includeContent ? _this.sourcesContentByPath[source] : null;
@@ -664,10 +669,10 @@ var Node = (function () {
 				if (generatedCodeColumn === columnIndex) {
 					if (segments[i].length < 4) return null;
 
-					var _sourceFileIndex = segments[i][1];
-					var _sourceCodeLine = segments[i][2];
-					var sourceCodeColumn = segments[i][3];
-					var _nameIndex = segments[i][4];
+					var _sourceFileIndex = segments[i][1] || 0;
+					var _sourceCodeLine = segments[i][2] || 0;
+					var sourceCodeColumn = segments[i][3] || 0;
+					var _nameIndex = segments[i][4] || 0;
 
 					var _parent = this.sources[_sourceFileIndex];
 					return _parent.trace(_sourceCodeLine, sourceCodeColumn, this.map.names[_nameIndex] || name);
@@ -676,9 +681,9 @@ var Node = (function () {
 		}
 
 		// fall back to a line mapping
-		var sourceFileIndex = segments[0][1];
-		var sourceCodeLine = segments[0][2];
-		var nameIndex = segments[0][4];
+		var sourceFileIndex = segments[0][1] || 0;
+		var sourceCodeLine = segments[0][2] || 0;
+		var nameIndex = segments[0][4] || 0;
 
 		var parent = this.sources[sourceFileIndex];
 		return parent.trace(sourceCodeLine, null, this.map.names[nameIndex] || name);
