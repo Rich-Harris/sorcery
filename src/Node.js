@@ -133,10 +133,10 @@ export default class Node {
 				if ( generatedCodeColumn === columnIndex ) {
 					if ( segments[i].length < 4 ) return null;
 
-					let sourceFileIndex = segments[i][1];
-					let sourceCodeLine = segments[i][2];
-					let sourceCodeColumn = segments[i][3];
-					let nameIndex = segments[i][4];
+					let sourceFileIndex = segments[i][1] || 0;
+					let sourceCodeLine = segments[i][2] || 0;
+					let sourceCodeColumn = segments[i][3] || 0;
+					let nameIndex = segments[i][4] || 0;
 
 					let parent = this.sources[ sourceFileIndex ];
 					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[ nameIndex ] || name );
@@ -145,9 +145,9 @@ export default class Node {
 		}
 
 		// fall back to a line mapping
-		let sourceFileIndex = segments[0][1];
-		let sourceCodeLine = segments[0][2];
-		let nameIndex = segments[0][4];
+		let sourceFileIndex = segments[0][1] || 0;
+		let sourceCodeLine = segments[0][2] || 0;
+		let nameIndex = segments[0][4] || 0;
 
 		let parent = this.sources[ sourceFileIndex ];
 		return parent.trace( sourceCodeLine, null, this.map.names[ nameIndex ] || name );
