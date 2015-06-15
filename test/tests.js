@@ -362,5 +362,61 @@ console.log "the answer is #{answer}"'
 				assert.deepEqual( actual, expected );
 			});
 		});
+
+		describe( 'chain.apply()', function () {
+			it( 'includes sourcesContent', function () {
+				var chain = sorcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
+
+				var map, smc;
+
+				map = chain.apply();
+				smc = new SourceMapConsumer( map );
+
+				assert.equal( map.version, 3 );
+				assert.deepEqual( map.file, 'helloworld.min.js' );
+				assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
+				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
+
+				var loc = smc.originalPositionFor({ line: 1, column: 31 });
+				assert.equal( loc.source, 'helloworld.coffee' );
+				assert.equal( loc.line, 2 );
+				assert.equal( loc.column, 8 );
+				assert.equal( loc.name, 'log' );
+			});
+
+			it( 'includes user-specified content', function () {
+				var javascript = '(function() {\
+var answer;\
+\
+answer = 40 + 2;\
+\
+console.log("the answer is " + answer);\
+\
+}).call(this);';
+
+				var coffeescript = 'answer = 40 + 2\
+console.log "the answer is #{answer}"';
+
+				var chain = sorcery.loadSync( 'example.js', {
+					content: {
+						'example.js': javascript,
+						'example.coffee': coffeescript
+					},
+					sourcemaps: {
+						'example.js': {
+							version: 3,
+							sources:[ 'example.coffee' ],
+							sourcesContent: [ null ],
+							names: [],
+							mappings: 'AAAA;AAAA,MAAA,MAAA;;AAAA,EAAA,MAAA,GAAS,EAAA,GAAK,CAAd,CAAA;;AAAA,EACA,OAAO,CAAC,GAAR,CAAa,gBAAA,GAAe,MAA5B,CADA,CAAA;AAAA'
+						}
+					}
+				});
+
+				var map = chain.apply();
+
+				assert.deepEqual( map.sourcesContent, [ coffeescript ] );
+			});
+		});
 	});
 });

@@ -58,7 +58,11 @@ export default class Node {
 
 	loadSync ( sourcesContentByPath, sourceMapByPath ) {
 		if ( !this.content ) {
-			this.content = sourcesContentByPath[ this.file ] = readFileSync( this.file ).toString();
+			if ( !sourcesContentByPath[ this.file ] ) {
+				sourcesContentByPath[ this.file ] = readFileSync( this.file ).toString();
+			}
+
+			this.content = sourcesContentByPath[ this.file ];
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
