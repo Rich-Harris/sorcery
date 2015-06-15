@@ -1,5 +1,10 @@
 # changelog
 
+## 0.6.3
+
+* New `writeSync` method - same options as `write` ([#16](https://github.com/Rich-Harris/sorcery/issues/16))
+* User-supplied content is correctly used in `sourcesContent` with `loadSync` ([#16](https://github.com/Rich-Harris/sorcery/issues/16))
+
 ## 0.6.2
 
 * Handle segments of length 1 (normal segments have a length of 4 or 5) ([#10](https://github.com/Rich-Harris/sorcery/issues/10))

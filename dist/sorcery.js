@@ -23,6 +23,27 @@ var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_
 '\\/\\*#?\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
 '\\s*$', 'g');
 
+function processWriteOptions(dest, chain, options) {
+	var resolved = path.resolve(dest);
+
+	var map = chain.apply({
+		includeContent: options.includeContent,
+		base: options.base ? path.resolve(options.base) : path.dirname(resolved)
+	});
+
+	var url = options.inline ? map.toUrl() : (options.absolutePath ? resolved : path.basename(resolved)) + '.map';
+
+	// TODO shouldn't url be relative?
+	var content = chain.node.content.replace(SOURCEMAP_COMMENT, '') + sourcemapComment(url, resolved);
+
+	return { resolved: resolved, content: content, map: map };
+}
+
+function slash(path) {
+  if (typeof path === 'string') return path.replace(/\\/g, '/');
+  return path;
+}
+
 
 /**
  * Encodes a string as base64
@@ -258,7 +279,7 @@ var Chain = (function () {
 		return new SourceMap({
 			file: path.basename(this.node.file),
 			sources: allSources.map(function (source) {
-				return path.relative(options.base || path.dirname(_this.node.file), source);
+				return slash(path.relative(options.base || path.dirname(_this.node.file), source));
 			}),
 			sourcesContent: allSources.map(function (source) {
 				return includeContent ? _this.sourcesContentByPath[source] : null;
@@ -279,24 +300,41 @@ var Chain = (function () {
 		}
 
 		options = options || {};
-		dest = path.resolve(dest);
 
-		var map = this.apply({
-			includeContent: options.includeContent,
-			base: options.base ? path.resolve(options.base) : path.dirname(dest)
-		});
+		var _processWriteOptions = processWriteOptions(dest, this, options);
 
-		var url = options.inline ? map.toUrl() : (options.absolutePath ? dest : path.basename(dest)) + '.map';
+		var resolved = _processWriteOptions.resolved;
+		var content = _processWriteOptions.content;
+		var map = _processWriteOptions.map;
 
-		var content = this.node.content.replace(SOURCEMAP_COMMENT, '') + sourcemapComment(url, dest);
-
-		var promises = [sander.writeFile(dest, content)];
+		var promises = [sander.writeFile(resolved, content)];
 
 		if (!options.inline) {
-			promises.push(sander.writeFile(dest + '.map', map.toString()));
+			promises.push(sander.writeFile(resolved + '.map', map.toString()));
 		}
 
 		return Promise.all(promises);
+	};
+
+	Chain.prototype.writeSync = function writeSync(dest, options) {
+		if (typeof dest !== 'string') {
+			options = dest;
+			dest = this.node.file;
+		}
+
+		options = options || {};
+
+		var _processWriteOptions2 = processWriteOptions(dest, this, options);
+
+		var resolved = _processWriteOptions2.resolved;
+		var content = _processWriteOptions2.content;
+		var map = _processWriteOptions2.map;
+
+		sander.writeFileSync(resolved, content);
+
+		if (!options.inline) {
+			sander.writeFileSync(resolved + '.map', map.toString());
+		}
 	};
 
 	return Chain;
@@ -588,7 +626,11 @@ var Node = (function () {
 		var _this2 = this;
 
 		if (!this.content) {
-			this.content = sourcesContentByPath[this.file] = sander.readFileSync(this.file).toString();
+			if (!sourcesContentByPath[this.file]) {
+				sourcesContentByPath[this.file] = sander.readFileSync(this.file).toString();
+			}
+
+			this.content = sourcesContentByPath[this.file];
 		}
 
 		var map = getMap(this, sourceMapByPath, true);

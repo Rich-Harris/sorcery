@@ -61,6 +61,7 @@ sorcery.load( 'some/generated/code.min.js' ).then( function ( chain ) {
 var chain = sorcery.loadSync( 'some/generated/code.min.js' );
 var map = chain.apply();
 var loc = chain.trace( x, y );
+chain.writeSync();
 ```
 
 #### Advanced options
@@ -132,4 +133,3 @@ sorcery -i some/generated/code.min.js -o newfile.js
 ## License
 
 MIT
-
