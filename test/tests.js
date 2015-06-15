@@ -16,11 +16,11 @@ describe( 'sorcery', function () {
 	this.timeout( 20000 );
 
 	beforeEach( function () {
-		return sander.rimraf( 'tmp' );
+		return sander.rimraf( '.tmp' );
 	});
 
 	afterEach( function () {
-		return sander.rimraf( 'tmp' );
+		return sander.rimraf( '.tmp' );
 	});
 
 	describe( 'sorcery.load()', function () {
@@ -263,12 +263,12 @@ console.log "the answer is #{answer}"'
 
 		it( 'allows sourceMappingURL to be an absolute path', function () {
 			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( function ( chain ) {
-				return chain.write( 'tmp/helloworld.min.js', {
+				return chain.write( '.tmp/helloworld.min.js', {
 					absolutePath: true
 				}).then( function () {
-					return sander.readFile( 'tmp/helloworld.min.js' ).then( String ).then( function ( generated ) {
+					return sander.readFile( '.tmp/helloworld.min.js' ).then( String ).then( function ( generated ) {
 						var mappingURL = /sourceMappingURL=([^\s]+)/.exec( generated )[1];
-						assert.equal( mappingURL, encodeURI( path.resolve( 'tmp/helloworld.min.js.map' ) ) );
+						assert.equal( mappingURL, encodeURI( path.resolve( '.tmp/helloworld.min.js.map' ) ) );
 					});
 				});
 			});
@@ -416,6 +416,32 @@ console.log "the answer is #{answer}"';
 				var map = chain.apply();
 
 				assert.deepEqual( map.sourcesContent, [ coffeescript ] );
+			});
+		});
+
+		describe( 'chain.writeSync()', function () {
+			it( 'writes a file and accompanying sourcemap', function () {
+				var chain = sorcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
+
+				chain.writeSync( '.tmp/write-file/helloworld.min.js' );
+
+				return sorcery.load( '.tmp/write-file/helloworld.min.js' ).then( function ( chain ) {
+					var map, smc;
+
+					map = chain.apply();
+					smc = new SourceMapConsumer( map );
+
+					assert.equal( map.version, 3 );
+					assert.deepEqual( map.file, 'helloworld.min.js' );
+					assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
+					assert.deepEqual( map.sourcesContent, [ sander.readFileSync( __dirname, 'samples/1/tmp/helloworld.coffee' ).toString() ]);
+
+					var loc = smc.originalPositionFor({ line: 1, column: 31 });
+					assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
+					assert.equal( loc.line, 2 );
+					assert.equal( loc.column, 8 );
+					assert.equal( loc.name, 'log' );
+				});
 			});
 		});
 	});

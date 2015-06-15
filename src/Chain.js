@@ -1,5 +1,5 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
-import { writeFile } from 'sander';
+import { writeFile, writeFileSync } from 'sander';
 import SourceMap from './SourceMap';
 import encodeMappings from './utils/encodeMappings';
 import slash from './utils/slash';
@@ -124,25 +124,50 @@ export default class Chain {
 		}
 
 		options = options || {};
-		dest = resolve( dest );
 
-		const map = this.apply({
-			includeContent: options.includeContent,
-			base: options.base ? resolve( options.base ) : dirname( dest )
-		});
+		const { resolved, content, map } = processWriteOptions( dest, this, options );
 
-		const url = options.inline ? map.toUrl() : ( options.absolutePath ? dest : basename( dest ) ) + '.map';
-
-		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, dest );
-
-		let promises = [ writeFile( dest, content ) ];
+		let promises = [ writeFile( resolved, content ) ];
 
 		if ( !options.inline ) {
-			promises.push( writeFile( dest + '.map', map.toString() ) );
+			promises.push( writeFile( resolved + '.map', map.toString() ) );
 		}
 
 		return Promise.all( promises );
 	}
+
+	writeSync ( dest, options ) {
+		if ( typeof dest !== 'string' ) {
+			options = dest;
+			dest = this.node.file;
+		}
+
+		options = options || {};
+
+		const { resolved, content, map } = processWriteOptions( dest, this, options );
+
+		writeFileSync( resolved, content );
+
+		if ( !options.inline ) {
+			writeFileSync( resolved + '.map', map.toString() );
+		}
+	}
+}
+
+function processWriteOptions ( dest, chain, options ) {
+	const resolved = resolve( dest );
+
+	const map = chain.apply({
+		includeContent: options.includeContent,
+		base: options.base ? resolve( options.base ) : dirname( resolved )
+	});
+
+	const url = options.inline ? map.toUrl() : ( options.absolutePath ? resolved : basename( resolved ) ) + '.map';
+
+	// TODO shouldn't url be relative?
+	const content = chain.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
+
+	return { resolved, content, map };
 }
 
 function tally ( nodes, stat ) {
