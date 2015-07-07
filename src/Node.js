@@ -5,7 +5,7 @@ import getMap from './utils/getMap';
 
 export default class Node {
 	constructor ({ file, content }) {
-		this.file = file ? resolve( file ) : null;
+		this.file = file ? (file.indexOf("://") >= 0 ? file : resolve( file )) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 		if ( !this.file && this.content === null ) {
@@ -77,9 +77,16 @@ export default class Node {
 			sourcesContent = map.sourcesContent || [];
 
 			this.sources = map.sources.map( ( source, i ) => {
+				var resolvedSource = resolveSourcePath(this, map.sourceRoot, source),
+					sourceContent = sourcesContent[i];
+
+				if (!sourcesContentByPath[resolvedSource] && sourceContent) {
+					sourcesContentByPath[resolvedSource] = sourceContent;
+				}
+
 				const node = new Node({
-					file: resolveSourcePath( this, map.sourceRoot, source ),
-					content: sourcesContent[i]
+					file: resolvedSource,
+					content: sourceContent
 				});
 
 				node.loadSync( sourcesContentByPath, sourceMapByPath );
@@ -171,5 +178,5 @@ function getContent ( node, sourcesContentByPath ) {
 }
 
 function resolveSourcePath ( node, sourceRoot, source ) {
-	return resolve( dirname( node.file ), sourceRoot || '', source );
+	return source.indexOf("://") >= 0 ? source :resolve( dirname( node.file ), sourceRoot || '', source );
 }

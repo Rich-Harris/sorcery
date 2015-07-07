@@ -106,7 +106,7 @@ export default class Chain {
 
 		return new SourceMap({
 			file: basename( this.node.file ),
-			sources: allSources.map( source => slash( relative( options.base || dirname( this.node.file ), source ) ) ),
+			sources: allSources.map( source => source.indexOf("://") >= 0 ? source : slash( relative( options.base || dirname( this.node.file ), source ) ) ),
 			sourcesContent: allSources.map( source => includeContent ? this.sourcesContentByPath[ source ] : null ),
 			names: allNames,
 			mappings
