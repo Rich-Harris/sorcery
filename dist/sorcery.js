@@ -193,11 +193,11 @@ var Chain = (function () {
 
 	Chain.prototype.stat = function stat() {
 		return {
-			selfDecodingTime: this._stats.decodingTime / 1000000,
-			totalDecodingTime: (this._stats.decodingTime + tally(this.node.sources, 'decodingTime')) / 1000000,
+			selfDecodingTime: this._stats.decodingTime / 1e6,
+			totalDecodingTime: (this._stats.decodingTime + tally(this.node.sources, 'decodingTime')) / 1e6,
 
-			encodingTime: this._stats.encodingTime / 1000000,
-			tracingTime: this._stats.tracingTime / 1000000,
+			encodingTime: this._stats.encodingTime / 1e6,
+			tracingTime: this._stats.tracingTime / 1e6,
 
 			untraceable: this._stats.untraceable
 		};
@@ -266,20 +266,20 @@ var Chain = (function () {
 		}
 
 		var tracingTime = process.hrtime(tracingStart);
-		this._stats.tracingTime = 1000000000 * tracingTime[0] + tracingTime[1];
+		this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
 
 		// Encode mappings
 		var encodingStart = process.hrtime();
 		var mappings = encodeMappings(resolved);
 		var encodingTime = process.hrtime(encodingStart);
-		this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
+		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 
 		var includeContent = options.includeContent !== false;
 
 		return new SourceMap({
 			file: path.basename(this.node.file),
 			sources: allSources.map(function (source) {
-				return slash(path.relative(options.base || path.dirname(_this.node.file), source));
+				return source.indexOf('://') >= 0 ? source : slash(path.relative(options.base || path.dirname(_this.node.file), source));
 			}),
 			sourcesContent: allSources.map(function (source) {
 				return includeContent ? _this.sourcesContentByPath[source] : null;
@@ -341,7 +341,7 @@ var Chain = (function () {
 })();
 
 function resolveSourcePath(node, sourceRoot, source) {
-	return path.resolve(path.dirname(node.file), sourceRoot || '', source);
+	return source.indexOf('://') >= 0 ? source : path.resolve(path.dirname(node.file), sourceRoot || '', source);
 }
 
 var cache = {};
@@ -567,7 +567,7 @@ var Node = (function () {
 
 		_classCallCheck(this, Node);
 
-		this.file = file ? path.resolve(file) : null;
+		this.file = file ? file.indexOf('://') >= 0 ? file : path.resolve(file) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 		if (!this.file && this.content === null) {
@@ -603,7 +603,7 @@ var Node = (function () {
 				var decodingStart = process.hrtime();
 				_this.mappings = decodeMappings(map.mappings);
 				var decodingTime = process.hrtime(decodingStart);
-				_this._stats.decodingTime = 1000000000 * decodingTime[0] + decodingTime[1];
+				_this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
 
 				var sourcesContent = map.sourcesContent || [];
 
@@ -645,9 +645,16 @@ var Node = (function () {
 			sourcesContent = map.sourcesContent || [];
 
 			this.sources = map.sources.map(function (source, i) {
+				var resolvedSource = resolveSourcePath(_this2, map.sourceRoot, source),
+				    sourceContent = sourcesContent[i];
+
+				if (!sourcesContentByPath[resolvedSource] && sourceContent) {
+					sourcesContentByPath[resolvedSource] = sourceContent;
+				}
+
 				var node = new Node({
-					file: resolveSourcePath(_this2, map.sourceRoot, source),
-					content: sourcesContent[i]
+					file: resolvedSource,
+					content: sourceContent
 				});
 
 				node.loadSync(sourcesContentByPath, sourceMapByPath);

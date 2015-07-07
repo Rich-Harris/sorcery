@@ -24,13 +24,13 @@ function init ( file, options = {} ) {
 
 	if ( options.content ) {
 		Object.keys( options.content ).forEach( key => {
-			sourcesContentByPath[ key.indexOf("://") >= 0 ? key : resolve( key ) ] = options.content[ key ];
+			sourcesContentByPath[ resolve( key ) ] = options.content[ key ];
 		});
 	}
 
 	if ( options.sourcemaps ) {
 		Object.keys( options.sourcemaps ).forEach( key => {
-			sourceMapByPath[ key.indexOf("://") >= 0 ? key : resolve( key ) ] = options.sourcemaps[ key ];
+			sourceMapByPath[ resolve( key ) ] = options.sourcemaps[ key ];
 		});
 	}
 
