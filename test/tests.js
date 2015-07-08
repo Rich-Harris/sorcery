@@ -341,6 +341,21 @@ console.log "the answer is #{answer}"'
 				});
 			});
 		});
+
+		it( 'handles sources with URL patterns differently from file paths (#9)', function () {
+			return sorcery.load( 'samples/9/urlSource.js' ).then( function ( chain ) {
+				return chain.write( '.tmp/write-file/urlSource.js' ).then( function () {
+					return sander.readFile( '.tmp/write-file/urlSource.js.map' )
+						.then( String )
+						.then( function ( js ) {
+							// sources that have "://" in them are not normalized the way filespecs are
+							// and should appear in the target .map file exactly as they appeared in the
+							// source .map file
+							assert.ok( ~js.indexOf( "webpack:///./src/bar.js" ) );
+						});
+				});
+			});
+		});
 	});
 
 	describe( 'sorcery (sync)', function () {

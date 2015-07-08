@@ -1,0 +1,7 @@
+{
+	"version": 3,
+	"sources":[ "webpack:///./src/bar.js" ],
+	"sourcesContent": [ "console.log('bar');" ],
+	"names": [],
+	"mappings": "AAAA"
+}
