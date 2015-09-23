@@ -40,8 +40,7 @@ function processWriteOptions(dest, chain, options) {
 }
 
 function slash(path) {
-  if (typeof path === 'string') return path.replace(/\\/g, '/');
-  return path;
+	return typeof path === 'string' ? path.replace(/\\/g, '/') : path;
 }
 
 
@@ -193,11 +192,11 @@ var Chain = (function () {
 
 	Chain.prototype.stat = function stat() {
 		return {
-			selfDecodingTime: this._stats.decodingTime / 1000000,
-			totalDecodingTime: (this._stats.decodingTime + tally(this.node.sources, 'decodingTime')) / 1000000,
+			selfDecodingTime: this._stats.decodingTime / 1e6,
+			totalDecodingTime: (this._stats.decodingTime + tally(this.node.sources, 'decodingTime')) / 1e6,
 
-			encodingTime: this._stats.encodingTime / 1000000,
-			tracingTime: this._stats.tracingTime / 1000000,
+			encodingTime: this._stats.encodingTime / 1e6,
+			tracingTime: this._stats.tracingTime / 1e6,
 
 			untraceable: this._stats.untraceable
 		};
@@ -206,7 +205,7 @@ var Chain = (function () {
 	Chain.prototype.apply = function apply() {
 		var _this = this;
 
-		var options = arguments[0] === undefined ? {} : arguments[0];
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 		var allNames = [];
 		var allSources = [];
@@ -266,13 +265,13 @@ var Chain = (function () {
 		}
 
 		var tracingTime = process.hrtime(tracingStart);
-		this._stats.tracingTime = 1000000000 * tracingTime[0] + tracingTime[1];
+		this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
 
 		// Encode mappings
 		var encodingStart = process.hrtime();
 		var mappings = encodeMappings(resolved);
 		var encodingTime = process.hrtime(encodingStart);
-		this._stats.encodingTime = 1000000000 * encodingTime[0] + encodingTime[1];
+		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 
 		var includeContent = options.includeContent !== false;
 
@@ -603,7 +602,7 @@ var Node = (function () {
 				var decodingStart = process.hrtime();
 				_this.mappings = decodeMappings(map.mappings);
 				var decodingTime = process.hrtime(decodingStart);
-				_this._stats.decodingTime = 1000000000 * decodingTime[0] + decodingTime[1];
+				_this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
 
 				var sourcesContent = map.sourcesContent || [];
 
@@ -742,7 +741,7 @@ function load(file, options) {
 }
 
 function loadSync(file) {
-	var options = arguments[1] === undefined ? {} : arguments[1];
+	var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 	var _init2 = init(file, options);
 
@@ -755,7 +754,7 @@ function loadSync(file) {
 }
 
 function init(file) {
-	var options = arguments[1] === undefined ? {} : arguments[1];
+	var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 	var node = new Node({ file: file });
 
