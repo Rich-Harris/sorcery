@@ -1,48 +1,13 @@
 'use strict';
 
+var _path = require('path');
 var sander = require('sander');
-var path = require('path');
 var crc32 = require('buffer-crc32');
 crc32 = 'default' in crc32 ? crc32['default'] : crc32;
-
-var SOURCEMAPPING_URL = 'sourceMa';
-SOURCEMAPPING_URL += 'ppingURL';
-
-function sourcemapComment(url, dest) {
-	var ext = path.extname(dest);
-	url = encodeURI(url);
-
-	if (ext === '.css') {
-		return '\n/*# ' + SOURCEMAPPING_URL + '=' + url + ' */\n';
-	}
-
-	return '\n//# ' + SOURCEMAPPING_URL + '=' + url + '\n';
-}
-
-var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)|') + ( // js
-'\\/\\*#?\\s*' + SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
-'\\s*$', 'g');
-
-function processWriteOptions(dest, chain, options) {
-	var resolved = path.resolve(dest);
-
-	var map = chain.apply({
-		includeContent: options.includeContent,
-		base: options.base ? path.resolve(options.base) : path.dirname(resolved)
-	});
-
-	var url = options.inline ? map.toUrl() : (options.absolutePath ? resolved : path.basename(resolved)) + '.map';
-
-	// TODO shouldn't url be relative?
-	var content = chain.node.content.replace(SOURCEMAP_COMMENT, '') + sourcemapComment(url, resolved);
-
-	return { resolved: resolved, content: content, map: map };
-}
 
 function slash(path) {
 	return typeof path === 'string' ? path.replace(/\\/g, '/') : path;
 }
-
 
 /**
  * Encodes a string as base64
@@ -53,11 +18,11 @@ function btoa(str) {
   return new Buffer(str).toString('base64');
 }
 
-function __classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var SourceMap = (function () {
 	function SourceMap(properties) {
-		__classCallCheck(this, SourceMap);
+		_classCallCheck(this, SourceMap);
 
 		this.version = 3;
 
@@ -79,14 +44,66 @@ var SourceMap = (function () {
 	return SourceMap;
 })();
 
-var integerToChar = {};
-
 var charToInteger = {};
+var integerToChar = {};
 
 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split( '' ).forEach( function ( char, i ) {
 	charToInteger[ char ] = i;
 	integerToChar[ i ] = char;
 });
+
+function decode ( string ) {
+	var result = [],
+		len = string.length,
+		i,
+		hasContinuationBit,
+		shift = 0,
+		value = 0,
+		integer,
+		shouldNegate;
+
+	for ( i = 0; i < len; i += 1 ) {
+		integer = charToInteger[ string[i] ];
+
+		if ( integer === undefined ) {
+			throw new Error( 'Invalid character (' + string[i] + ')' );
+		}
+
+		hasContinuationBit = integer & 32;
+
+		integer &= 31;
+		value += integer << shift;
+
+		if ( hasContinuationBit ) {
+			shift += 5;
+		} else {
+			shouldNegate = value & 1;
+			value >>= 1;
+
+			result.push( shouldNegate ? -value : value );
+
+			// reset
+			value = shift = 0;
+		}
+	}
+
+	return result;
+}
+
+function encode ( value ) {
+	var result, i;
+
+	if ( typeof value === 'number' ) {
+		result = encodeInteger( value );
+	} else {
+		result = '';
+		for ( i = 0; i < value.length; i += 1 ) {
+			result += encodeInteger( value[i] );
+		}
+	}
+
+	return result;
+}
 
 function encodeInteger ( num ) {
 	var result = '', clamped;
@@ -107,21 +124,6 @@ function encodeInteger ( num ) {
 
 		result += integerToChar[ clamped ];
 	} while ( num > 0 );
-
-	return result;
-}
-
-function encode ( value ) {
-	var result, i;
-
-	if ( typeof value === 'number' ) {
-		result = encodeInteger( value );
-	} else {
-		result = '';
-		for ( i = 0; i < value.length; i += 1 ) {
-			result += encodeInteger( value[i] );
-		}
-	}
 
 	return result;
 }
@@ -172,17 +174,18 @@ function encodeMappings(decoded) {
 	}
 }
 
-function tally(nodes, stat) {
-	return nodes.reduce(function (total, node) {
-		return total + node._stats[stat];
-	}, 0);
-}
+function __classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-function ___classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+var _SOURCEMAPPING_URL = 'sourceMa';
+_SOURCEMAPPING_URL += 'ppingURL';
+
+var SOURCEMAP_COMMENT = new RegExp('\n*(?:' + ('\\/\\/[@#]\\s*' + _SOURCEMAPPING_URL + '=([^\'"]+)|') + ( // js
+'\\/\\*#?\\s*' + _SOURCEMAPPING_URL + '=([^\'"]+)\\s\\*\\/)') + // css
+'\\s*$', 'g');
 
 var Chain = (function () {
 	function Chain(node, sourcesContentByPath) {
-		___classCallCheck(this, Chain);
+		__classCallCheck(this, Chain);
 
 		this.node = node;
 		this.sourcesContentByPath = sourcesContentByPath;
@@ -276,9 +279,9 @@ var Chain = (function () {
 		var includeContent = options.includeContent !== false;
 
 		return new SourceMap({
-			file: path.basename(this.node.file),
+			file: _path.basename(this.node.file),
 			sources: allSources.map(function (source) {
-				return slash(path.relative(options.base || path.dirname(_this.node.file), source));
+				return slash(_path.relative(options.base || _path.dirname(_this.node.file), source));
 			}),
 			sourcesContent: allSources.map(function (source) {
 				return includeContent ? _this.sourcesContentByPath[source] : null;
@@ -339,49 +342,40 @@ var Chain = (function () {
 	return Chain;
 })();
 
-function resolveSourcePath(node, sourceRoot, source) {
-	return path.resolve(path.dirname(node.file), sourceRoot || '', source);
+function processWriteOptions(dest, chain, options) {
+	var resolved = _path.resolve(dest);
+
+	var map = chain.apply({
+		includeContent: options.includeContent,
+		base: options.base ? _path.resolve(options.base) : _path.dirname(resolved)
+	});
+
+	var url = options.inline ? map.toUrl() : (options.absolutePath ? resolved : _path.basename(resolved)) + '.map';
+
+	// TODO shouldn't url be relative?
+	var content = chain.node.content.replace(SOURCEMAP_COMMENT, '') + sourcemapComment(url, resolved);
+
+	return { resolved: resolved, content: content, map: map };
+}
+
+function tally(nodes, stat) {
+	return nodes.reduce(function (total, node) {
+		return total + node._stats[stat];
+	}, 0);
+}
+
+function sourcemapComment(url, dest) {
+	var ext = _path.extname(dest);
+	url = encodeURI(url);
+
+	if (ext === '.css') {
+		return '\n/*# ' + _SOURCEMAPPING_URL + '=' + url + ' */\n';
+	}
+
+	return '\n//# ' + _SOURCEMAPPING_URL + '=' + url + '\n';
 }
 
 var cache = {};
-
-function decode ( string ) {
-	var result = [],
-		len = string.length,
-		i,
-		hasContinuationBit,
-		shift = 0,
-		value = 0,
-		integer,
-		shouldNegate;
-
-	for ( i = 0; i < len; i += 1 ) {
-		integer = charToInteger[ string[i] ];
-
-		if ( integer === undefined ) {
-			throw new Error( 'Invalid character (' + string[i] + ')' );
-		}
-
-		hasContinuationBit = integer & 32;
-
-		integer &= 31;
-		value += integer << shift;
-
-		if ( hasContinuationBit ) {
-			shift += 5;
-		} else {
-			shouldNegate = value & 1;
-			value >>= 1;
-
-			result.push( shouldNegate ? -value : value );
-
-			// reset
-			value = shift = 0;
-		}
-	}
-
-	return result;
-}
 
 function decodeSegments(encodedSegments) {
 	var i = encodedSegments.length;
@@ -461,7 +455,6 @@ function decodeMappings(mappings) {
 	return cache[checksum];
 }
 
-
 /**
  * Decodes a base64 string
  * @param {string} base64 - the string to decode
@@ -471,11 +464,15 @@ function atob(base64) {
   return new Buffer(base64, 'base64').toString('utf8');
 }
 
+// this looks ridiculous, but it prevents sourcemap tooling from mistaking
+// this for an actual sourceMappingURL
+var SOURCEMAPPING_URL = 'sourceMa';
+SOURCEMAPPING_URL += 'ppingURL';
 
 /**
  * Turns a sourceMappingURL into a sourcemap
- * @param {string} url - the URL (i.e. sourceMappingURL=url). Can
-   be a base64-encoded data URI
+ * @param {string} url - the sourceMappingURL. Can be a
+   base64-encoded data URI
  * @param {string} base - the URL against which relative URLS
    should be resolved
  * @param {boolean} sync - if `true`, return a promise, otherwise
@@ -488,7 +485,7 @@ function getMapFromUrl(url, base, sync) {
 		var match = /base64,(.+)$/.exec(url);
 
 		if (!match) {
-			throw new Error('sourceMappingURL is not base64-encoded');
+			throw new Error(SOURCEMAPPING_URL + ' is not base64-encoded');
 		}
 
 		var json = atob(match[1]);
@@ -496,7 +493,7 @@ function getMapFromUrl(url, base, sync) {
 		return sync ? map : sander.Promise.resolve(map);
 	}
 
-	url = path.resolve(path.dirname(base), decodeURI(url));
+	url = _path.resolve(_path.dirname(base), decodeURI(url));
 
 	if (sync) {
 		return JSON.parse(sander.readFileSync(url).toString());
@@ -509,7 +506,7 @@ function getSourceMappingUrl(str) {
 	var index, substring, url, match;
 
 	// assume we want the last occurence
-	index = str.lastIndexOf('sourceMappingURL=');
+	index = str.lastIndexOf(SOURCEMAPPING_URL + '=');
 
 	if (index === -1) {
 		return null;
@@ -545,28 +542,16 @@ function getMap(node, sourceMapByPath, sync) {
 	}
 }
 
-function getContent(node, sourcesContentByPath) {
-	if (node.file in sourcesContentByPath) {
-		node.content = sourcesContentByPath[node.file];
-	}
-
-	if (!node.content) {
-		return sander.readFile(node.file).then(String);
-	}
-
-	return sander.Promise.resolve(node.content);
-}
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+function ___classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Node = (function () {
 	function Node(_ref) {
 		var file = _ref.file;
 		var content = _ref.content;
 
-		_classCallCheck(this, Node);
+		___classCallCheck(this, Node);
 
-		this.file = file ? path.resolve(file) : null;
+		this.file = file ? _path.resolve(file) : null;
 		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 		if (!this.file && this.content === null) {
@@ -728,7 +713,23 @@ var Node = (function () {
 	return Node;
 })();
 
-function load(file, options) {
+function getContent(node, sourcesContentByPath) {
+	if (node.file in sourcesContentByPath) {
+		node.content = sourcesContentByPath[node.file];
+	}
+
+	if (!node.content) {
+		return sander.readFile(node.file).then(String);
+	}
+
+	return sander.Promise.resolve(node.content);
+}
+
+function resolveSourcePath(node, sourceRoot, source) {
+	return _path.resolve(_path.dirname(node.file), sourceRoot || '', source);
+}
+
+function _load(file, options) {
 	var _init = init(file, options);
 
 	var node = _init.node;
@@ -740,7 +741,7 @@ function load(file, options) {
 	});
 }
 
-function loadSync(file) {
+function _loadSync(file) {
 	var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 	var _init2 = init(file, options);
@@ -763,18 +764,19 @@ function init(file) {
 
 	if (options.content) {
 		Object.keys(options.content).forEach(function (key) {
-			sourcesContentByPath[path.resolve(key)] = options.content[key];
+			sourcesContentByPath[_path.resolve(key)] = options.content[key];
 		});
 	}
 
 	if (options.sourcemaps) {
 		Object.keys(options.sourcemaps).forEach(function (key) {
-			sourceMapByPath[path.resolve(key)] = options.sourcemaps[key];
+			sourceMapByPath[_path.resolve(key)] = options.sourcemaps[key];
 		});
 	}
 
 	return { node: node, sourcesContentByPath: sourcesContentByPath, sourceMapByPath: sourceMapByPath };
 }
 
-exports.load = load;
-exports.loadSync = loadSync;
+exports.load = _load;
+exports.loadSync = _loadSync;
+//# sourceMappingURL=sorcery.js.map

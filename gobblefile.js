@@ -8,5 +8,6 @@ module.exports = gobble( 'src' )
 		entry: 'index.js',
 		dest: 'sorcery.js',
 		format: 'cjs',
-		external: [ 'path', 'sander', 'buffer-crc32' ]
+		external: [ 'path', 'sander', 'buffer-crc32' ],
+		sourceMap: true
 	});
