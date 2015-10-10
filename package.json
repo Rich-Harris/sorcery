@@ -1,7 +1,7 @@
 {
   "name": "sorcery",
   "description": "Resolve a chain of sourcemaps back to the original source",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "author": "Rich Harris",
   "repository": "https://github.com/Rich-Harris/sorcery",
   "main": "dist/sorcery.js",
@@ -21,7 +21,6 @@
     "eslint": "^1.6.0",
     "esperanto": "^0.7.5",
     "gobble": "^0.10.1",
-    "gobble-babel": "^5.0.0",
     "gobble-cli": "^0.5.0",
     "gobble-rollup-babel": "^0.5.0",
     "istanbul": "^0.3.22",

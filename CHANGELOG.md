@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.5
+
+* Use rollup-babel
+
 ## 0.6.4
 
 * Update dependencies
