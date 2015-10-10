@@ -25,7 +25,7 @@
     "gobble-cli": "^0.5.0",
     "gobble-rollup": "^0.10.0",
     "istanbul": "^0.3.22",
-    "less": "^2.5.0",
+    "less": "^2.5.3",
     "mocha": "^2.1.0",
     "promise-map-series": "^0.2.1",
     "remap-istanbul": "^0.3.0",
