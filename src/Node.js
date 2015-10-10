@@ -43,9 +43,11 @@ export default class Node {
 
 				const sourcesContent = map.sourcesContent || [];
 
+				const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
-						file: source ? resolveSourcePath( this, map.sourceRoot, source ) : null,
+						file: source ? resolve( sourceRoot, source ) : null,
 						content: sourcesContent[i]
 					});
 				});
@@ -76,9 +78,11 @@ export default class Node {
 
 			sourcesContent = map.sourcesContent || [];
 
+			const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+
 			this.sources = map.sources.map( ( source, i ) => {
 				const node = new Node({
-					file: resolveSourcePath( this, map.sourceRoot, source ),
+					file: resolve( sourceRoot, source ),
 					content: sourcesContent[i]
 				});
 
@@ -168,8 +172,4 @@ function getContent ( node, sourcesContentByPath ) {
 	}
 
 	return Promise.resolve( node.content );
-}
-
-function resolveSourcePath ( node, sourceRoot, source ) {
-	return resolve( dirname( node.file ), sourceRoot || '', source );
 }
