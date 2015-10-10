@@ -5,3 +5,4 @@ cli-test
 .gobble*
 .tmp
 dist
+coverage

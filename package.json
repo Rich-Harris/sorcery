@@ -16,6 +16,7 @@
   "devDependencies": {
     "babel": "^5.1.10",
     "browserify": "^11.2.0",
+    "codecov.io": "^0.1.6",
     "coffee-script": "^1.9.2",
     "eslint": "^1.5.1",
     "esperanto": "^0.7.5",
@@ -23,9 +24,11 @@
     "gobble-babel": "^5.0.0",
     "gobble-cli": "^0.5.0",
     "gobble-rollup": "^0.10.0",
+    "istanbul": "^0.3.22",
     "less": "^2.5.0",
     "mocha": "^2.1.0",
     "promise-map-series": "^0.2.1",
+    "remap-istanbul": "^0.3.0",
     "source-map": "^0.5.1",
     "source-map-support": "^0.3.2",
     "uglify-js": "^2.4.20"
@@ -39,7 +42,11 @@
     "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",
     "prepublish": "npm test",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "pretest-coverage": "npm run build",
+    "test-coverage": "rm -rf coverage/* && istanbul cover --report json node_modules/.bin/_mocha -- -u exports -R spec test/test.js",
+    "posttest-coverage": "remap-istanbul -i coverage/coverage-final.json -o coverage/coverage-remapped.json -b dist && remap-istanbul -i coverage/coverage-final.json -o coverage/coverage-remapped.lcov -t lcovonly -b dist && remap-istanbul -i coverage/coverage-final.json -o coverage/coverage-remapped -t html -b dist",
+    "ci": "npm run test-coverage && codecov < coverage/coverage-remapped.lcov"
   },
   "files": [
     "src/",
