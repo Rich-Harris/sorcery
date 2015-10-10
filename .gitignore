@@ -4,3 +4,4 @@ cli-test
 .gobble
 .gobble*
 .tmp
+dist
