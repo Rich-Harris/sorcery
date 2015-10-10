@@ -1,5 +1,10 @@
 # changelog
 
+## 0.6.4
+
+* Update dependencies
+* General tidy-up
+
 ## 0.6.3
 
 * New `writeSync` method - same options as `write` ([#16](https://github.com/Rich-Harris/sorcery/issues/16))
