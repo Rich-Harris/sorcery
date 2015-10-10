@@ -1,14 +1,10 @@
 require( 'source-map-support' ).install();
 
 var path = require( 'path' );
-var exec = require( 'child_process' ).exec;
 var sander = require( 'sander' );
 var assert = require( 'assert' );
-var promiseMapSeries = require( 'promise-map-series' );
 var SourceMapConsumer = require( 'source-map' ).SourceMapConsumer;
 var sorcery = require( '../' );
-
-var Promise = sander.Promise;
 
 process.chdir( __dirname );
 
@@ -66,7 +62,7 @@ console.log "the answer is #{answer}"'
 				};
 
 				assert.deepEqual( actual, expected );
-			})
+			});
 		});
 
 		it( 'handles URLs that look a bit like data URIs', function () {
@@ -87,7 +83,7 @@ console.log "the answer is #{answer}"'
 		it( 'handles segments of length 1', function () {
 			return sorcery.load( 'samples/8/datafile.js' ).then( function ( chain ) {
 				// this will throw if 1-length segments are rejected
-				var map = chain.apply();
+				chain.apply();
 			});
 		});
 	});
