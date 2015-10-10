@@ -1,11 +1,12 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync, Promise } from 'sander';
 import atob from './atob';
+import SOURCEMAPPING_URL from './sourceMappingURL';
 
 /**
  * Turns a sourceMappingURL into a sourcemap
- * @param {string} url - the URL (i.e. sourceMappingURL=url). Can
-   be a base64-encoded data URI
+ * @param {string} url - the sourceMappingURL. Can be a
+   base64-encoded data URI
  * @param {string} base - the URL against which relative URLS
    should be resolved
  * @param {boolean} sync - if `true`, return a promise, otherwise
@@ -17,7 +18,7 @@ export default function getMapFromUrl ( url, base, sync ) {
 		const match = /base64,(.+)$/.exec( url );
 
 		if ( !match ) {
-			throw new Error( 'sourceMappingURL is not base64-encoded' );
+			throw new Error( `${SOURCEMAPPING_URL} is not base64-encoded` );
 		}
 
 		const json = atob( match[1] );

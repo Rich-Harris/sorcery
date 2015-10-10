@@ -17,11 +17,12 @@
     "babel": "^5.1.10",
     "browserify": "^9.0.8",
     "coffee-script": "^1.9.2",
+    "eslint": "^1.5.1",
     "esperanto": "^0.6.29",
     "gobble": "^0.10.1",
     "gobble-babel": "^5.0.0",
     "gobble-cli": "^0.4.2",
-    "gobble-rollup": "^0.3.0",
+    "gobble-rollup": "^0.8.1",
     "less": "^2.5.0",
     "mocha": "^2.1.0",
     "promise-map-series": "^0.2.1",
@@ -37,7 +38,8 @@
     "pretest": "npm run build",
     "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",
-    "prepublish": "npm test"
+    "prepublish": "npm test",
+    "lint": "eslint src"
   },
   "files": [
     "src/",
