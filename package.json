@@ -18,7 +18,7 @@
     "browserify": "^11.2.0",
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.9.2",
-    "eslint": "^1.6.0",
+    "eslint": "^1.7.0",
     "esperanto": "^0.7.5",
     "gobble": "^0.10.1",
     "gobble-cli": "^0.5.0",
