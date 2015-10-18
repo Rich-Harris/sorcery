@@ -1,5 +1,9 @@
 # changelog
 
+## 0.7.0
+
+* Use [sourcemap-codec](https://github.com/rich-harris/sourcemap-codec) instead of vlq
+
 ## 0.6.5
 
 * Use rollup-babel
