@@ -23,7 +23,7 @@
     "gobble": "^0.10.1",
     "gobble-cli": "^0.6.0",
     "gobble-rollup-babel": "^0.5.0",
-    "istanbul": "^0.3.22",
+    "istanbul": "^0.4.0",
     "less": "^2.5.3",
     "mocha": "^2.3.3",
     "promise-map-series": "^0.2.1",
