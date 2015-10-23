@@ -11,7 +11,7 @@
     "buffer-crc32": "^0.2.5",
     "minimist": "^1.1.0",
     "sander": "^0.3.8",
-    "sourcemap-codec": "^1.1.0"
+    "sourcemap-codec": "^1.2.0"
   },
   "devDependencies": {
     "babel": "^5.1.10",
