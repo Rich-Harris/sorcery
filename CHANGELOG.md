@@ -1,5 +1,9 @@
 # changelog
 
+## 0.8.0
+
+* Add ES6 build
+
 ## 0.7.0
 
 * Use [sourcemap-codec](https://github.com/rich-harris/sourcemap-codec) instead of vlq
