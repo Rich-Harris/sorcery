@@ -4,8 +4,8 @@
   "version": "0.7.0",
   "author": "Rich Harris",
   "repository": "https://github.com/Rich-Harris/sorcery",
-  "main": "dist/sorcery.js",
-  "jsnext:main": "src/index.js",
+  "main": "dist/sorcery.cjs.js",
+  "jsnext:main": "dist/sorcery.es6.js",
   "license": "MIT",
   "dependencies": {
     "buffer-crc32": "^0.2.5",
