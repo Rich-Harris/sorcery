@@ -27,7 +27,7 @@
     "less": "^2.5.3",
     "mocha": "^2.3.3",
     "promise-map-series": "^0.2.1",
-    "remap-istanbul": "^0.4.0",
+    "remap-istanbul": "^0.5.1",
     "source-map": "^0.5.1",
     "source-map-support": "^0.3.2",
     "uglify-js": "^2.4.20"
