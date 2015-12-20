@@ -1,6 +1,6 @@
 # changelog
 
-## 0.9.1
+## 0.9.1-2
 
 * Fix case-sensitive filenames
 
