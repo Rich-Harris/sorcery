@@ -14,20 +14,19 @@
     "sourcemap-codec": "^1.2.0"
   },
   "devDependencies": {
-    "babel": "^5.1.10",
-    "browserify": "^11.2.0",
+    "babel-preset-es2015-rollup": "^1.0.0",
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.10.0",
     "eslint": "^1.7.1",
-    "esperanto": "^0.7.5",
-    "gobble": "^0.10.1",
-    "gobble-cli": "^0.6.0",
-    "gobble-rollup-babel": "^0.6.1",
     "istanbul": "^0.4.0",
     "less": "^2.5.3",
     "mocha": "^2.3.3",
     "promise-map-series": "^0.2.1",
     "remap-istanbul": "^0.4.0",
+    "rollup": "^0.21.2",
+    "rollup-plugin-babel": "^2.2.0",
+    "rollup-plugin-commonjs": "^1.4.0",
+    "rollup-plugin-npm": "^1.1.0",
     "source-map": "^0.5.1",
     "source-map-support": "^0.3.2",
     "uglify-js": "^2.4.20"
@@ -36,7 +35,7 @@
     "sorcery": "bin/index.js"
   },
   "scripts": {
-    "build": "gobble build -f dist",
+    "build": "rollup -c -f cjs -o dist/sorcery.cjs.js && rollup -c -f es6 -o dist/sorcery.es6.js",
     "pretest": "npm run build",
     "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",
