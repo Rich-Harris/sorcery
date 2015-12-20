@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.0
+
+* Update build process
+
 ## 0.8.0
 
 * Add ES6 build
