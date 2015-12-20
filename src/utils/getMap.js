@@ -1,6 +1,6 @@
 import { Promise } from 'sander';
 import getMapFromUrl from './getMapFromUrl.js';
-import getSourceMappingUrl from './getSourceMappingUrl.js';
+import getSourceMappingUrl from './getSourceMappingURL.js';
 
 export default function getMap ( node, sourceMapByPath, sync ) {
 	if ( node.file in sourceMapByPath ) {
