@@ -1,6 +1,6 @@
 import { resolve } from 'path';
-import Node from './Node';
-import Chain from './Chain';
+import Node from './Node.js';
+import Chain from './Chain.js';
 
 export function load ( file, options ) {
 	const { node, sourcesContentByPath, sourceMapByPath } = init( file, options );

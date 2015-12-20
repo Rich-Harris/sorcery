@@ -1,25 +1,23 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
 import { writeFile, writeFileSync } from 'sander';
 import { encode } from 'sourcemap-codec';
-import SourceMap from './SourceMap';
-import slash from './utils/slash';
-
-let SOURCEMAPPING_URL = 'sourceMa';
-SOURCEMAPPING_URL += 'ppingURL';
+import SourceMap from './SourceMap.js';
+import slash from './utils/slash.js';
+import SOURCEMAPPING_URL from './utils/sourceMappingUrl.js';
 
 const SOURCEMAP_COMMENT = new RegExp( `\n*(?:` +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^'"]+)|` +      // js
 	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
 `\\s*$`, 'g' );
 
-export default class Chain {
-	constructor ( node, sourcesContentByPath ) {
-		this.node = node;
-		this.sourcesContentByPath = sourcesContentByPath;
+export default function Chain ( node, sourcesContentByPath ) {
+	this.node = node;
+	this.sourcesContentByPath = sourcesContentByPath;
 
-		this._stats = {};
-	}
+	this._stats = {};
+}
 
+Chain.prototype = {
 	stat () {
 		return {
 			selfDecodingTime: this._stats.decodingTime / 1e6,
@@ -30,7 +28,7 @@ export default class Chain {
 
 			untraceable: this._stats.untraceable
 		};
-	}
+	},
 
 	apply ( options = {} ) {
 		let allNames = [];
@@ -111,11 +109,11 @@ export default class Chain {
 			names: allNames,
 			mappings
 		});
-	}
+	},
 
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
 		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
-	}
+	},
 
 	write ( dest, options ) {
 		if ( typeof dest !== 'string' ) {
@@ -134,7 +132,7 @@ export default class Chain {
 		}
 
 		return Promise.all( promises );
-	}
+	},
 
 	writeSync ( dest, options ) {
 		if ( typeof dest !== 'string' ) {
@@ -152,7 +150,7 @@ export default class Chain {
 			writeFileSync( resolved + '.map', map.toString() );
 		}
 	}
-}
+};
 
 function processWriteOptions ( dest, chain, options ) {
 	const resolved = resolve( dest );

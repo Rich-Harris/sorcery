@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync, Promise } from 'sander';
-import atob from './atob';
-import SOURCEMAPPING_URL from './sourceMappingURL';
+import atob from './atob.js';
+import SOURCEMAPPING_URL from './sourceMappingURL.js';
 
 /**
  * Turns a sourceMappingURL into a sourcemap

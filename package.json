@@ -10,8 +10,7 @@
   "dependencies": {
     "buffer-crc32": "^0.2.5",
     "minimist": "^1.1.0",
-    "sander": "^0.3.8",
-    "sourcemap-codec": "^1.2.0"
+    "sander": "^0.3.8"
   },
   "devDependencies": {
     "babel-preset-es2015-rollup": "^1.0.0",
@@ -28,6 +27,7 @@
     "rollup-plugin-commonjs": "^1.4.0",
     "rollup-plugin-npm": "^1.1.0",
     "source-map": "^0.5.1",
+    "sourcemap-codec": "^1.2.0",
     "source-map-support": "^0.3.2",
     "uglify-js": "^2.4.20"
   },

@@ -1,4 +1,4 @@
-import SOURCEMAPPING_URL from './sourceMappingURL';
+import SOURCEMAPPING_URL from './sourceMappingURL.js';
 
 export default function getSourceMappingUrl ( str ) {
 	var index, substring, url, match;

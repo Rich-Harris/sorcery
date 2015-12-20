@@ -1,32 +1,32 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync, Promise } from 'sander';
-import decodeMappings from './utils/decodeMappings';
-import getMap from './utils/getMap';
+import decodeMappings from './utils/decodeMappings.js';
+import getMap from './utils/getMap.js';
 
-export default class Node {
-	constructor ({ file, content }) {
-		this.file = file ? resolve( file ) : null;
-		this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+export default function Node ({ file, content }) {
+	this.file = file ? resolve( file ) : null;
+	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
-		if ( !this.file && this.content === null ) {
-			throw new Error( 'A source must specify either file or content' );
-		}
-
-		// these get filled in later
-		this.map = null;
-		this.mappings = null;
-		this.sources = null;
-		this.isOriginalSource = null;
-
-		this._stats = {
-			decodingTime: 0,
-			encodingTime: 0,
-			tracingTime: 0,
-
-			untraceable: 0
-		};
+	if ( !this.file && this.content === null ) {
+		throw new Error( 'A source must specify either file or content' );
 	}
 
+	// these get filled in later
+	this.map = null;
+	this.mappings = null;
+	this.sources = null;
+	this.isOriginalSource = null;
+
+	this._stats = {
+		decodingTime: 0,
+		encodingTime: 0,
+		tracingTime: 0,
+
+		untraceable: 0
+	};
+}
+
+Node.prototype = {
 	load ( sourcesContentByPath, sourceMapByPath ) {
 		return getContent( this, sourcesContentByPath ).then( content => {
 			this.content = sourcesContentByPath[ this.file ] = content;
@@ -56,7 +56,7 @@ export default class Node {
 				return Promise.all( promises );
 			});
 		});
-	}
+	},
 
 	loadSync ( sourcesContentByPath, sourceMapByPath ) {
 		if ( !this.content ) {
@@ -90,7 +90,7 @@ export default class Node {
 				return node;
 			});
 		}
-	}
+	},
 
 	/**
 	 * Traces a segment back to its origin
@@ -160,7 +160,7 @@ export default class Node {
 		let parent = this.sources[ sourceFileIndex ];
 		return parent.trace( sourceCodeLine, null, this.map.names[ nameIndex ] || name );
 	}
-}
+};
 
 function getContent ( node, sourcesContentByPath ) {
 	if ( node.file in sourcesContentByPath ) {
