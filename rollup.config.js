@@ -17,5 +17,6 @@ export default {
 			exclude: 'node_modules/**'
 		})
 	],
-	external: [ 'path', 'sander', 'buffer-crc32' ]
+	external: [ 'path', 'sander', 'buffer-crc32' ],
+	sourceMap: true
 };
