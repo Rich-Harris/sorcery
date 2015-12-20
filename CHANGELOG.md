@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.1
+
+* Fix case-sensitive filenames
+
 ## 0.9.0
 
 * Update build process
