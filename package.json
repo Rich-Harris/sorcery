@@ -23,7 +23,7 @@
     "mocha": "^2.3.3",
     "promise-map-series": "^0.2.1",
     "remap-istanbul": "^0.5.1",
-    "rollup": "^0.22.0",
+    "rollup": "^0.23.0",
     "rollup-plugin-babel": "^2.2.0",
     "rollup-plugin-commonjs": "^2.0.0",
     "rollup-plugin-npm": "^1.1.0",
