@@ -9,6 +9,7 @@
   "license": "MIT",
   "dependencies": {
     "buffer-crc32": "^0.2.5",
+    "glob": "^7.0.0",
     "minimist": "^1.1.0",
     "sander": "^0.4.0",
     "sourcemap-codec": "^1.2.0"
