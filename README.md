@@ -104,12 +104,13 @@ Usage:
   sorcery [options]
 
 Options:
-  -h, --help               Show help message
-  -v, --version            Show version
-  -i, --input <file>       Input file
-  -o, --output <file>      Output file (if absent, will overwrite input)
-  -d, --datauri            Append map as a data URI, rather than separate file
-  -x, --excludeContent     Don't populate the sourcesContent array
+  -h, --help                   Show help message
+  -v, --version                Show version
+  -i, --input <file>           Input file
+  -f, --folder <folder>        Input folder
+  -o, --output <file/folder>   Output file (if absent, will overwrite input) or folder (if -f is used)
+  -d, --datauri                Append map as a data URI, rather than separate file
+  -x, --excludeContent         Don't populate the sourcesContent array
 ```
 
 Examples:
@@ -127,6 +128,12 @@ sorcery -d -i some/generated/code.min.js
 # write to a new file (will create newfile.js and
 # newfile.js.map)
 sorcery -i some/generated/code.min.js -o newfile.js
+
+# use sorcery to recurse over a folder
+sorcery -f some/generated/
+
+# change output folder when recursing over a folder
+sorcery -f some/generated/ -o some/other/generated/
 ```
 
 
