@@ -39,7 +39,7 @@ else if ( !command.input && !command.folder ) {
 else if ( command.folder ) {
     function globHandler( error, files ) {
         if ( error ) {
-            console.error( `Error: Failed to glob, ${error}` );
+            console.error( 'Error: Failed to glob,', error );
             return;
         }
         files.forEach(function ( file ) {
