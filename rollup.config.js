@@ -1,4 +1,4 @@
-import babel from 'rollup-plugin-babel';
+import buble from 'rollup-plugin-buble';
 import commonjs from 'rollup-plugin-commonjs';
 import npm from 'rollup-plugin-npm';
 
@@ -13,7 +13,7 @@ export default {
 			main: true,
 			skip: [ 'path', 'sander', 'buffer-crc32' ]
 		}),
-		babel({
+		buble({
 			exclude: 'node_modules/**'
 		})
 	],
