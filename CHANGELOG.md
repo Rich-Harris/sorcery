@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.3
+
+* Update dependencies, use Bublé instead of Babel
+
 ## 0.9.1-2
 
 * Fix case-sensitive filenames
