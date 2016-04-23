@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.4
+
+* Remove caching mechanism due to collisions ([#74](https://github.com/Rich-Harris/sorcery/pull/74))
+
 ## 0.9.3
 
 * Update dependencies, use Bublé instead of Babel
