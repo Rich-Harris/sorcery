@@ -25,16 +25,16 @@ describe( 'sorcery', function () {
 		it( 'allows user to specify content/sourcemaps', () => {
 			return sorcery.load( 'example.js', {
 				content: {
-					'example.js': '(function() {\
-  var answer;\
-\
-  answer = 40 + 2;\
-\
-  console.log("the answer is " + answer);\
-\
-}).call(this);',
-					'example.coffee': 'answer = 40 + 2\
-console.log "the answer is #{answer}"'
+					'example.js': `(function() {
+  var answer;
+
+  answer = 40 + 2;
+
+  console.log("the answer is " + answer);
+
+}).call(this);`,
+					'example.coffee': `answer = 40 + 2
+console.log "the answer is #{answer}"`
 				},
 				sourcemaps: {
 					'example.js': {
@@ -359,17 +359,17 @@ console.log "the answer is #{answer}"'
 			});
 
 			it( 'includes user-specified content', () => {
-				const javascript = '(function() {\
-var answer;\
-\
-answer = 40 + 2;\
-\
-console.log("the answer is " + answer);\
-\
-}).call(this);';
+				const javascript = `(function() {
+var answer;
 
-				const coffeescript = 'answer = 40 + 2\
-console.log "the answer is #{answer}"';
+answer = 40 + 2;
+
+console.log("the answer is " + answer);
+
+}).call(this);`;
+
+				const coffeescript = `answer = 40 + 2
+console.log "the answer is #{answer}"`;
 
 				const chain = sorcery.loadSync( 'example.js', {
 					content: {
