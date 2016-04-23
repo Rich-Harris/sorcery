@@ -18,6 +18,7 @@
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.10.0",
     "eslint": "^2.8.0",
+    "glob": "^7.0.3",
     "istanbul": "^0.4.3",
     "less": "^2.6.1",
     "mocha": "^2.4.5",
