@@ -32,7 +32,7 @@
     "uglify-js": "^2.6.2"
   },
   "bin": {
-    "sorcery": "bin/index.js"
+    "sorcery": "bin/sorcery"
   },
   "scripts": {
     "build": "rm -rf dist && rollup -c -f cjs -o dist/sorcery.cjs.js && rollup -c -f es6 -o dist/sorcery.es6.js",
