@@ -1,5 +1,9 @@
 # changelog
 
+## 0.10.0
+
+* Allow CLI to recurse over a directory ([#13](https://github.com/Rich-Harris/sorcery/issues/13))
+
 ## 0.9.4
 
 * Remove caching mechanism due to collisions ([#74](https://github.com/Rich-Harris/sorcery/pull/74))

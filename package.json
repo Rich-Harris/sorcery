@@ -1,7 +1,7 @@
 {
   "name": "sorcery",
   "description": "Resolve a chain of sourcemaps back to the original source",
-  "version": "0.9.4",
+  "version": "0.10.0",
   "author": "Rich Harris",
   "repository": "https://github.com/Rich-Harris/sorcery",
   "main": "dist/sorcery.cjs.js",
