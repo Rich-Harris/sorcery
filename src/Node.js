@@ -61,7 +61,7 @@ Node.prototype = {
 	loadSync ( sourcesContentByPath, sourceMapByPath ) {
 		if ( !this.content ) {
 			if ( !sourcesContentByPath[ this.file ] ) {
-				sourcesContentByPath[ this.file ] = readFileSync( this.file ).toString();
+				sourcesContentByPath[ this.file ] = readFileSync( this.file, { encoding: 'utf-8' });
 			}
 
 			this.content = sourcesContentByPath[ this.file ];
@@ -168,7 +168,7 @@ function getContent ( node, sourcesContentByPath ) {
 	}
 
 	if ( !node.content ) {
-		return readFile( node.file ).then( String );
+		return readFile( node.file, { encoding: 'utf-8' });
 	}
 
 	return Promise.resolve( node.content );
