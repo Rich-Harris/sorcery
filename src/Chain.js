@@ -8,7 +8,7 @@ import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
 const SOURCEMAP_COMMENT = new RegExp( `\n*(?:` +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^'"]+)|` +      // js
 	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
-`\\s*$`, 'g' );
+'\\s*$', 'g' );
 
 export default function Chain ( node, sourcesContentByPath ) {
 	this.node = node;
