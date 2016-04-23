@@ -3,6 +3,14 @@ import { readFile, readFileSync, Promise } from 'sander';
 import atob from './atob.js';
 import SOURCEMAPPING_URL from './sourceMappingURL.js';
 
+function parseJSON ( json, url ) {
+	try {
+		return JSON.parse( json );
+	} catch ( err ) {
+		throw new Error( `Could not parse sourcemap (${url}): ${err.message}` );
+	}
+}
+
 /**
  * Turns a sourceMappingURL into a sourcemap
  * @param {string} url - the sourceMappingURL. Can be a
@@ -22,15 +30,15 @@ export default function getMapFromUrl ( url, base, sync ) {
 		}
 
 		const json = atob( match[1] );
-		const map = JSON.parse( json );
+		const map = parseJSON( json, `data URI in ${base}` );
 		return sync ? map : Promise.resolve( map );
 	}
 
 	url = resolve( dirname( base ), decodeURI( url ) );
 
 	if ( sync ) {
-		return JSON.parse( readFileSync( url ).toString() );
+		return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
 	} else {
-		return readFile( url ).then( String ).then( JSON.parse );
+		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) );
 	}
 }
