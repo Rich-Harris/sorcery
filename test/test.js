@@ -3,6 +3,8 @@ require( 'source-map-support' ).install();
 const path = require( 'path' );
 const sander = require( 'sander' );
 const assert = require( 'assert' );
+const glob = require( 'glob' );
+const child_process = require( 'child_process' );
 const { describe, it, beforeEach, afterEach } = require( 'mocha' );
 const SourceMapConsumer = require( 'source-map' ).SourceMapConsumer;
 const sorcery = require( '../' );
@@ -413,6 +415,60 @@ console.log "the answer is #{answer}"`;
 					assert.equal( loc.line, 2 );
 					assert.equal( loc.column, 8 );
 					assert.equal( loc.name, 'log' );
+				});
+			});
+		});
+	});
+
+	describe( 'cli', () => {
+		sander.readdirSync( 'cli' ).forEach( dir => {
+			if ( dir[0] === '.' ) return;
+
+			( /^solo-/.test( dir ) ? it.only : it )( dir, done => {
+				dir = path.resolve( 'cli', dir );
+				sander.rimrafSync( path.resolve( dir, 'actual' ) );
+
+				var commandFile = path.resolve( dir, 'command.sh' );
+
+				child_process.execFile( commandFile, {
+					cwd: dir,
+					env: {
+						PATH: path.resolve( __dirname, '../bin' ) + ':' + process.env.PATH
+					}
+				}, ( err, stdout, stderr ) => {
+					if ( err ) return done( err );
+
+					if ( stdout ) console.log( stdout );
+					if ( stderr ) console.error( stderr );
+
+					function catalogue ( subdir ) {
+						subdir = path.resolve( dir, subdir );
+
+						return glob.sync( '**/*.js?(.map)', { cwd: subdir })
+							.sort()
+							.map( name => {
+								var contents = sander.readFileSync( subdir, name, { encoding: 'utf-8' }).trim();
+
+								if ( path.extname( name ) === '.map' ) {
+									contents = JSON.parse( contents );
+								}
+
+								return {
+									name: name,
+									contents: contents
+								};
+							});
+					}
+
+					var expected = catalogue( 'expected' );
+					var actual = catalogue( 'actual' );
+
+					try {
+						assert.deepEqual( actual, expected );
+						done();
+					} catch ( err ) {
+						done( err );
+					}
 				});
 			});
 		});

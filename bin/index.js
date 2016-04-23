@@ -7,6 +7,8 @@ var showHelp = require( './showHelp' );
 var command;
 var sorcery = require( '../' );
 
+var validExtensions = { js: true };
+
 command = minimist( process.argv.slice( 2 ), {
 	alias: {
 		i: 'input',
@@ -38,19 +40,23 @@ else {
 	sander.stat( command.input ).then( function ( stats ) {
 		if ( stats.isDirectory() ) {
 			return sander.lsr( command.input ).then( function ( files ) {
-				var promises = files.map( function ( file ) {
-					var input = path.join( command.input, file );
-					var output = path.join( command.output || command.input, file );
-
-					return sorcery.load( input ).then( function ( chain ) {
-						return chain.write( output, {
-							inline: command.datauri,
-							includeContent: !command.excludeContent
-						});
-					});
+				files = files.filter( function ( file ) {
+					return validExtensions[ path.extname( file ).slice( 1 ) ];
 				});
 
-				return sander.Promise.all( promises );
+				return files.reduce( function ( promise, file ) {
+					return promise.then( function () {
+						var input = path.join( command.input, file );
+						var output = path.join( command.output || command.input, file );
+
+						return sorcery.load( input ).then( function ( chain ) {
+							return chain.write( output, {
+								inline: command.datauri,
+								includeContent: !command.excludeContent
+							});
+						});
+					});
+				}, Promise.resolve() );
 			});
 		}
 
