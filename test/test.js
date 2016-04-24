@@ -433,14 +433,11 @@ console.log "the answer is #{answer}"`;
 					require( path.join( dir, 'pre.js' ) )();
 				}
 
-				var command = sander.readFileSync( dir, 'command.sh', { encoding: 'utf-8' });
-				var pathSeparator = require( 'os' ).platform() === 'win32' ? ';' : ':';
+				var command = sander.readFileSync( dir, 'command.sh', { encoding: 'utf-8' })
+					.replace( 'sorcery', path.resolve( __dirname, '../bin/sorcery' ) );
 
 				child_process.exec( command, {
-					cwd: dir,
-					env: {
-						PATH: path.resolve( __dirname, '../bin' ) + pathSeparator + process.env.PATH
-					}
+					cwd: dir
 				}, ( err, stdout, stderr ) => {
 					if ( err ) return done( err );
 
