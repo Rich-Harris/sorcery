@@ -434,7 +434,7 @@ console.log "the answer is #{answer}"`;
 				}
 
 				var command = sander.readFileSync( dir, 'command.sh', { encoding: 'utf-8' })
-					.replace( 'sorcery', path.resolve( __dirname, '../bin/sorcery' ) );
+					.replace( 'sorcery', 'node ' + path.resolve( __dirname, '../bin/sorcery' ) );
 
 				child_process.exec( command, {
 					cwd: dir
