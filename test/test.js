@@ -434,11 +434,12 @@ console.log "the answer is #{answer}"`;
 				}
 
 				var command = sander.readFileSync( dir, 'command.sh', { encoding: 'utf-8' });
+				var pathSeparator = require( 'os' ).platform() === 'win32' ? ';' : ':';
 
 				child_process.exec( command, {
 					cwd: dir,
 					env: {
-						PATH: path.resolve( __dirname, '../bin' ) + ':' + process.env.PATH
+						PATH: path.resolve( __dirname, '../bin' ) + pathSeparator + process.env.PATH
 					}
 				}, ( err, stdout, stderr ) => {
 					if ( err ) return done( err );
