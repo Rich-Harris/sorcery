@@ -426,11 +426,16 @@ console.log "the answer is #{answer}"`;
 
 			( /^solo-/.test( dir ) ? it.only : it )( dir, done => {
 				dir = path.resolve( 'cli', dir );
-				sander.rimrafSync( path.resolve( dir, 'actual' ) );
+				sander.rimrafSync( dir, 'actual' );
+				sander.mkdirSync( dir, 'actual' );
 
-				var commandFile = path.resolve( dir, 'command.sh' );
+				if ( sander.existsSync( dir, 'pre.js' ) ) {
+					require( path.join( dir, 'pre.js' ) )();
+				}
 
-				child_process.execFile( commandFile, {
+				var command = sander.readFileSync( dir, 'command.sh', { encoding: 'utf-8' });
+
+				child_process.exec( command, {
 					cwd: dir,
 					env: {
 						PATH: path.resolve( __dirname, '../bin' ) + ':' + process.env.PATH
@@ -440,6 +445,10 @@ console.log "the answer is #{answer}"`;
 
 					if ( stdout ) console.log( stdout );
 					if ( stderr ) console.error( stderr );
+
+					if ( sander.existsSync( dir, 'post.js' ) ) {
+						require( path.join( dir, 'post.js' ) )();
+					}
 
 					function catalogue ( subdir ) {
 						subdir = path.resolve( dir, subdir );
