@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "buble": "^0.10.4",
-    "codecov.io": "^0.1.6",
+    "codecov.io": "^0.1.7",
     "coffee-script": "^1.10.0",
     "eslint": "^2.8.0",
     "glob": "^7.0.3",
