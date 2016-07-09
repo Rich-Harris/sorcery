@@ -24,7 +24,7 @@
     "mocha": "^2.4.5",
     "promise-map-series": "^0.2.2",
     "remap-istanbul": "^0.6.3",
-    "rollup": "^0.31.0",
+    "rollup": "^0.33.2",
     "rollup-plugin-buble": "^0.10.0",
     "rollup-plugin-commonjs": "^2.2.1",
     "rollup-plugin-npm": "^1.4.0",
