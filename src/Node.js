@@ -61,7 +61,11 @@ Node.prototype = {
 	loadSync ( sourcesContentByPath, sourceMapByPath ) {
 		if ( !this.content ) {
 			if ( !sourcesContentByPath[ this.file ] ) {
-				sourcesContentByPath[ this.file ] = readFileSync( this.file, { encoding: 'utf-8' });
+				try {
+					sourcesContentByPath[ this.file ] = readFileSync( this.file, { encoding: 'utf-8' });
+				} catch (err) {
+					sourcesContentByPath[ this.file ] = `// error reading file ${this.file}`;
+				}
 			}
 
 			this.content = sourcesContentByPath[ this.file ];
@@ -168,7 +172,8 @@ function getContent ( node, sourcesContentByPath ) {
 	}
 
 	if ( !node.content ) {
-		return readFile( node.file, { encoding: 'utf-8' });
+		return readFile( node.file, { encoding: 'utf-8' })
+			.catch(err => `// error reading file ${node.file}`);
 	}
 
 	return Promise.resolve( node.content );
