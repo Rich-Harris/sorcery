@@ -24,6 +24,13 @@ describe( 'sorcery', function () {
 			});
 		});
 
+		it( 'do not fail if source could not be loaded', () => {
+			return sorcery.load( 'samples/not-existing/src/helloworld.coffee' ).then( chain => {
+				// we have no source-map
+				assert.equal( chain, null );
+			});
+		});
+
 		it( 'allows user to specify content/sourcemaps', () => {
 			return sorcery.load( 'example.js', {
 				content: {
@@ -324,6 +331,15 @@ console.log "the answer is #{answer}"`
 	});
 
 	describe( 'sorcery (sync)', () => {
+		describe( 'sorcery.loadSync()', () => {
+			it( 'do not fail if source could not be loaded', () => {
+				const chain = sorcery.loadSync( 'samples/not-existing/src/helloworld.coffee' );
+
+				// we have no source-map
+				assert.equal( chain, null );
+			});
+		});
+
 		describe( 'chain.trace()', () => {
 			it( 'follows a mapping back to its origin', () => {
 				const chain = sorcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
