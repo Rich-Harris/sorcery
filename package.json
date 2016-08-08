@@ -21,7 +21,7 @@
     "glob": "^7.0.3",
     "istanbul": "^0.4.3",
     "less": "^2.6.1",
-    "mocha": "^2.4.5",
+    "mocha": "^3.0.2",
     "promise-map-series": "^0.2.2",
     "remap-istanbul": "^0.6.3",
     "rollup": "^0.31.0",
