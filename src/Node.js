@@ -29,7 +29,7 @@ export default function Node ({ file, content }) {
 Node.prototype = {
 	load ( sourcesContentByPath, sourceMapByPath ) {
 		return getContent( this, sourcesContentByPath ).then( content => {
-			this.content = sourcesContentByPath[ this.file ] = content;
+			this.content = sourcesContentByPath[this.file] = content;
 
 			return getMap( this, sourceMapByPath ).then( map => {
 				if ( !map ) return null;
@@ -60,11 +60,15 @@ Node.prototype = {
 
 	loadSync ( sourcesContentByPath, sourceMapByPath ) {
 		if ( !this.content ) {
-			if ( !sourcesContentByPath[ this.file ] ) {
-				sourcesContentByPath[ this.file ] = readFileSync( this.file, { encoding: 'utf-8' });
+			if ( !sourcesContentByPath[this.file]) {
+				try {
+					sourcesContentByPath[this.file] = readFileSync( this.file, { encoding: 'utf-8' });
+				} catch ( e ) {
+					sourcesContentByPath[this.file] = null;
+				}
 			}
 
-			this.content = sourcesContentByPath[ this.file ];
+			this.content = sourcesContentByPath[this.file];
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
@@ -121,7 +125,7 @@ Node.prototype = {
 
 		// Otherwise, we need to figure out what this position in
 		// the intermediate file corresponds to in *its* source
-		const segments = this.mappings[ lineIndex ];
+		const segments = this.mappings[lineIndex];
 
 		if ( !segments || segments.length === 0 ) {
 			return null;
@@ -146,8 +150,8 @@ Node.prototype = {
 					let sourceCodeColumn = segments[i][3];
 					let nameIndex = segments[i][4];
 
-					let parent = this.sources[ sourceFileIndex ];
-					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[ nameIndex ] || name );
+					let parent = this.sources[sourceFileIndex];
+					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[nameIndex] || name );
 				}
 			}
 		}
@@ -157,18 +161,18 @@ Node.prototype = {
 		let sourceCodeLine = segments[0][2];
 		let nameIndex = segments[0][4];
 
-		let parent = this.sources[ sourceFileIndex ];
-		return parent.trace( sourceCodeLine, null, this.map.names[ nameIndex ] || name );
+		let parent = this.sources[sourceFileIndex];
+		return parent.trace( sourceCodeLine, null, this.map.names[nameIndex] || name );
 	}
 };
 
 function getContent ( node, sourcesContentByPath ) {
 	if ( node.file in sourcesContentByPath ) {
-		node.content = sourcesContentByPath[ node.file ];
+		node.content = sourcesContentByPath[node.file];
 	}
 
 	if ( !node.content ) {
-		return readFile( node.file, { encoding: 'utf-8' });
+		return readFile( node.file, { encoding: 'utf-8' }).catch( () => null );
 	}
 
 	return Promise.resolve( node.content );
