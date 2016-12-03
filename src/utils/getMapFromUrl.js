@@ -37,8 +37,12 @@ export default function getMapFromUrl ( url, base, sync ) {
 	url = resolve( dirname( base ), decodeURI( url ) );
 
 	if ( sync ) {
-		return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
+		try {
+			return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
+		} catch ( e ) {
+			return null;
+		}
 	} else {
-		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) );
+		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) ).catch( () => null );
 	}
 }

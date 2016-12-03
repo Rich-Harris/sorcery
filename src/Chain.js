@@ -30,7 +30,7 @@ Chain.prototype = {
 		};
 	},
 
-	apply ( options = {} ) {
+	apply ( options = {}) {
 		let allNames = [];
 		let allSources = [];
 

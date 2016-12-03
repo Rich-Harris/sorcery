@@ -9,14 +9,14 @@ export function load ( file, options ) {
 		.then( () => node.isOriginalSource ? null : new Chain( node, sourcesContentByPath ) );
 }
 
-export function loadSync ( file, options = {} ) {
+export function loadSync ( file, options = {}) {
 	const { node, sourcesContentByPath, sourceMapByPath } = init( file, options );
 
 	node.loadSync( sourcesContentByPath, sourceMapByPath );
 	return node.isOriginalSource ? null : new Chain( node, sourcesContentByPath );
 }
 
-function init ( file, options = {} ) {
+function init ( file, options = {}) {
 	const node = new Node({ file });
 
 	let sourcesContentByPath = {};
