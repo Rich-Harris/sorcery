@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync, Promise } from 'sander';
+import stripBom from "strip-bom";
 import atob from './atob.js';
 import SOURCEMAPPING_URL from './sourceMappingURL.js';
 
@@ -37,8 +38,8 @@ export default function getMapFromUrl ( url, base, sync ) {
 	url = resolve( dirname( base ), decodeURI( url ) );
 
 	if ( sync ) {
-		return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
+		return parseJSON( stripBom( readFileSync( url, { encoding: 'utf-8' }) ), url );
 	} else {
-		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) );
+		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( stripBom( json ), url ) );
 	}
 }

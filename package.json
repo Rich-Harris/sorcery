@@ -30,6 +30,7 @@
     "rollup-plugin-npm": "^1.4.0",
     "source-map": "^0.5.3",
     "source-map-support": "^0.4.0",
+    "strip-bom": "^3.0.0",
     "uglify-js": "^2.6.2"
   },
   "bin": {

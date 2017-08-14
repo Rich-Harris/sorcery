@@ -82,6 +82,13 @@ console.log "the answer is #{answer}"`
 				chain.apply();
 			});
 		});
+
+		it( 'loads source map files with BOM', () => {
+			return sorcery.load( 'samples/9/datafile.js' ).then( chain => {
+				// // this will throw if 1-length segments are rejected
+				// chain.apply();
+			});
+		});
 	});
 
 	describe( 'chain.trace()', () => {
