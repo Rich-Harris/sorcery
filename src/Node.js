@@ -27,6 +27,15 @@ export default function Node ({ file, content }) {
 }
 
 Node.prototype = {
+	decode () {
+		if ( this.map && !this.mappings ) {
+			let decodingStart = process.hrtime();
+			this.mappings = decode( this.map.mappings );
+			let decodingTime = process.hrtime( decodingStart );
+			this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
+		}
+	},
+
 	load ( sourcesContentByPath, sourceMapByPath ) {
 		return getContent( this, sourcesContentByPath ).then( content => {
 			this.content = sourcesContentByPath[ this.file ] = content;
@@ -35,15 +44,14 @@ Node.prototype = {
 				if ( !map ) return null;
 
 				this.map = map;
-
-				let decodingStart = process.hrtime();
-				this.mappings = decode( map.mappings );
-				let decodingTime = process.hrtime( decodingStart );
-				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
+				this.decode();
 
 				const sourcesContent = map.sourcesContent || [];
 
-				const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+				const sourceRoot = resolve(
+					this.file ? dirname( this.file ) : '',
+					map.sourceRoot || ''
+				);
 
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
@@ -74,11 +82,14 @@ Node.prototype = {
 			this.isOriginalSource = true;
 		} else {
 			this.map = map;
-			this.mappings = decode( map.mappings );
+			this.decode();
 
 			sourcesContent = map.sourcesContent || [];
 
-			const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+			const sourceRoot = resolve(
+				this.file ? dirname( this.file ) : '',
+				map.sourceRoot || ''
+			);
 
 			this.sources = map.sources.map( ( source, i ) => {
 				const node = new Node({
