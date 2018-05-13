@@ -102,9 +102,16 @@ Chain.prototype = {
 
 		let includeContent = options.includeContent !== false;
 
+		let sourceRoot = options.base
+			? resolve( options.base )
+			: this.node.file
+				? dirname( this.node.file )
+				: process.cwd();
+
 		return new SourceMap({
-			file: basename( this.node.file ),
-			sources: allSources.map( source => slash( relative( options.base || dirname( this.node.file ), source ) ) ),
+			file: this.node.file ? basename( this.node.file ) : null,
+			sources: allSources.map( source => slash( relative( sourceRoot, source ) ) ),
+			sourceRoot: slash( sourceRoot ),
 			sourcesContent: allSources.map( source => includeContent ? this.sourcesContentByPath[ source ] : null ),
 			names: allNames,
 			mappings

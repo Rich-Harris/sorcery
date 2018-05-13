@@ -5,6 +5,7 @@ export default function SourceMap ( properties ) {
 
 	this.file           = properties.file;
 	this.sources        = properties.sources;
+	this.sourceRoot     = properties.sourceRoot;
 	this.sourcesContent = properties.sourcesContent;
 	this.names          = properties.names;
 	this.mappings       = properties.mappings;
