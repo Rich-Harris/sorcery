@@ -78,9 +78,7 @@ Node.prototype = {
 		const map = getMap( this, sourceMapByPath, true );
 		let sourcesContent;
 
-		if ( !map ) {
-			this.isOriginalSource = true;
-		} else {
+		if ( map ) {
 			this.map = map;
 			this.decode();
 
