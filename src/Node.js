@@ -1,7 +1,6 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync, Promise } from 'sander';
 import { decode } from 'sourcemap-codec';
-import { parse } from 'url';
 import getMap from './utils/getMap.js';
 
 export default function Node ({ file, content }) {
@@ -178,8 +177,8 @@ function getContent ( node, sourcesContentByPath ) {
 
 function resolveProtocol ( file ) {
 	// resolve file:///path to /path
-	if(!!file && file.indexOf("file:") === 0) {
-		file = parse(file)["path"];
+	if(!!file && file.indexOf("file://") === 0) {
+		file = require('url').parse(file)["path"];
 	}
 	return file;
 }
