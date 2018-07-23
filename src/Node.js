@@ -4,6 +4,7 @@ import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 
 export default function Node ({ file, content }) {
+	file = resolveProtocol( file );
 	this.file = file ? resolve( file ) : null;
 	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
@@ -42,12 +43,11 @@ Node.prototype = {
 				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
 
 				const sourcesContent = map.sourcesContent || [];
-
-				const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+				const sourceRoot = resolve( this.file ? dirname( this.file ) : '', resolveProtocol( map.sourceRoot ) || '' );
 
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
-						file: source ? resolve( sourceRoot, source ) : null,
+						file: source ? resolve( sourceRoot, resolveProtocol( source ) ) : null,
 						content: sourcesContent[i]
 					});
 				});
@@ -77,12 +77,11 @@ Node.prototype = {
 			this.mappings = decode( map.mappings );
 
 			sourcesContent = map.sourcesContent || [];
-
-			const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+			const sourceRoot = resolve( this.file ? dirname( this.file ) : '', resolveProtocol( map.sourceRoot ) || '' );
 
 			this.sources = map.sources.map( ( source, i ) => {
 				const node = new Node({
-					file: resolve( sourceRoot, source ),
+					file: resolve( sourceRoot, resolveProtocol( source ) ),
 					content: sourcesContent[i]
 				});
 
@@ -172,4 +171,12 @@ function getContent ( node, sourcesContentByPath ) {
 	}
 
 	return Promise.resolve( node.content );
+}
+
+function resolveProtocol ( file ) {
+	// resolve file:///path to /path
+	if(!!file && file.indexOf("file://") === 0) {
+		file = require('url').parse(file)["path"];
+	}
+	return file;
 }
