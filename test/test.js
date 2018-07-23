@@ -276,7 +276,7 @@ console.log "the answer is #{answer}"`
 					return sander.readFile( '.tmp/with-spaces/file with spaces.js' )
 						.then( String )
 						.then( result => {
-							const sourceMappingURL = /sourceMappingURL=([^\r\n]+)/.exec( result )[0];
+							const sourceMappingURL = /sourceMappingURL=([^\r\n]+)/.exec( result )[1];
 							assert.equal( sourceMappingURL, 'file%20with%20spaces.js.map' );
 						});
 				});
