@@ -43,8 +43,7 @@ Node.prototype = {
 				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
 
 				const sourcesContent = map.sourcesContent || [];
-
-				const sourceRoot = resolve( dirname( this.file ), resolveProtocol( map.sourceRoot ) || '' );
+				const sourceRoot = resolve( this.file ? dirname( this.file ) : '', resolveProtocol( map.sourceRoot ) || '' );
 
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
@@ -78,8 +77,7 @@ Node.prototype = {
 			this.mappings = decode( map.mappings );
 
 			sourcesContent = map.sourcesContent || [];
-
-			const sourceRoot = resolve( dirname( this.file ), resolveProtocol( map.sourceRoot ) || '' );
+			const sourceRoot = resolve( this.file ? dirname( this.file ) : '', resolveProtocol( map.sourceRoot ) || '' );
 
 			this.sources = map.sources.map( ( source, i ) => {
 				const node = new Node({
