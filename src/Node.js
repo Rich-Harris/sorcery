@@ -1,9 +1,14 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync, Promise } from 'sander';
 import { decode } from 'sourcemap-codec';
+import { parse } from 'url';
 import getMap from './utils/getMap.js';
 
 export default function Node ({ file, content }) {
+	// resolve file:///path to /path
+	if(!!file && file.indexOf("file:") === 0) {
+		file = parse(file)["path"];
+	}
 	this.file = file ? resolve( file ) : null;
 	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
