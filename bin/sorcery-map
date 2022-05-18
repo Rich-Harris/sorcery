@@ -3,11 +3,10 @@
 var path = require( 'path' );
 var minimist = require( 'minimist' );
 var fse = require( 'fs-extra' );
+var globby = require( 'globby' );
 var showHelp = require( './showHelp' );
 var command;
 var sorcery = require( '../' );
-
-var validExtensions = { js: true };
 
 command = minimist( process.argv.slice( 2 ), {
 	alias: {
@@ -16,7 +15,8 @@ command = minimist( process.argv.slice( 2 ), {
 		v: 'version',
 		h: 'help',
 		d: 'datauri',
-		x: 'excludeContent'
+		x: 'excludeContent',
+		e: 'existingContent'
 	}
 });
 
@@ -29,7 +29,7 @@ else if ( process.argv.length <= 2 && process.stdin.isTTY ) {
 }
 
 else if ( command.version ) {
-	console.log( 'Sorcery version ' + require( '../package.json' ).version );
+	console.log( 'Sorcery-map version ' + require( '../package.json' ).version );
 }
 
 else if ( !command.input ) {
@@ -39,11 +39,11 @@ else if ( !command.input ) {
 else {
 	fse.stat( command.input ).then( function ( stats ) {
 		if ( stats.isDirectory() ) {
-			return sander.lsr( command.input ).then( function ( files ) {
-				files = files.filter( function ( file ) {
-					return validExtensions[ path.extname( file ).slice( 1 ) ];
-				});
-
+			const globby_options = {
+				cwd: command.input
+			}
+			globby("**/*.js", globby_options)
+			.then((files) => {
 				return files.reduce( function ( promise, file ) {
 					return promise.then( function () {
 						var input = path.join( command.input, file );
