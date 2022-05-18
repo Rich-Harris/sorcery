@@ -1,12 +1,12 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
-import { writeFile, writeFileSync } from 'sander';
+import { writeFile, writeFileSync } from 'fs-extra';
 import { encode } from 'sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
 
 const SOURCEMAP_COMMENT = new RegExp( `\n*(?:` +
-	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^'"]+)|` +      // js
+	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\n]+)|` + // js
 	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
 '\\s*$', 'g' );
 
@@ -30,7 +30,7 @@ Chain.prototype = {
 		};
 	},
 
-	apply ( options = {} ) {
+	apply ( options = {}) {
 		let allNames = [];
 		let allSources = [];
 
@@ -104,6 +104,7 @@ Chain.prototype = {
 
 		return new SourceMap({
 			file: basename( this.node.file ),
+			// absolute path option ?
 			sources: allSources.map( source => slash( relative( options.base || dirname( this.node.file ), source ) ) ),
 			sourcesContent: allSources.map( source => includeContent ? this.sourcesContentByPath[ source ] : null ),
 			names: allNames,

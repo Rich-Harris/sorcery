@@ -1,7 +1,7 @@
 require( 'source-map-support' ).install();
 
 const path = require( 'path' );
-const sander = require( 'sander' );
+const fse = require( 'fs-extra' );
 const assert = require( 'assert' );
 const glob = require( 'glob' );
 const child_process = require( 'child_process' );
@@ -14,8 +14,8 @@ process.chdir( __dirname );
 describe( 'sorcery', function () {
 	this.timeout( 20000 );
 
-	beforeEach( () => sander.rimraf( '.tmp' ) );
-	afterEach( () => sander.rimraf( '.tmp' ) );
+	beforeEach( () => fse.rm( '.tmp', { recursive: true, force: true } ) );
+	afterEach( () => fse.rm( '.tmp', { recursive: true, force: true } ) );
 
 	describe( 'sorcery.load()', () => {
 		it( 'resolves to null if target has no sourcemap', () => {
@@ -161,36 +161,40 @@ console.log "the answer is #{answer}"`
 		it( 'creates a flattened sourcemap', () => {
 			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				const map = chain.apply();
-				const smc = new SourceMapConsumer( map );
+				const smcFact = new SourceMapConsumer( map );
 
-				assert.equal( map.version, 3 );
-				assert.deepEqual( map.file, 'helloworld.min.js' );
-				assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
-				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
+				return smcFact.then((smc) => {
+					assert.equal( map.version, 3 );
+					assert.deepEqual( map.file, 'helloworld.min.js' );
+					assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
+					assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
-				const loc = smc.originalPositionFor({ line: 1, column: 31 });
-				assert.equal( loc.source, 'helloworld.coffee' );
-				assert.equal( loc.line, 2 );
-				assert.equal( loc.column, 8 );
-				assert.equal( loc.name, 'log' );
+					const loc = smc.originalPositionFor({ line: 1, column: 31 });
+					assert.equal( loc.source, 'helloworld.coffee' );
+					assert.equal( loc.line, 2 );
+					assert.equal( loc.column, 8 );
+					assert.equal( loc.name, 'log' );
+				});
 			});
 		});
 
 		it( 'handles sourceMappingURLs with spaces (#6)', () => {
 			return sorcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( chain => {
 				const map = chain.apply();
-				const smc = new SourceMapConsumer( map );
+				const smcFact = new SourceMapConsumer( map );
 
-				assert.equal( map.version, 3 );
-				assert.deepEqual( map.file, 'file with spaces.esperanto.js' );
-				assert.deepEqual( map.sources, [ 'file with spaces.js' ]);
-				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/4/src/file with spaces.js' ).toString() ]);
+				return smcFact.then((smc) => {
+					assert.equal( map.version, 3 );
+					assert.deepEqual( map.file, 'file with spaces.esperanto.js' );
+					assert.deepEqual( map.sources, [ 'file with spaces.js' ]);
+					assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/4/src/file with spaces.js' ).toString() ]);
 
-				const loc = smc.originalPositionFor({ line: 4, column: 8 });
-				assert.equal( loc.source, 'file with spaces.js' );
-				assert.equal( loc.line, 2 );
-				assert.equal( loc.column, 8 );
-				assert.equal( loc.name, null );
+					const loc = smc.originalPositionFor({ line: 4, column: 8 });
+					assert.equal( loc.source, 'file with spaces.js' );
+					assert.equal( loc.line, 2 );
+					assert.equal( loc.column, 8 );
+					assert.equal( loc.name, null );
+				});
 			});
 		});
 	});
@@ -206,7 +210,7 @@ console.log "the answer is #{answer}"`
 						assert.equal( map.version, 3 );
 						assert.deepEqual( map.file, 'helloworld.min.js' );
 						assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
-						assert.deepEqual( map.sourcesContent, [ sander.readFileSync( __dirname, 'samples/1/tmp/helloworld.coffee' ).toString() ]);
+						assert.deepEqual( map.sourcesContent, [ fse.readFileSync( path.join(__dirname, 'samples/1/tmp/helloworld.coffee') ).toString() ]);
 
 						const loc = smc.originalPositionFor({ line: 1, column: 31 });
 						assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
@@ -219,16 +223,16 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'overwrites existing file', () => {
-			return sander.copydir( 'samples/1/tmp' ).to( '.tmp/overwrite-file' ).then( () => {
+			return fse.copy( 'samples/1/tmp', '.tmp/overwrite-file' ).then( () => {
 				return sorcery.load( '.tmp/overwrite-file/helloworld.min.js' ).then( chain => {
 					return chain.write().then( () => {
-						return sander.readFile( '.tmp/overwrite-file/helloworld.min.js.map' ).then( String ).then( JSON.parse ).then( map => {
+						return fse.readFile( '.tmp/overwrite-file/helloworld.min.js.map' ).then( String ).then( JSON.parse ).then( map => {
 							const smc = new SourceMapConsumer( map );
 
 							assert.equal( map.version, 3 );
 							assert.deepEqual( map.file, 'helloworld.min.js' );
 							assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
-							assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
+							assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
 							const loc = smc.originalPositionFor({ line: 1, column: 31 });
 							assert.equal( loc.source, 'helloworld.coffee' );
@@ -246,7 +250,7 @@ console.log "the answer is #{answer}"`
 				return chain.write( '.tmp/helloworld.min.js', {
 					absolutePath: true
 				}).then( () => {
-					return sander.readFile( '.tmp/helloworld.min.js' ).then( String ).then( generated => {
+					return fse.readFile( '.tmp/helloworld.min.js' ).then( String ).then( generated => {
 						const mappingURL = /sourceMappingURL=([^\s]+)/.exec( generated )[1];
 						assert.equal( mappingURL, encodeURI( path.resolve( '.tmp/helloworld.min.js.map' ) ) );
 					});
@@ -257,7 +261,7 @@ console.log "the answer is #{answer}"`
 		it( 'adds a trailing newline after sourceMappingURL comment (#4)', () => {
 			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				return chain.write( '.tmp/write-file/helloworld.min.js' ).then( () => {
-					return sander.readFile( '.tmp/write-file/helloworld.min.js' ).then( String ).then( file => {
+					return fse.readFile( '.tmp/write-file/helloworld.min.js' ).then( String ).then( file => {
 						const lines = file.split( '\n' );
 
 						// sourceMappingURL comment should be on penultimate line
@@ -273,10 +277,10 @@ console.log "the answer is #{answer}"`
 		it( 'ensures sourceMappingURL is encoded (#6)', () => {
 			return sorcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( chain => {
 				chain.write( '.tmp/with-spaces/file with spaces.js' ).then( () => {
-					return sander.readFile( '.tmp/with-spaces/file with spaces.js' )
+					return fse.readFile( '.tmp/with-spaces/file with spaces.js' )
 						.then( String )
 						.then( result => {
-							const sourceMappingURL = /sourceMappingURL=([^\r\n]+)/.exec( result )[0];
+							const sourceMappingURL = /sourceMappingURL=([^\r\n]+)/.exec( result )[1];
 							assert.equal( sourceMappingURL, 'file%20with%20spaces.js.map' );
 						});
 				});
@@ -288,7 +292,7 @@ console.log "the answer is #{answer}"`
 				return chain.write( '.tmp/write-file/helloworld.min.js', {
 					base: 'x/y/z'
 				}).then( () => {
-					return sander.readFile( '.tmp/write-file/helloworld.min.js.map' )
+					return fse.readFile( '.tmp/write-file/helloworld.min.js.map' )
 						.then( String )
 						.then( JSON.parse )
 						.then( map => {
@@ -301,7 +305,7 @@ console.log "the answer is #{answer}"`
 		it( 'writes a block comment to CSS files', () => {
 			return sorcery.load( 'samples/5/tmp/styles.css' ).then( chain => {
 				return chain.write( '.tmp/write-file/styles.css' ).then( () => {
-					return sander.readFile( '.tmp/write-file/styles.css' )
+					return fse.readFile( '.tmp/write-file/styles.css' )
 						.then( String )
 						.then( css => {
 							assert.ok( ~css.indexOf( '/*# sourceMappingURL=styles.css.map */' ) );
@@ -313,7 +317,7 @@ console.log "the answer is #{answer}"`
 		it( 'decodes/encodes URIs', () => {
 			return sorcery.load( 'samples/6/file with spaces.js' ).then( chain => {
 				return chain.write( '.tmp/write-file/file with spaces.js' ).then( () => {
-					return sander.readFile( '.tmp/write-file/file with spaces.js' )
+					return fse.readFile( '.tmp/write-file/file with spaces.js' )
 						.then( String )
 						.then( js => {
 							assert.ok( ~js.indexOf( '//# sourceMappingURL=file%20with%20spaces.js.map' ) );
@@ -351,7 +355,7 @@ console.log "the answer is #{answer}"`
 				assert.equal( map.version, 3 );
 				assert.deepEqual( map.file, 'helloworld.min.js' );
 				assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
-				assert.deepEqual( map.sourcesContent, [ sander.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
+				assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
 				const loc = smc.originalPositionFor({ line: 1, column: 31 });
 				assert.equal( loc.source, 'helloworld.coffee' );
@@ -408,7 +412,7 @@ console.log "the answer is #{answer}"`;
 					assert.equal( map.version, 3 );
 					assert.deepEqual( map.file, 'helloworld.min.js' );
 					assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
-					assert.deepEqual( map.sourcesContent, [ sander.readFileSync( __dirname, 'samples/1/tmp/helloworld.coffee' ).toString() ]);
+					assert.deepEqual( map.sourcesContent, [ fse.readFileSync( path.join(__dirname, 'samples/1/tmp/helloworld.coffee') ).toString() ]);
 
 					const loc = smc.originalPositionFor({ line: 1, column: 31 });
 					assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
@@ -421,19 +425,19 @@ console.log "the answer is #{answer}"`;
 	});
 
 	describe( 'cli', () => {
-		sander.readdirSync( 'cli' ).forEach( dir => {
+		fse.readdirSync( 'cli' ).forEach( dir => {
 			if ( dir[0] === '.' ) return;
 
 			( /^solo-/.test( dir ) ? it.only : it )( dir, done => {
 				dir = path.resolve( 'cli', dir );
-				sander.rimrafSync( dir, 'actual' );
-				sander.mkdirSync( dir, 'actual' );
+				fse.rmSync(path.join( dir, 'actual'), { recursive: true, force: true } );
+				fse.ensureDirSync(path.join( dir, 'actual' ) );
 
-				if ( sander.existsSync( dir, 'pre.js' ) ) {
+				if ( fse.existsSync( dir, 'pre.js' ) ) {
 					require( path.join( dir, 'pre.js' ) )();
 				}
 
-				var command = sander.readFileSync( dir, 'command.sh', { encoding: 'utf-8' })
+				var command = fse.readFileSync( path.join(dir, 'command.sh'), { encoding: 'utf-8' })
 					.replace( 'sorcery', 'node ' + path.resolve( __dirname, '../bin/sorcery' ) );
 
 				child_process.exec( command, {
@@ -444,7 +448,7 @@ console.log "the answer is #{answer}"`;
 					if ( stdout ) console.log( stdout );
 					if ( stderr ) console.error( stderr );
 
-					if ( sander.existsSync( dir, 'post.js' ) ) {
+					if ( fse.existsSync( dir, 'post.js' ) ) {
 						require( path.join( dir, 'post.js' ) )();
 					}
 
@@ -454,7 +458,7 @@ console.log "the answer is #{answer}"`;
 						return glob.sync( '**/*.js?(.map)', { cwd: subdir })
 							.sort()
 							.map( name => {
-								var contents = sander.readFileSync( subdir, name, { encoding: 'utf-8' }).trim();
+								var contents = fse.readFileSync( path.join(subdir, name), { encoding: 'utf-8' }).trim();
 
 								if ( path.extname( name ) === '.map' ) {
 									contents = JSON.parse( contents );

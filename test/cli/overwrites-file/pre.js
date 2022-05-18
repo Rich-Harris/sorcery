@@ -1,5 +1,6 @@
-var sander = require( 'sander' );
+var fse = require( 'fs-extra' );
+var path = require( 'path' );
 
 module.exports = function () {
-	sander.copydirSync( __dirname, 'files' ).to( __dirname, 'actual' );
+	fse.copySync( path.join(__dirname, 'files' ), path.join( __dirname, 'actual' ));
 };

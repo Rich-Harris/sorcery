@@ -1,15 +1,17 @@
-# sorcery.js
+# sorcery-map.js
 
-Sourcemaps are great - if you have a JavaScript file, and you minify it, your minifier can generate a map that lets you debug as though you were looking at the original uncompressed code.
+This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but we added few improvements:
 
-But if you have more than one transformation - say you want to transpile your JavaScript, concatenate several files into one, and minify the result - it gets a little trickier. Each intermediate step needs to be able to both *ingest* a sourcemap and *generate* one, all the time pointing back to the original source.
+1) We merged following pull requests:
+* [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sorcery/pull/176)
+* [chore(deps-dev): bump eslint from 2.13.1 to 6.6.0](https://github.com/Rich-Harris/sorcery/pull/175)
+* [Handle file:// paths to source files](https://github.com/Rich-Harris/sorcery/pull/173)
+* [Ignore missing / unavailable files](https://github.com/Rich-Harris/sorcery/pull/165)
+* [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sorcery/pull/14)
 
-Most compilers don't do that. ([UglifyJS](https://github.com/mishoo/UglifyJS2) is an honourable exception.) So when you fire up devtools, instead of looking at the original source you find yourself looking at the final intermediate step in the chain of transformations.
-
-**Sorcery aims to fix that.** Given an file at the end of a transformation chain (e.g., your minified JavaScript), it will follow the entire chain back to the original source, and generate a new sourcemap that describes the whole process. How? Magic.
-
-This is a work-in-progress - suitable for playing around with, but don't rely on it to debug air traffic control software or medical equipment. Other than that, it can't do much harm.
-
+2) New feature
+*onlyAvailableSources* default true
+manage the transformation chain while the sources are physically present on the machine. We want to end with a map which refers existing sources only.
 
 ## Usage
 
@@ -18,13 +20,13 @@ This is a work-in-progress - suitable for playing around with, but don't rely on
 Install sorcery locally:
 
 ```bash
-npm install sorcery
+npm install sorcery-map
 ```
 
 ```js
-var sorcery = require( 'sorcery' );
+var sorcery_map = require( 'sorcery-map' );
 
-sorcery.load( 'some/generated/code.min.js' ).then( function ( chain ) {
+sorcery_map.load( 'some/generated/code.min.js' ).then( function ( chain ) {
   // generate a flattened sourcemap
   var map = chain.apply(); // { version: 3, file: 'code.min.js', ... }
 
@@ -57,8 +59,8 @@ sorcery.load( 'some/generated/code.min.js' ).then( function ( chain ) {
   var loc = chain.trace( x, y );
 });
 
-// You can also use sorcery synchronously:
-var chain = sorcery.loadSync( 'some/generated/code.min.js' );
+// You can also use sorcery-map synchronously:
+var chain = sorcery_map.loadSync( 'some/generated/code.min.js' );
 var map = chain.apply();
 var loc = chain.trace( x, y );
 chain.writeSync();
@@ -66,7 +68,7 @@ chain.writeSync();
 
 #### Advanced options
 
-You can pass an optional second argument to `sorcery.load()` and `sorcery.loadSync()`, with zero or more of the following properties:
+You can pass an optional second argument to `sorcery_map.load()` and `sorcery_map.loadSync()`, with zero or more of the following properties:
 
 * `content` - a map of `filename: contents` pairs. `filename` will be resolved against the current working directory if needs be
 * `sourcemaps` - a map of `filename: sourcemap` pairs, where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself.
@@ -74,7 +76,7 @@ You can pass an optional second argument to `sorcery.load()` and `sorcery.loadSy
 For example:
 
 ```js
-sorcery.load( 'some/generated/code.min.js', {
+sorcery_map.load( 'some/generated/code.min.js', {
   content: {
     'some/minified/code.min.js': '...',
     'some/transpiled/code.js': '...',
@@ -93,15 +95,15 @@ Any files not found will be read from the filesystem as normal.
 
 ### On the command line
 
-First, install sorcery globally:
+First, install sorcery-map globally:
 
 ```bash
-npm install -g sorcery
+npm install -g sorcery-map
 ```
 
 ```
 Usage:
-  sorcery [options]
+  sorcery-map [options]
 
 Options:
   -h, --help               Show help message
@@ -110,6 +112,7 @@ Options:
   -o, --output <file>      Output file (if absent, will overwrite input)
   -d, --datauri            Append map as a data URI, rather than separate file
   -x, --excludeContent     Don't populate the sourcesContent array
+  -e, --existingContent    true|false, false: reach the original source even if not present locally, true: stop to the last existing file of the chain.
 ```
 
 Examples:
@@ -118,15 +121,15 @@ Examples:
 # overwrite sourcemap in place (will write map to
 # some/generated/code.min.js.map, and update
 # sourceMappingURL comment if necessary
-sorcery -i some/generated/code.min.js
+sorcery-map -i some/generated/code.min.js
 
 # append flattened sourcemap as an inline data URI
 # (will delete existing .map file, if applicable)
-sorcery -d -i some/generated/code.min.js
+sorcery-map -d -i some/generated/code.min.js
 
 # write to a new file (will create newfile.js and
 # newfile.js.map)
-sorcery -i some/generated/code.min.js -o newfile.js
+sorcery-map -i some/generated/code.min.js -o newfile.js
 ```
 
 

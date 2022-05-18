@@ -1,11 +1,11 @@
 var path = require( 'path' );
 var exec = require( 'child_process' ).exec;
-var sander = require( 'sander' );
+var fse = require( 'fs-extra' );
 var promiseMapSeries = require( 'promise-map-series' );
 
-sander.readdir( __dirname ).then( function ( samples ) {
+fse.readdir( __dirname ).then( function ( samples ) {
 	var filtered = samples.filter( function ( dir ) {
-		return sander.statSync( __dirname, dir ).isDirectory();
+		return fse.statSync( __dirname, dir ).isDirectory();
 	});
 
 	return promiseMapSeries( filtered, function ( dir ) {
@@ -13,7 +13,7 @@ sander.readdir( __dirname ).then( function ( samples ) {
 
 		return new Promise( function ( fulfil, reject ) {
 			// check it exists
-			sander.readFile( 'build.sh' )
+			fse.readFile( 'build.sh' )
 				.then( function () {
 					exec( 'sh ./build.sh', function ( err, stdout, stderr ) {
 						if ( err ) {

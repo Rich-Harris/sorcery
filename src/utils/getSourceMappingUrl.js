@@ -1,6 +1,7 @@
 import SOURCEMAPPING_URL from './sourceMappingURL.js';
 
 export default function getSourceMappingUrl ( str ) {
+	if ( !str ) return null;
 	var index, substring, url, match;
 
 	// assume we want the last occurence

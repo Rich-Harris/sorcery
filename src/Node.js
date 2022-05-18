@@ -1,10 +1,10 @@
 import { dirname, resolve } from 'path';
-import { readFile, readFileSync, Promise } from 'sander';
+import { readFile, readFileSync } from 'fs-extra';
 import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 
 export default function Node ({ file, content }) {
-	this.file = file ? resolve( file ) : null;
+	this.file = file ? resolve(manageFileProtocol(file)) : '';
 	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 	if ( !this.file && this.content === null ) {
@@ -27,14 +27,18 @@ export default function Node ({ file, content }) {
 }
 
 Node.prototype = {
-	load ( sourcesContentByPath, sourceMapByPath ) {
+	load ( sourcesContentByPath, sourceMapByPath, options ) {
 		return getContent( this, sourcesContentByPath ).then( content => {
-			this.content = sourcesContentByPath[ this.file ] = content;
+			this.content = sourcesContentByPath[this.file] = content;
+            if (!content) {
+				return null;
+			}
 
 			return getMap( this, sourceMapByPath ).then( map => {
-				if ( !map ) return null;
-
 				this.map = map;
+				if (!map) {
+                    return null;
+                }
 
 				let decodingStart = process.hrtime();
 				this.mappings = decode( map.mappings );
@@ -43,53 +47,58 @@ Node.prototype = {
 
 				const sourcesContent = map.sourcesContent || [];
 
-				const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+				const sourceRoot = resolve( dirname( this.file ), manageFileProtocol(map.sourceRoot) || '' );
 
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
-						file: source ? resolve( sourceRoot, source ) : null,
+						file: source ? resolve( sourceRoot, manageFileProtocol(source) ) : null,
 						content: sourcesContent[i]
 					});
 				});
 
-				const promises = this.sources.map( node => node.load( sourcesContentByPath, sourceMapByPath ) );
+				const promises = this.sources.map( node => node.load( sourcesContentByPath, sourceMapByPath, options ) );
 				return Promise.all( promises );
 			});
+		})
+		.then(() => {
+			checkOriginalSource(this, options);
 		});
 	},
 
-	loadSync ( sourcesContentByPath, sourceMapByPath ) {
+	loadSync ( sourcesContentByPath, sourceMapByPath, options) {
 		if ( !this.content ) {
-			if ( !sourcesContentByPath[ this.file ] ) {
-				sourcesContentByPath[ this.file ] = readFileSync( this.file, { encoding: 'utf-8' });
+			if ( !sourcesContentByPath[this.file]) {
+				try {
+					sourcesContentByPath[this.file] = readFileSync( this.file, { encoding: 'utf-8' });
+				} catch ( e ) {
+					sourcesContentByPath[this.file] = null;
+				}
 			}
 
-			this.content = sourcesContentByPath[ this.file ];
+			this.content = sourcesContentByPath[this.file];
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
-		let sourcesContent;
 
-		if ( !map ) {
-			this.isOriginalSource = true;
-		} else {
-			this.map = map;
+		this.map = map;
+		if ( map ) {
 			this.mappings = decode( map.mappings );
 
-			sourcesContent = map.sourcesContent || [];
+			let sourcesContent = map.sourcesContent || [];
 
-			const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+			const sourceRoot = resolve( dirname( this.file ), manageFileProtocol(map.sourceRoot) || '' );
 
 			this.sources = map.sources.map( ( source, i ) => {
 				const node = new Node({
-					file: resolve( sourceRoot, source ),
+					file: resolve( sourceRoot, manageFileProtocol(source) ),
 					content: sourcesContent[i]
 				});
 
-				node.loadSync( sourcesContentByPath, sourceMapByPath );
+				node.loadSync( sourcesContentByPath, sourceMapByPath, options );
 				return node;
 			});
 		}
+		checkOriginalSource(this, options);
 	},
 
 	/**
@@ -121,7 +130,7 @@ Node.prototype = {
 
 		// Otherwise, we need to figure out what this position in
 		// the intermediate file corresponds to in *its* source
-		const segments = this.mappings[ lineIndex ];
+		const segments = this.mappings[lineIndex];
 
 		if ( !segments || segments.length === 0 ) {
 			return null;
@@ -141,35 +150,53 @@ Node.prototype = {
 				if ( generatedCodeColumn === columnIndex ) {
 					if ( segments[i].length < 4 ) return null;
 
-					let sourceFileIndex = segments[i][1];
-					let sourceCodeLine = segments[i][2];
-					let sourceCodeColumn = segments[i][3];
-					let nameIndex = segments[i][4];
+					let sourceFileIndex = segments[i][1] || 0;
+					let sourceCodeLine = segments[i][2] || 0;
+					let sourceCodeColumn = segments[i][3] || 0;
+					let nameIndex = segments[i][4] || 0;
 
-					let parent = this.sources[ sourceFileIndex ];
-					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[ nameIndex ] || name );
+					let parent = this.sources[sourceFileIndex];
+					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[nameIndex] || name );
 				}
 			}
 		}
 
 		// fall back to a line mapping
-		let sourceFileIndex = segments[0][1];
-		let sourceCodeLine = segments[0][2];
-		let nameIndex = segments[0][4];
+		let sourceFileIndex = segments[0][1] || 0;
+		let sourceCodeLine = segments[0][2] || 0;
+		let nameIndex = segments[0][4] || 0;
 
-		let parent = this.sources[ sourceFileIndex ];
-		return parent.trace( sourceCodeLine, null, this.map.names[ nameIndex ] || name );
+		let parent = this.sources[sourceFileIndex];
+		return parent.trace( sourceCodeLine, null, this.map.names[nameIndex] || name );
 	}
 };
 
+function checkOriginalSource( node, options ) {
+	if (node.sources == null || node.map == null || (options.onlyAvailableSources === true && node.sources.some((node) => node.content == null))) {
+		node.isOriginalSource = true;
+		node.map = null;
+		node.mappings = null;
+		node.sources = null;
+	}
+}
+
 function getContent ( node, sourcesContentByPath ) {
 	if ( node.file in sourcesContentByPath ) {
-		node.content = sourcesContentByPath[ node.file ];
+		node.content = sourcesContentByPath[node.file];
 	}
 
 	if ( !node.content ) {
-		return readFile( node.file, { encoding: 'utf-8' });
+		return readFile( node.file, { encoding: 'utf-8' }).catch( () => null );
 	}
 
 	return Promise.resolve( node.content );
+}
+
+const protocol_file = 'file://';
+function manageFileProtocol ( file ) {
+	// resolve file:///path to /path
+	if(!!file && file.indexOf("file://") === 0) {
+		file = require('url').parse(file)["path"];
+	}
+	return file;
 }

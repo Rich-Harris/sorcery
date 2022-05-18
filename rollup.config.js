@@ -1,22 +1,17 @@
 import buble from 'rollup-plugin-buble';
 import commonjs from 'rollup-plugin-commonjs';
-import npm from 'rollup-plugin-npm';
+import resolve from 'rollup-plugin-node-resolve';
 
 export default {
-	entry: 'src/index.js',
+	input: 'src/index.js',
 	plugins: [
 		commonjs({
 			include: 'node_modules/**'
-		}),
-		npm({
-			jsnext: true,
-			main: true,
-			skip: [ 'path', 'sander', 'buffer-crc32' ]
 		}),
 		buble({
 			exclude: 'node_modules/**'
 		})
 	],
-	external: [ 'path', 'sander', 'buffer-crc32' ],
+	external: [ 'path', 'fs', 'buffer-crc32', 'sourcemap-codec '],
 	sourceMap: true
 };

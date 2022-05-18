@@ -2,7 +2,7 @@
 
 var path = require( 'path' );
 var minimist = require( 'minimist' );
-var sander = require( 'sander' );
+var fse = require( 'fs-extra' );
 var showHelp = require( './showHelp' );
 var command;
 var sorcery = require( '../' );
@@ -37,7 +37,7 @@ else if ( !command.input ) {
 }
 
 else {
-	sander.stat( command.input ).then( function ( stats ) {
+	fse.stat( command.input ).then( function ( stats ) {
 		if ( stats.isDirectory() ) {
 			return sander.lsr( command.input ).then( function ( files ) {
 				files = files.filter( function ( file ) {

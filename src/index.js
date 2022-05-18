@@ -2,21 +2,23 @@ import { resolve } from 'path';
 import Node from './Node.js';
 import Chain from './Chain.js';
 
-export function load ( file, options ) {
-	const { node, sourcesContentByPath, sourceMapByPath } = init( file, options );
+export function load ( file, raw_options ) {
+	const { node, sourcesContentByPath, sourceMapByPath, options } = init( file, raw_options );
 
-	return node.load( sourcesContentByPath, sourceMapByPath )
+	return node.load( sourcesContentByPath, sourceMapByPath, options )
 		.then( () => node.isOriginalSource ? null : new Chain( node, sourcesContentByPath ) );
 }
 
-export function loadSync ( file, options = {} ) {
-	const { node, sourcesContentByPath, sourceMapByPath } = init( file, options );
+export function loadSync ( file, raw_options = {}) {
+	const { node, sourcesContentByPath, sourceMapByPath, options } = init( file, raw_options );
 
-	node.loadSync( sourcesContentByPath, sourceMapByPath );
+	node.loadSync( sourcesContentByPath, sourceMapByPath, options );
 	return node.isOriginalSource ? null : new Chain( node, sourcesContentByPath );
 }
 
-function init ( file, options = {} ) {
+function init ( file, options = {}) {
+	options.onlyAvailableSources = (options.onlyAvailableSources == null) ? true : options.onlyAvailableSources;
+
 	const node = new Node({ file });
 
 	let sourcesContentByPath = {};
@@ -34,5 +36,5 @@ function init ( file, options = {} ) {
 		});
 	}
 
-	return { node, sourcesContentByPath, sourceMapByPath };
+	return { node, sourcesContentByPath, sourceMapByPath, options };
 }

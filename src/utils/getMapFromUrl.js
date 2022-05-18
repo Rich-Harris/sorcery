@@ -1,5 +1,5 @@
 import { dirname, resolve } from 'path';
-import { readFile, readFileSync, Promise } from 'sander';
+import { readFile, readFileSync } from 'fs-extra';
 import atob from './atob.js';
 import SOURCEMAPPING_URL from './sourceMappingURL.js';
 
@@ -30,15 +30,24 @@ export default function getMapFromUrl ( url, base, sync ) {
 		}
 
 		const json = atob( match[1] );
-		const map = parseJSON( json, `data URI in ${base}` );
-		return sync ? map : Promise.resolve( map );
+		try {
+		    var map = parseJSON( json, ("data URI in " + base) );
+		    return sync ? map : sander.Promise.resolve( map );
+        }
+        catch (err) {
+		    return sync ? null : sander.Promise.resolve( null );
+        }
 	}
 
 	url = resolve( dirname( base ), decodeURI( url ) );
 
 	if ( sync ) {
-		return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
+		try {
+			return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
+		} catch ( e ) {
+			return null;
+		}
 	} else {
-		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) );
+		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) ).catch( () => null );
 	}
 }
