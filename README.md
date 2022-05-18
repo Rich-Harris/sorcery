@@ -2,26 +2,32 @@
 
 This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but we added few improvements:
 
-1) We merged following pull requests:
+**We merged pull requests**  
 * [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sorcery/pull/176)
 * [chore(deps-dev): bump eslint from 2.13.1 to 6.6.0](https://github.com/Rich-Harris/sorcery/pull/175)
 * [Handle file:// paths to source files](https://github.com/Rich-Harris/sorcery/pull/173)
 * [Ignore missing / unavailable files](https://github.com/Rich-Harris/sorcery/pull/165)
 * [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sorcery/pull/14)
 
-2) New feature
-*onlyAvailableSources* default true
-manage the transformation chain while the sources are physically present on the machine. We want to end with a map which refers existing sources only.
+**New feature**  
+*existingContentOnly* default true  
+Apply the transformation chain while the sources content are available. We want to end with a map which refers existing local sources only.
 
-3) Build
+**Build**  
 Fix build which was not working on Windows.  
-Still have to ensure multi-platforms unit tests  
+
+## Next steps
+* still have to ensure unit tests can be run on Windows  
+* absolutePath ?  
+* read remote map  
+* expose a Webpack plugin (like source-mapper)  
+* add d.ts
 
 ## Usage
 
 ### As a node module
 
-Install sorcery locally:
+Install sorcery-map locally:
 
 ```bash
 npm install sorcery-map
@@ -89,7 +95,8 @@ sorcery_map.load( 'some/generated/code.min.js', {
   sourcemaps: {
     'some/minified/code.min.js': {...},
     'some/transpiled/code.js': {...}
-  }
+  },
+  existingContentOnly: false
 }).then( chain => {
   /* ... */
 });
@@ -110,13 +117,13 @@ Usage:
   sorcery-map [options]
 
 Options:
-  -h, --help               Show help message
-  -v, --version            Show version
-  -i, --input <file>       Input file
-  -o, --output <file>      Output file (if absent, will overwrite input)
-  -d, --datauri            Append map as a data URI, rather than separate file
-  -x, --excludeContent     Don't populate the sourcesContent array
-  -e, --existingContent    true|false, false: reach the original source even if not present locally, true: stop to the last existing file of the chain.
+  -h, --help                 Show help message
+  -v, --version              Show version
+  -i, --input <file>         Input file
+  -o, --output <file>        Output file (if absent, will overwrite input)
+  -d, --datauri              Append map as a data URI, rather than separate file
+  -x, --excludeContent       Don't populate the sourcesContent array
+  -e, --existingContentOnly  true|false, false: reach the original source even if not present locally, true: stop to the last existing file of the chain.
 ```
 
 Examples:

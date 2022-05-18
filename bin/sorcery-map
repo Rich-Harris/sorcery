@@ -16,7 +16,7 @@ command = minimist( process.argv.slice( 2 ), {
 		h: 'help',
 		d: 'datauri',
 		x: 'excludeContent',
-		e: 'existingContent'
+		e: 'existingContentOnly'
 	}
 });
 
