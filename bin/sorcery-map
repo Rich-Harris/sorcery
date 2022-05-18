@@ -6,7 +6,7 @@ var fse = require( 'fs-extra' );
 var globby = require( 'globby' );
 var showHelp = require( './showHelp' );
 var command;
-var sorcery = require( '../' );
+var sorcery_map = require( '../' );
 
 command = minimist( process.argv.slice( 2 ), {
 	alias: {
@@ -49,7 +49,7 @@ else {
 						var input = path.join( command.input, file );
 						var output = path.join( command.output || command.input, file );
 
-						return sorcery.load( input ).then( function ( chain ) {
+						return sorcery_map.load( input, options ).then( function ( chain ) {
 							return chain.write( output, {
 								inline: command.datauri,
 								includeContent: !command.excludeContent
@@ -60,7 +60,7 @@ else {
 			});
 		}
 
-		return sorcery.load( command.input ).then( function ( chain ) {
+		return sorcery_map.load( command.input, options ).then( function ( chain ) {
 			return chain.write( command.output || command.input, {
 				inline: command.datauri,
 				includeContent: !command.excludeContent

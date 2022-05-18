@@ -172,7 +172,7 @@ Node.prototype = {
 };
 
 function checkOriginalSource( node, options ) {
-	if (node.sources == null || node.map == null || (options.onlyAvailableSources === true && node.sources.some((node) => node.content == null))) {
+	if (node.sources == null || node.map == null || (options.existingContent === true && node.sources.some((node) => node.content == null))) {
 		node.isOriginalSource = true;
 		node.map = null;
 		node.mappings = null;

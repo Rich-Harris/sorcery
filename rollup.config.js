@@ -1,6 +1,6 @@
 import buble from 'rollup-plugin-buble';
 import commonjs from 'rollup-plugin-commonjs';
-import resolve from 'rollup-plugin-node-resolve';
+// import resolve from 'rollup-plugin-node-resolve';
 
 export default {
 	input: 'src/index.js',
@@ -12,6 +12,8 @@ export default {
 			exclude: 'node_modules/**'
 		})
 	],
-	external: [ 'path', 'fs', 'buffer-crc32', 'sourcemap-codec '],
-	sourceMap: true
+	external: [ 'path', 'fs-extra', 'buffer-crc32', 'sourcemap-codec'],
+	output: {
+		sourcemap: true
+	}
 };

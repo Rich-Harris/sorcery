@@ -1,8 +1,8 @@
-var fs = require( 'fs' ),
+var fse = require( 'fs-extra' ),
 	path = require( 'path' );
 
 module.exports = function ( stream ) {
-	fs.readFile( path.join( __dirname, 'help.md' ), function ( err, result ) {
+	fse.readFile( path.join( __dirname, 'help.md' ), function ( err, result ) {
 		var help;
 
 		if ( err ) throw err;

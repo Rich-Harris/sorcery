@@ -13,6 +13,10 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but 
 *onlyAvailableSources* default true
 manage the transformation chain while the sources are physically present on the machine. We want to end with a map which refers existing sources only.
 
+3) Build
+Fix build which was not working on Windows.  
+Still have to ensure multi-platforms unit tests  
+
 ## Usage
 
 ### As a node module
