@@ -5,7 +5,7 @@ import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
 
-const SOURCEMAP_COMMENT = new RegExp( `\n*(?:` +
+const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\n]+)|` + // js
 	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
 '\\s*$', 'g' );

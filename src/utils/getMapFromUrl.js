@@ -29,14 +29,14 @@ export default function getMapFromUrl ( url, base, sync ) {
 			throw new Error( `${SOURCEMAPPING_URL} is not base64-encoded` );
 		}
 
-		const json = atob( match[1] );
+		const json = atob( match[1]);
 		try {
-		    var map = parseJSON( json, ("data URI in " + base) );
-		    return sync ? map : sander.Promise.resolve( map );
-        }
-        catch (err) {
-		    return sync ? null : sander.Promise.resolve( null );
-        }
+		    var map = parseJSON( json, ( 'data URI in ' + base ) );
+		    return sync ? map : Promise.resolve( map );
+		}
+		catch ( err ) {
+		    return sync ? null : Promise.resolve( null );
+		}
 	}
 
 	url = resolve( dirname( base ), decodeURI( url ) );

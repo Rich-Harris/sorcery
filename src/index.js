@@ -17,7 +17,7 @@ export function loadSync ( file, raw_options = {}) {
 }
 
 function init ( file, options = {}) {
-	options.existingContent = (options.existingContent == null) ? true : options.existingContent;
+	options.existingContent = ( options.existingContent == null ) ? true : options.existingContent;
 
 	const node = new Node({ file });
 
