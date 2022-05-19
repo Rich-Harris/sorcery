@@ -1,13 +1,13 @@
-# sorcery-map.js
+# sourcery-map.js
 
-This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but with few improvements added:
+This package is a fork of [sourcery](https://github.com/Rich-Harris/sourcery) but with few improvements added:
 
 **We merged pull requests**  
-* [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sorcery/pull/176)
-* [chore(deps-dev): bump eslint from 2.13.1 to 6.6.0](https://github.com/Rich-Harris/sorcery/pull/175)
-* [Handle file:// paths to source files](https://github.com/Rich-Harris/sorcery/pull/173)
-* [Ignore missing / unavailable files](https://github.com/Rich-Harris/sorcery/pull/165)
-* [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sorcery/pull/14)
+* [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sourcery/pull/176)
+* [chore(deps-dev): bump eslint from 2.13.1 to 6.6.0](https://github.com/Rich-Harris/sourcery/pull/175)
+* [Handle file:// paths to source files](https://github.com/Rich-Harris/sourcery/pull/173)
+* [Ignore missing / unavailable files](https://github.com/Rich-Harris/sourcery/pull/165)
+* [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sourcery/pull/14)
 
 **New feature**  
 *existingContentOnly* default true  
@@ -27,16 +27,16 @@ Fix build which was not working on Windows.
 
 ### As a node module
 
-Install sorcery-map locally:
+Install sourcery-map locally:
 
 ```bash
-npm install sorcery-map
+npm install sourcery-map
 ```
 
 ```js
-var sorcery_map = require( 'sorcery-map' );
+var sourcery_map = require( 'sourcery-map' );
 
-sorcery_map.load( 'some/generated/code.min.js' ).then( function ( chain ) {
+sourcery_map.load( 'some/generated/code.min.js' ).then( function ( chain ) {
   // generate a flattened sourcemap
   var map = chain.apply(); // { version: 3, file: 'code.min.js', ... }
 
@@ -69,8 +69,8 @@ sorcery_map.load( 'some/generated/code.min.js' ).then( function ( chain ) {
   var loc = chain.trace( x, y );
 });
 
-// You can also use sorcery-map synchronously:
-var chain = sorcery_map.loadSync( 'some/generated/code.min.js' );
+// You can also use sourcery-map synchronously:
+var chain = sourcery_map.loadSync( 'some/generated/code.min.js' );
 var map = chain.apply();
 var loc = chain.trace( x, y );
 chain.writeSync();
@@ -78,7 +78,7 @@ chain.writeSync();
 
 #### Advanced options
 
-You can pass an optional second argument to `sorcery_map.load()` and `sorcery_map.loadSync()`, with zero or more of the following properties:
+You can pass an optional second argument to `sourcery_map.load()` and `sourcery_map.loadSync()`, with zero or more of the following properties:
 
 * `content` - a map of `filename: contents` pairs. `filename` will be resolved against the current working directory if needs be
 * `sourcemaps` - a map of `filename: sourcemap` pairs, where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself.
@@ -86,7 +86,7 @@ You can pass an optional second argument to `sorcery_map.load()` and `sorcery_ma
 For example:
 
 ```js
-sorcery_map.load( 'some/generated/code.min.js', {
+sourcery_map.load( 'some/generated/code.min.js', {
   content: {
     'some/minified/code.min.js': '...',
     'some/transpiled/code.js': '...',
@@ -106,15 +106,15 @@ Any files not found will be read from the filesystem as normal.
 
 ### On the command line
 
-First, install sorcery-map globally:
+First, install sourcery-map globally:
 
 ```bash
-npm install -g sorcery-map
+npm install -g sourcery-map
 ```
 
 ```
 Usage:
-  sorcery-map [options]
+  sourcery-map [options]
 
 Options:
   -h, --help                 Show help message
@@ -132,15 +132,15 @@ Examples:
 # overwrite sourcemap in place (will write map to
 # some/generated/code.min.js.map, and update
 # sourceMappingURL comment if necessary
-sorcery-map -i some/generated/code.min.js
+sourcery-map -i some/generated/code.min.js
 
 # append flattened sourcemap as an inline data URI
 # (will delete existing .map file, if applicable)
-sorcery-map -d -i some/generated/code.min.js
+sourcery-map -d -i some/generated/code.min.js
 
 # write to a new file (will create newfile.js and
 # newfile.js.map)
-sorcery-map -i some/generated/code.min.js -o newfile.js
+sourcery-map -i some/generated/code.min.js -o newfile.js
 ```
 
 

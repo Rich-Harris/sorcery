@@ -7,25 +7,25 @@ const glob = require( 'glob' );
 const child_process = require( 'child_process' );
 const { describe, it, beforeEach, afterEach } = require( 'mocha' );
 const SourceMapConsumer = require( 'source-map' ).SourceMapConsumer;
-const sorcery = require( '../' );
+const sourcery = require( '../' );
 
 process.chdir( __dirname );
 
-describe( 'sorcery', function () {
+describe( 'sourcery', function () {
 	this.timeout( 20000 );
 
 	beforeEach( () => fse.rm( '.tmp', { recursive: true, force: true } ) );
 	afterEach( () => fse.rm( '.tmp', { recursive: true, force: true } ) );
 
-	describe( 'sorcery.load()', () => {
+	describe( 'sourcery.load()', () => {
 		it( 'resolves to null if target has no sourcemap', () => {
-			return sorcery.load( 'samples/1/src/helloworld.coffee' ).then( chain => {
+			return sourcery.load( 'samples/1/src/helloworld.coffee' ).then( chain => {
 				assert.equal( chain, null );
 			});
 		});
 
 		it( 'allows user to specify content/sourcemaps', () => {
-			return sorcery.load( 'example.js', {
+			return sourcery.load( 'example.js', {
 				content: {
 					'example.js': `(function() {
   var answer;
@@ -62,7 +62,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'handles URLs that look a bit like data URIs', () => {
-			return sorcery.load( 'samples/8/datafile.js' ).then( chain => {
+			return sourcery.load( 'samples/8/datafile.js' ).then( chain => {
 				const actual = chain.trace( 1, 0 );
 
 				const expected = {
@@ -77,7 +77,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'handles segments of length 1', () => {
-			return sorcery.load( 'samples/8/datafile.js' ).then( chain => {
+			return sourcery.load( 'samples/8/datafile.js' ).then( chain => {
 				// this will throw if 1-length segments are rejected
 				chain.apply();
 			});
@@ -86,7 +86,7 @@ console.log "the answer is #{answer}"`
 
 	describe( 'chain.trace()', () => {
 		it( 'follows a mapping back to its origin', () => {
-			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
+			return sourcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				const actual = chain.trace( 1, 31 );
 
 				const expected = {
@@ -101,7 +101,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'handles browserify-style line mappings', () => {
-			return sorcery.load( 'samples/2/tmp/bundle.min.js' ).then( chain => {
+			return sourcery.load( 'samples/2/tmp/bundle.min.js' ).then( chain => {
 				const actual = chain.trace( 1, 487 );
 
 				const expected = {
@@ -116,7 +116,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'uses inline sources if provided', () => {
-			return sorcery.load( 'samples/3/tmp/app.esperanto.js' ).then( chain => {
+			return sourcery.load( 'samples/3/tmp/app.esperanto.js' ).then( chain => {
 				const actual = chain.trace( 4, 8 );
 
 				assert.strictEqual( actual.line, 2 );
@@ -127,7 +127,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'handles CSS sourcemap comments', () => {
-			return sorcery.load( 'samples/5/tmp/styles.css' ).then( chain => {
+			return sourcery.load( 'samples/5/tmp/styles.css' ).then( chain => {
 				const actual = chain.trace( 1, 8 );
 
 				const expected = {
@@ -142,7 +142,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'resolves source paths using sourceRoot where applicable', () => {
-			return sorcery.load( 'samples/7/foo.js' ).then( chain => {
+			return sourcery.load( 'samples/7/foo.js' ).then( chain => {
 				const actual = chain.trace( 1, 0 );
 
 				const expected = {
@@ -159,7 +159,7 @@ console.log "the answer is #{answer}"`
 
 	describe( 'chain.apply()', () => {
 		it( 'creates a flattened sourcemap', () => {
-			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
+			return sourcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				const map = chain.apply();
 				const smcFact = new SourceMapConsumer( map );
 
@@ -179,7 +179,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'handles sourceMappingURLs with spaces (#6)', () => {
-			return sorcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( chain => {
+			return sourcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( chain => {
 				const map = chain.apply();
 				const smcFact = new SourceMapConsumer( map );
 
@@ -201,9 +201,9 @@ console.log "the answer is #{answer}"`
 
 	describe( 'chain.write()', () => {
 		it( 'writes a file and accompanying sourcemap', () => {
-			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
+			return sourcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				return chain.write( '.tmp/write-file/helloworld.min.js' ).then( () => {
-					return sorcery.load( '.tmp/write-file/helloworld.min.js' ).then( chain => {
+					return sourcery.load( '.tmp/write-file/helloworld.min.js' ).then( chain => {
 						const map = chain.apply();
 						const smc = new SourceMapConsumer( map );
 
@@ -224,7 +224,7 @@ console.log "the answer is #{answer}"`
 
 		it( 'overwrites existing file', () => {
 			return fse.copy( 'samples/1/tmp', '.tmp/overwrite-file' ).then( () => {
-				return sorcery.load( '.tmp/overwrite-file/helloworld.min.js' ).then( chain => {
+				return sourcery.load( '.tmp/overwrite-file/helloworld.min.js' ).then( chain => {
 					return chain.write().then( () => {
 						return fse.readFile( '.tmp/overwrite-file/helloworld.min.js.map' ).then( String ).then( JSON.parse ).then( map => {
 							const smc = new SourceMapConsumer( map );
@@ -246,7 +246,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'allows sourceMappingURL to be an absolute path', () => {
-			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
+			return sourcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				return chain.write( '.tmp/helloworld.min.js', {
 					absolutePath: true
 				}).then( () => {
@@ -259,7 +259,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'adds a trailing newline after sourceMappingURL comment (#4)', () => {
-			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
+			return sourcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				return chain.write( '.tmp/write-file/helloworld.min.js' ).then( () => {
 					return fse.readFile( '.tmp/write-file/helloworld.min.js' ).then( String ).then( file => {
 						const lines = file.split( '\n' );
@@ -275,7 +275,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'ensures sourceMappingURL is encoded (#6)', () => {
-			return sorcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( chain => {
+			return sourcery.load( 'samples/4/tmp/file with spaces.esperanto.js' ).then( chain => {
 				chain.write( '.tmp/with-spaces/file with spaces.js' ).then( () => {
 					return fse.readFile( '.tmp/with-spaces/file with spaces.js' )
 						.then( String )
@@ -288,7 +288,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'allows the base to be specified as something other than the destination file', () => {
-			return sorcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
+			return sourcery.load( 'samples/1/tmp/helloworld.min.js' ).then( chain => {
 				return chain.write( '.tmp/write-file/helloworld.min.js', {
 					base: 'x/y/z'
 				}).then( () => {
@@ -303,7 +303,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'writes a block comment to CSS files', () => {
-			return sorcery.load( 'samples/5/tmp/styles.css' ).then( chain => {
+			return sourcery.load( 'samples/5/tmp/styles.css' ).then( chain => {
 				return chain.write( '.tmp/write-file/styles.css' ).then( () => {
 					return fse.readFile( '.tmp/write-file/styles.css' )
 						.then( String )
@@ -315,7 +315,7 @@ console.log "the answer is #{answer}"`
 		});
 
 		it( 'decodes/encodes URIs', () => {
-			return sorcery.load( 'samples/6/file with spaces.js' ).then( chain => {
+			return sourcery.load( 'samples/6/file with spaces.js' ).then( chain => {
 				return chain.write( '.tmp/write-file/file with spaces.js' ).then( () => {
 					return fse.readFile( '.tmp/write-file/file with spaces.js' )
 						.then( String )
@@ -327,10 +327,10 @@ console.log "the answer is #{answer}"`
 		});
 	});
 
-	describe( 'sorcery (sync)', () => {
+	describe( 'sourcery (sync)', () => {
 		describe( 'chain.trace()', () => {
 			it( 'follows a mapping back to its origin', () => {
-				const chain = sorcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
+				const chain = sourcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
 
 				const actual = chain.trace( 1, 31 );
 
@@ -347,7 +347,7 @@ console.log "the answer is #{answer}"`
 
 		describe( 'chain.apply()', () => {
 			it( 'includes sourcesContent', () => {
-				const chain = sorcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
+				const chain = sourcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
 
 				const map = chain.apply();
 				const smc = new SourceMapConsumer( map );
@@ -377,7 +377,7 @@ console.log("the answer is " + answer);
 				const coffeescript = `answer = 40 + 2
 console.log "the answer is #{answer}"`;
 
-				const chain = sorcery.loadSync( 'example.js', {
+				const chain = sourcery.loadSync( 'example.js', {
 					content: {
 						'example.js': javascript,
 						'example.coffee': coffeescript
@@ -401,11 +401,11 @@ console.log "the answer is #{answer}"`;
 
 		describe( 'chain.writeSync()', () => {
 			it( 'writes a file and accompanying sourcemap', () => {
-				const chain = sorcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
+				const chain = sourcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
 
 				chain.writeSync( '.tmp/write-file/helloworld.min.js' );
 
-				return sorcery.load( '.tmp/write-file/helloworld.min.js' ).then( chain => {
+				return sourcery.load( '.tmp/write-file/helloworld.min.js' ).then( chain => {
 					const map = chain.apply();
 					const smc = new SourceMapConsumer( map );
 
@@ -438,7 +438,7 @@ console.log "the answer is #{answer}"`;
 				}
 
 				var command = fse.readFileSync( path.join(dir, 'command.sh'), { encoding: 'utf-8' })
-					.replace( 'sorcery', 'node ' + path.resolve( __dirname, '../bin/sorcery-map' ) );
+					.replace( 'sourcery', 'node ' + path.resolve( __dirname, '../bin/sourcery-map' ) );
 
 				child_process.exec( command, {
 					cwd: dir

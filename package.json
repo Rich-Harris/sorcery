@@ -1,14 +1,18 @@
 {
-  "name": "sorcery-map",
-  "description": "Find your way through the chain of sourcemaps to the original source, like magic",
-  "version": "1.0.2",
+  "name": "sourcery-map",
+  "description": "Find your way through the chain of sourcemaps to the original source, like magic sourcery",
+  "version": "1.0.0",
   "author": "Emmanuel Kimmerlin",
-  "repository": "https://https://github.com/emmkimme/sorcery-map",
-  "main": "dist/sorcery-map.cjs.js",
-  "module": "dist/sorcery-map.es.js",
+  "repository": "https://github.com/emmkimme/sourcery-map",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/emmkimme/sourcery-map/issues"
+  },
+  "homepage": "https://github.com/emmkimme/sourcery-map#readme",
+  "main": "dist/sourcery-map.cjs.js",
+  "module": "dist/sourcery-map.es.js",
   "keywords": [
-    "sorcery",
+    "sourcery",
     "map",
     "sourcemap",
     "excludeContent",
@@ -49,10 +53,10 @@
     "uglify-js": "^3.15.5"
   },
   "bin": {
-    "sorcery-map": "bin/sorcery-map"
+    "sourcery-map": "bin/sourcery-map"
   },
   "scripts": {
-    "build": "del-cli -f dist && rollup -m -c --format cjs -o dist/sorcery-map.cjs.js && rollup -m -c --format es -o dist/sorcery-map.es.js",
+    "build": "del-cli -f dist && rollup -m -c --format cjs -o dist/sourcery-map.cjs.js && rollup -m -c --format es -o dist/sourcery-map.es.js",
     "_pretest": "npm run build",
     "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",

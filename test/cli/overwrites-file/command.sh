@@ -1,1 +1,1 @@
-sorcery -i actual/helloworld.min.js
+sourcery-mao -i actual/helloworld.min.js
