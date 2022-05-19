@@ -1,7 +1,7 @@
 {
   "name": "sorcery-map",
   "description": "Find your way through the chain of sourcemaps to the original source, like magic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Emmanuel Kimmerlin",
   "repository": "https://https://github.com/emmkimme/sorcery-map",
   "main": "dist/sorcery-map.cjs.js",

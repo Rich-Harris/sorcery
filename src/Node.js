@@ -4,7 +4,7 @@ import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 
 export default function Node ({ file, content }) {
-	this.file = file ? resolve( manageFileProtocol( file ) ) : '';
+	this.file = file ? resolve( manageFileProtocol( file ) ) : null;
 	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
 	if ( !this.file && this.content === null ) {
@@ -74,8 +74,10 @@ Node.prototype = {
 					sourcesContentByPath[this.file] = null;
 				}
 			}
-
 			this.content = sourcesContentByPath[this.file];
+		}
+		else if ( !sourcesContentByPath[ this.file ] ) {
+			sourcesContentByPath[ this.file ] = this.content;
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
