@@ -1,13 +1,13 @@
 # sourcery-map.js
 
-This package is a fork of [sourcery](https://github.com/Rich-Harris/sourcery) but with few improvements added:
+This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but with few improvements added:
 
 **We merged pull requests**  
-* [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sourcery/pull/176)
-* [chore(deps-dev): bump eslint from 2.13.1 to 6.6.0](https://github.com/Rich-Harris/sourcery/pull/175)
-* [Handle file:// paths to source files](https://github.com/Rich-Harris/sourcery/pull/173)
-* [Ignore missing / unavailable files](https://github.com/Rich-Harris/sourcery/pull/165)
-* [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sourcery/pull/14)
+* [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sorcery/pull/176)
+* [chore(deps-dev): bump eslint from 2.13.1 to 6.6.0](https://github.com/Rich-Harris/sorcery/pull/175)
+* [Handle file:// paths to source files](https://github.com/Rich-Harris/sorcery/pull/173)
+* [Ignore missing / unavailable files](https://github.com/Rich-Harris/sorcery/pull/165)
+* [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sorcery/pull/14)
 
 **New feature**  
 *existingContentOnly* default true  
