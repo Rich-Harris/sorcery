@@ -3,9 +3,14 @@ import { readFile, readFileSync } from 'fs-extra';
 import atob from './atob.js';
 import SOURCEMAPPING_URL from './sourceMappingURL.js';
 
+/**
+ * Strip any JSON XSSI avoidance prefix from the string (as documented
+ * in the source maps specification), and then parse the string as
+ * JSON.
+ */
 function parseJSON ( json, url ) {
 	try {
-		return JSON.parse( json );
+		return JSON.parse(json.replace(/^\)]}'[^\n]*\n/, ""));
 	} catch ( err ) {
 		throw new Error( `Could not parse sourcemap (${url}): ${err.message}` );
 	}

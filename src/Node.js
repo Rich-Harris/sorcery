@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'path';
-import { readFile, readFileSync } from 'fs-extra';
 import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
+import getContent from './utils/getContent.js';
 
 export default function Node ({ file, content }) {
 	this.file = file ? resolve( manageFileProtocol( file ) ) : null;
@@ -28,33 +28,17 @@ export default function Node ({ file, content }) {
 
 Node.prototype = {
 	load ( sourcesContentByPath, sourceMapByPath, options ) {
-		return getContent( this, sourcesContentByPath ).then( content => {
-			this.content = sourcesContentByPath[this.file] = content;
+		return getContent( this, sourcesContentByPath, false ).then( content => {
 			if ( !content ) {
 				return null;
 			}
+			this.content = content;
 
 			return getMap( this, sourceMapByPath ).then( map => {
-				this.map = map;
 				if ( !map ) {
 					return null;
 				}
-
-				let decodingStart = process.hrtime();
-				this.mappings = decode( map.mappings );
-				let decodingTime = process.hrtime( decodingStart );
-				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
-
-				const sourcesContent = map.sourcesContent || [];
-
-				const sourceRoot = resolve( dirname( this.file ), manageFileProtocol( map.sourceRoot ) || '' );
-
-				this.sources = map.sources.map( ( source, i ) => {
-					return new Node({
-						file: source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null,
-						content: sourcesContent[i]
-					});
-				});
+				applyMap(this, map);
 
 				const promises = this.sources.map( node => node.load( sourcesContentByPath, sourceMapByPath, options ) );
 				return Promise.all( promises );
@@ -66,39 +50,17 @@ Node.prototype = {
 	},
 
 	loadSync ( sourcesContentByPath, sourceMapByPath, options ) {
-		if ( !this.content ) {
-			if ( !sourcesContentByPath[this.file]) {
-				try {
-					sourcesContentByPath[this.file] = readFileSync( this.file, { encoding: 'utf-8' });
-				} catch ( e ) {
-					sourcesContentByPath[this.file] = null;
-				}
-			}
-			this.content = sourcesContentByPath[this.file];
-		}
-		else if ( !sourcesContentByPath[ this.file ] ) {
-			sourcesContentByPath[ this.file ] = this.content;
+		let content = getContent(this, sourcesContentByPath, true);
+		this.content = content;
+		if (!content) {
+			return null;
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
-
-		this.map = map;
 		if ( map ) {
-			this.mappings = decode( map.mappings );
+			applyMap(this, map);
 
-			let sourcesContent = map.sourcesContent || [];
-
-			const sourceRoot = resolve( dirname( this.file ), manageFileProtocol( map.sourceRoot ) || '' );
-
-			this.sources = map.sources.map( ( source, i ) => {
-				const node = new Node({
-					file: resolve( sourceRoot, manageFileProtocol( source ) ),
-					content: sourcesContent[i]
-				});
-
-				node.loadSync( sourcesContentByPath, sourceMapByPath, options );
-				return node;
-			});
+			this.sources.map( node => node.loadSync( sourcesContentByPath, sourceMapByPath, options ) );
 		}
 		checkOriginalSource( this, options );
 	},
@@ -173,25 +135,32 @@ Node.prototype = {
 	}
 };
 
+function applyMap(node, map) {
+	node.map = map;
+	let decodingStart = process.hrtime();
+	node.mappings = decode( map.mappings );
+	let decodingTime = process.hrtime( decodingStart );
+	node._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
+
+	const sourcesContent = map.sourcesContent || [];
+
+	const sourceRoot = node.file ? resolve( dirname( node.file ), manageFileProtocol( map.sourceRoot ) || '' ) : '';
+
+	node.sources = map.sources.map( ( source, i ) => {
+		return new Node({
+			file: source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null,
+			content: sourcesContent[i]
+		});
+	});
+}
+
 function checkOriginalSource ( node, options ) {
-	if ( node.sources == null || node.map == null || ( options.existingContentOnly === true && node.sources.some( ( node ) => node.content == null ) ) ) {
+	if ( node.sources == null || node.sources.length == 0 || node.map == null || ( options.existingContentOnly === true && node.sources.some( ( node ) => node.content == null ) ) ) {
 		node.isOriginalSource = true;
 		node.map = null;
 		node.mappings = null;
 		node.sources = null;
 	}
-}
-
-function getContent ( node, sourcesContentByPath ) {
-	if ( node.file in sourcesContentByPath ) {
-		node.content = sourcesContentByPath[node.file];
-	}
-
-	if ( !node.content ) {
-		return readFile( node.file, { encoding: 'utf-8' }).catch( () => null );
-	}
-
-	return Promise.resolve( node.content );
 }
 
 function manageFileProtocol ( file ) {

@@ -1,7 +1,7 @@
 {
   "name": "sorcery-map",
   "description": "Find your way through the chain of sourcemaps to the original source, like magic",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Emmanuel Kimmerlin",
   "repository": "https://https://github.com/emmkimme/sorcery-map",
   "main": "dist/sorcery-map.cjs.js",
@@ -25,7 +25,7 @@
   "dependencies": {
     "buffer-crc32": "^0.2.5",
     "fs-extra": "^10.1.0",
-    "globby": "^13.1.1",
+    "globby": "~11.0.4",
     "minimist": "^1.2.0",
     "sourcemap-codec": "^1.3.0"
   },
@@ -53,7 +53,7 @@
   },
   "scripts": {
     "build": "del-cli -f dist && rollup -m -c --format cjs -o dist/sorcery-map.cjs.js && rollup -m -c --format es -o dist/sorcery-map.es.js",
-    "pretest": "npm run build",
+    "_pretest": "npm run build",
     "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",
     "prepublish": "npm test",

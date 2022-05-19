@@ -60,7 +60,7 @@ else {
 			});
 		}
 
-		return sorcery_map.load( command.input, options ).then( function ( chain ) {
+		return sorcery_map.load( command.input, command ).then( function ( chain ) {
 			return chain.write( command.output || command.input, {
 				inline: command.datauri,
 				includeContent: !command.excludeContent

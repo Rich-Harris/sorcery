@@ -20,7 +20,7 @@ Fix build which was not working on Windows.
 * still have to ensure unit tests can be run on Windows  
 * absolutePath ?  
 * read remote map  
-* expose a Webpack plugin (like source-mapper)  
+* expose a Webpack plugin (like source-map-loader)  
 * add d.ts
 
 ## Usage

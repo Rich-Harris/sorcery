@@ -438,7 +438,7 @@ console.log "the answer is #{answer}"`;
 				}
 
 				var command = fse.readFileSync( path.join(dir, 'command.sh'), { encoding: 'utf-8' })
-					.replace( 'sorcery', 'node ' + path.resolve( __dirname, '../bin/sorcery' ) );
+					.replace( 'sorcery', 'node ' + path.resolve( __dirname, '../bin/sorcery-map' ) );
 
 				child_process.exec( command, {
 					cwd: dir
