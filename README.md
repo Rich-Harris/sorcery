@@ -1,6 +1,6 @@
 # sorcery-map.js
 
-This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but we added few improvements:
+This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but with few improvements added:
 
 **We merged pull requests**  
 * [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sorcery/pull/176)
