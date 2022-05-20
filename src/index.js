@@ -6,14 +6,14 @@ export function load ( file, raw_options ) {
 	const { node, sourcesContentByPath, sourceMapByPath, options } = init( file, raw_options );
 
 	return node.load( sourcesContentByPath, sourceMapByPath, options )
-		.then( () => node.isOriginalSource ? null : new Chain( node, sourcesContentByPath ) );
+		.then( () => node.isOriginalSource ? null : new Chain( node, sourcesContentByPath, options ) );
 }
 
 export function loadSync ( file, raw_options = {}) {
 	const { node, sourcesContentByPath, sourceMapByPath, options } = init( file, raw_options );
 
 	node.loadSync( sourcesContentByPath, sourceMapByPath, options );
-	return node.isOriginalSource ? null : new Chain( node, sourcesContentByPath );
+	return node.isOriginalSource ? null : new Chain( node, sourcesContentByPath, options );
 }
 
 function init ( file, options = {}) {

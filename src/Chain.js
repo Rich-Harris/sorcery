@@ -10,9 +10,10 @@ const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
 	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
 '\\s*$', 'g' );
 
-export default function Chain ( node, sourcesContentByPath ) {
+export default function Chain ( node, sourcesContentByPath, options ) {
 	this.node = node;
 	this.sourcesContentByPath = sourcesContentByPath;
+	this.options = options;
 
 	this._stats = {};
 }
@@ -33,6 +34,8 @@ Chain.prototype = {
 	apply ( options = {}) {
 		let allNames = [];
 		let allSources = [];
+
+		options = Object.assign({}, this.options, options);
 
 		const applySegment = ( segment, result ) => {
 			if ( segment.length < 4 ) return;
@@ -105,7 +108,7 @@ Chain.prototype = {
 		return new SourceMap({
 			file: basename( this.node.file ),
 			// absolute path option ?
-			sources: allSources.map( source => slash( relative( options.base || dirname( this.node.file ), source ) ) ),
+			sources: allSources.map( source => getSourcePath( this.node, source, options ) ),
 			sourcesContent: allSources.map( source => includeContent ? this.sourcesContentByPath[ source ] : null ),
 			names: allNames,
 			mappings
@@ -153,15 +156,14 @@ Chain.prototype = {
 	}
 };
 
-function processWriteOptions ( dest, chain, options ) {
+function processWriteOptions ( dest, chain, raw_options ) {
 	const resolved = resolve( dest );
 
-	// const sourceTemplatePath = `[absolute-source-path]|[base-source-path][relative-source-path]`;
+	let options = Object.assign({}, raw_options);
+	options.base = options.base ? resolve( options.base ) : dirname( resolved );
+	options.sourcePathTemplate = options.sourcePathTemplate ? options.sourcePathTemplate : '[base-source-path]';
 
-	const map = chain.apply({
-		includeContent: options.includeContent,
-		base: options.base ? resolve( options.base ) : dirname( resolved )
-	});
+	const map = chain.apply(options);
 
 	const url = options.inline ? map.toUrl() : ( options.absolutePath ? resolved : basename( resolved ) ) + '.map';
 
@@ -186,4 +188,17 @@ function sourcemapComment ( url, dest ) {
 	}
 
 	return `\n//# ${SOURCEMAPPING_URL}=${url}\n`;
+}
+
+function getSourcePath(node, source, options) {
+	const replacer = {
+		'[absolute-source-path]': source,
+		'[base-source-path]': options.base ? relative( options.base, source ) : options.base,
+		'[relative-source-path]': relative( dirname( node.file ), source )
+	};
+	let sourcePath = options.sourcePathTemplate;
+	Object.keys(replacer).forEach((key) => {
+		sourcePath = sourcePath.replace(key, replacer[key]);
+	});
+	return slash(sourcePath);
 }
