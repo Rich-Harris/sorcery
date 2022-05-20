@@ -11,6 +11,7 @@ export default function getContent ( node, sourcesContentByPath, sync ) {
 			try {
 				content = readFileSync( node.file, { encoding: 'utf-8' });
 			} catch ( e ) {
+				content = null;
 			}
 			return sourcesContentByPath[node.file] = content;
 		}

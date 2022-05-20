@@ -16,7 +16,8 @@ command = minimist( process.argv.slice( 2 ), {
 		h: 'help',
 		d: 'datauri',
 		x: 'excludeContent',
-		e: 'existingContentOnly'
+		e: 'existingContentOnly',
+		b: 'base'
 	}
 });
 
@@ -37,6 +38,12 @@ else if ( !command.input ) {
 }
 
 else {
+	const options = { 
+		...command,
+		inline: command.datauri,
+		includeContent: !command.excludeContent,
+		output: command.output || command.input
+	};
 	fse.stat( command.input ).then( function ( stats ) {
 		if ( stats.isDirectory() ) {
 			const globby_options = {
@@ -46,25 +53,19 @@ else {
 			.then((files) => {
 				return files.reduce( function ( promise, file ) {
 					return promise.then( function () {
-						var input = path.join( command.input, file );
-						var output = path.join( command.output || command.input, file );
+						var input = path.join( options.input, file );
+						var output = path.join( options.output, file );
 
 						return sourcery_map.load( input, options ).then( function ( chain ) {
-							return chain.write( output, {
-								inline: command.datauri,
-								includeContent: !command.excludeContent
-							});
+							return chain.write( output, options );
 						});
 					});
 				}, Promise.resolve() );
 			});
 		}
 
-		return sourcery_map.load( command.input, command ).then( function ( chain ) {
-			return chain.write( command.output || command.input, {
-				inline: command.datauri,
-				includeContent: !command.excludeContent
-			});
+		return sourcery_map.load( options.input, options ).then( function ( chain ) {
+			return chain.write( options.output, options );
 		});
 	}).catch( function ( err ) {
 		setTimeout( function () {

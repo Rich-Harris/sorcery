@@ -29,13 +29,13 @@ export default function Node ({ file, content }) {
 Node.prototype = {
 	load ( sourcesContentByPath, sourceMapByPath, options ) {
 		return getContent( this, sourcesContentByPath, false ).then( content => {
-			if ( !content ) {
+			if ( content == null ) {
 				return null;
 			}
 			this.content = content;
 
 			return getMap( this, sourceMapByPath ).then( map => {
-				if ( !map ) {
+				if ( map == null ) {
 					return null;
 				}
 				applyMap(this, map);
@@ -44,23 +44,21 @@ Node.prototype = {
 				return Promise.all( promises );
 			});
 		})
-			.then( () => {
-				checkOriginalSource( this, options );
-			});
+		.then( () => {
+			checkOriginalSource( this, options );
+		});
 	},
 
 	loadSync ( sourcesContentByPath, sourceMapByPath, options ) {
 		let content = getContent(this, sourcesContentByPath, true);
-		this.content = content;
-		if (!content) {
-			return null;
-		}
+		if (content != null) {
+			this.content = content;
+			const map = getMap( this, sourceMapByPath, true );
+			if ( map != null ) {
+				applyMap(this, map);
 
-		const map = getMap( this, sourceMapByPath, true );
-		if ( map ) {
-			applyMap(this, map);
-
-			this.sources.map( node => node.loadSync( sourcesContentByPath, sourceMapByPath, options ) );
+				this.sources.map( node => node.loadSync( sourcesContentByPath, sourceMapByPath, options ) );
+			}
 		}
 		checkOriginalSource( this, options );
 	},

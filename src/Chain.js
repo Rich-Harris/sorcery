@@ -156,6 +156,8 @@ Chain.prototype = {
 function processWriteOptions ( dest, chain, options ) {
 	const resolved = resolve( dest );
 
+	// const sourceTemplatePath = `[absolute-source-path]|[base-source-path][relative-source-path]`;
+
 	const map = chain.apply({
 		includeContent: options.includeContent,
 		base: options.base ? resolve( options.base ) : dirname( resolved )
