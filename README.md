@@ -17,9 +17,8 @@ Apply the transformation chain while the sources content are available. We want 
 Fix build which was not working on Windows.  
 
 ## Next steps
-* still have to ensure unit tests can be run on Windows  
+* still have to ensure all unit tests can be run on Windows  
 * absolutePath ?  
-* read remote map  
 * expose a Webpack plugin (like source-map-loader)  
 * add d.ts
 
