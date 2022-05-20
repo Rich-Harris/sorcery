@@ -1,1 +1,1 @@
-sourcery-mao -i files/helloworld.min.js -o actual/helloworld.min.js
+sourcery-map -i files/helloworld.min.js -o actual/helloworld.min.js

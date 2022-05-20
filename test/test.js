@@ -205,18 +205,20 @@ console.log "the answer is #{answer}"`
 				return chain.write( '.tmp/write-file/helloworld.min.js' ).then( () => {
 					return sourcery.load( '.tmp/write-file/helloworld.min.js' ).then( chain => {
 						const map = chain.apply();
-						const smc = new SourceMapConsumer( map );
+						const smcFact = new SourceMapConsumer( map );
 
-						assert.equal( map.version, 3 );
-						assert.deepEqual( map.file, 'helloworld.min.js' );
-						assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
-						assert.deepEqual( map.sourcesContent, [ fse.readFileSync( path.join(__dirname, 'samples/1/tmp/helloworld.coffee') ).toString() ]);
+						return smcFact.then((smc) => {
+							assert.equal( map.version, 3 );
+							assert.deepEqual( map.file, 'helloworld.min.js' );
+							assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
+							assert.deepEqual( map.sourcesContent, [ fse.readFileSync( path.join(__dirname, 'samples/1/tmp/helloworld.coffee') ).toString() ]);
 
-						const loc = smc.originalPositionFor({ line: 1, column: 31 });
-						assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
-						assert.equal( loc.line, 2 );
-						assert.equal( loc.column, 8 );
-						assert.equal( loc.name, 'log' );
+							const loc = smc.originalPositionFor({ line: 1, column: 31 });
+							assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
+							assert.equal( loc.line, 2 );
+							assert.equal( loc.column, 8 );
+							assert.equal( loc.name, 'log' );
+						})
 					});
 				});
 			});
@@ -227,18 +229,20 @@ console.log "the answer is #{answer}"`
 				return sourcery.load( '.tmp/overwrite-file/helloworld.min.js' ).then( chain => {
 					return chain.write().then( () => {
 						return fse.readFile( '.tmp/overwrite-file/helloworld.min.js.map' ).then( String ).then( JSON.parse ).then( map => {
-							const smc = new SourceMapConsumer( map );
+							const smcFact = new SourceMapConsumer( map );
 
-							assert.equal( map.version, 3 );
-							assert.deepEqual( map.file, 'helloworld.min.js' );
-							assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
-							assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
+							return smcFact.then((smc) => {
+								assert.equal( map.version, 3 );
+								assert.deepEqual( map.file, 'helloworld.min.js' );
+								assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
+								assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
-							const loc = smc.originalPositionFor({ line: 1, column: 31 });
-							assert.equal( loc.source, 'helloworld.coffee' );
-							assert.equal( loc.line, 2 );
-							assert.equal( loc.column, 8 );
-							assert.equal( loc.name, 'log' );
+								const loc = smc.originalPositionFor({ line: 1, column: 31 });
+								assert.equal( loc.source, 'helloworld.coffee' );
+								assert.equal( loc.line, 2 );
+								assert.equal( loc.column, 8 );
+								assert.equal( loc.name, 'log' );
+							});
 						});
 					});
 				});
@@ -350,18 +354,20 @@ console.log "the answer is #{answer}"`
 				const chain = sourcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
 
 				const map = chain.apply();
-				const smc = new SourceMapConsumer( map );
+				const smcFact = new SourceMapConsumer( map );
 
-				assert.equal( map.version, 3 );
-				assert.deepEqual( map.file, 'helloworld.min.js' );
-				assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
-				assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
+				return smcFact.then((smc) => {
+					assert.equal( map.version, 3 );
+					assert.deepEqual( map.file, 'helloworld.min.js' );
+					assert.deepEqual( map.sources, [ 'helloworld.coffee' ]);
+					assert.deepEqual( map.sourcesContent, [ fse.readFileSync( 'samples/1/src/helloworld.coffee' ).toString() ]);
 
-				const loc = smc.originalPositionFor({ line: 1, column: 31 });
-				assert.equal( loc.source, 'helloworld.coffee' );
-				assert.equal( loc.line, 2 );
-				assert.equal( loc.column, 8 );
-				assert.equal( loc.name, 'log' );
+					const loc = smc.originalPositionFor({ line: 1, column: 31 });
+					assert.equal( loc.source, 'helloworld.coffee' );
+					assert.equal( loc.line, 2 );
+					assert.equal( loc.column, 8 );
+					assert.equal( loc.name, 'log' );
+				})
 			});
 
 			it( 'includes user-specified content', () => {
@@ -407,18 +413,20 @@ console.log "the answer is #{answer}"`;
 
 				return sourcery.load( '.tmp/write-file/helloworld.min.js' ).then( chain => {
 					const map = chain.apply();
-					const smc = new SourceMapConsumer( map );
+					const smcFact = new SourceMapConsumer( map );
 
-					assert.equal( map.version, 3 );
-					assert.deepEqual( map.file, 'helloworld.min.js' );
-					assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
-					assert.deepEqual( map.sourcesContent, [ fse.readFileSync( path.join(__dirname, 'samples/1/tmp/helloworld.coffee') ).toString() ]);
+					return smcFact.then((smc) => {
+						assert.equal( map.version, 3 );
+						assert.deepEqual( map.file, 'helloworld.min.js' );
+						assert.deepEqual( map.sources, [ '../../samples/1/tmp/helloworld.coffee' ]);
+						assert.deepEqual( map.sourcesContent, [ fse.readFileSync( path.join(__dirname, 'samples/1/tmp/helloworld.coffee') ).toString() ]);
 
-					const loc = smc.originalPositionFor({ line: 1, column: 31 });
-					assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
-					assert.equal( loc.line, 2 );
-					assert.equal( loc.column, 8 );
-					assert.equal( loc.name, 'log' );
+						const loc = smc.originalPositionFor({ line: 1, column: 31 });
+						assert.equal( loc.source, '../../samples/1/tmp/helloworld.coffee' );
+						assert.equal( loc.line, 2 );
+						assert.equal( loc.column, 8 );
+						assert.equal( loc.name, 'log' );
+					});
 				});
 			});
 		});
@@ -433,12 +441,12 @@ console.log "the answer is #{answer}"`;
 				fse.rmSync(path.join( dir, 'actual'), { recursive: true, force: true } );
 				fse.ensureDirSync(path.join( dir, 'actual' ) );
 
-				if ( fse.existsSync( dir, 'pre.js' ) ) {
+				if ( fse.existsSync( path.join( dir, 'pre.js' ) ) ) {
 					require( path.join( dir, 'pre.js' ) )();
 				}
 
 				var command = fse.readFileSync( path.join(dir, 'command.sh'), { encoding: 'utf-8' })
-					.replace( 'sourcery', 'node ' + path.resolve( __dirname, '../bin/sourcery-map' ) );
+					.replace( 'sourcery-map', 'node ' + path.resolve( __dirname, '../bin/sourcery-map' ) );
 
 				child_process.exec( command, {
 					cwd: dir
@@ -448,7 +456,7 @@ console.log "the answer is #{answer}"`;
 					if ( stdout ) console.log( stdout );
 					if ( stderr ) console.error( stderr );
 
-					if ( fse.existsSync( dir, 'post.js' ) ) {
+					if ( fse.existsSync( path.join( dir, 'post.js' ) ) ) {
 						require( path.join( dir, 'post.js' ) )();
 					}
 

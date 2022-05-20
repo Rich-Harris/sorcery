@@ -1,1 +1,1 @@
-sourcery-mao -i actual
+sourcery-map -i actual
