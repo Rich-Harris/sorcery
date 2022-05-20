@@ -49,7 +49,7 @@ else {
 			const globby_options = {
 				cwd: command.input
 			}
-			globby("**/*.js", globby_options)
+			return globby("**/*.js", globby_options)
 			.then((files) => {
 				return files.reduce( function ( promise, file ) {
 					return promise.then( function () {

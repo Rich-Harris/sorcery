@@ -435,6 +435,9 @@ console.log "the answer is #{answer}"`;
 	describe( 'cli', () => {
 		fse.readdirSync( 'cli' ).forEach( dir => {
 			if ( dir[0] === '.' ) return;
+			// if ( dir.indexOf('excludes-content') === -1) {
+			// 	return;
+			// }
 
 			( /^solo-/.test( dir ) ? it.only : it )( dir, done => {
 				dir = path.resolve( 'cli', dir );
@@ -457,7 +460,7 @@ console.log "the answer is #{answer}"`;
 					if ( stderr ) console.error( stderr );
 
 					if ( fse.existsSync( path.join( dir, 'post.js' ) ) ) {
-						require( path.join( dir, 'post.js' ) )();
+						require( path.join( dir, 'post.js' ))();
 					}
 
 					function catalogue ( subdir ) {

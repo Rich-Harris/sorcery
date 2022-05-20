@@ -36,6 +36,14 @@ Chain.prototype = {
 		let allSources = [];
 
 		options = Object.assign({}, this.options, options);
+		if (options.sourcePathTemplate == null) {
+			if (options.base) {
+				options.sourcePathTemplate = '[base-source-path]';
+			}
+			else {
+				options.sourcePathTemplate = '[relative-source-path]';
+			}
+		}
 
 		const applySegment = ( segment, result ) => {
 			if ( segment.length < 4 ) return;
@@ -161,7 +169,6 @@ function processWriteOptions ( dest, chain, raw_options ) {
 
 	let options = Object.assign({}, raw_options);
 	options.base = options.base ? resolve( options.base ) : dirname( resolved );
-	options.sourcePathTemplate = options.sourcePathTemplate ? options.sourcePathTemplate : '[base-source-path]';
 
 	const map = chain.apply(options);
 
