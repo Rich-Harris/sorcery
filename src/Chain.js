@@ -1,5 +1,5 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
-import { writeFile, writeFileSync } from 'fs-extra';
+import { writeFile, writeFileSync, ensureDir, ensureDirSync } from 'fs-extra';
 import { encode } from 'sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
@@ -137,13 +137,16 @@ Chain.prototype = {
 
 		const { resolved, content, map } = processWriteOptions( dest, this, options );
 
-		let promises = [ writeFile( resolved, content ) ];
+		return ensureDir(dirname(resolved))
+		.then(() => {
+			let promises = [ writeFile( resolved, content ) ];
 
-		if ( !options.inline ) {
-			promises.push( writeFile( resolved + '.map', map.toString() ) );
-		}
+			if ( !options.inline ) {
+				promises.push( writeFile( resolved + '.map', map.toString() ) );
+			}
 
-		return Promise.all( promises );
+			return Promise.all( promises );
+		});
 	},
 
 	writeSync ( dest, options ) {
@@ -155,6 +158,8 @@ Chain.prototype = {
 		options = options || {};
 
 		const { resolved, content, map } = processWriteOptions( dest, this, options );
+
+		ensureDirSync(dirname(resolved));
 
 		writeFileSync( resolved, content );
 

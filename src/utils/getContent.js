@@ -1,12 +1,10 @@
 import { readFile, readFileSync } from 'fs-extra';
 
 export default function getContent ( node, sourcesContentByPath, sync ) {
-	let content = node.content;
-	if ( node.file in sourcesContentByPath ) {
-		content = sourcesContentByPath[node.file];
-	}
-
-	if ( !content ) {
+	// 'undefined' never seen
+	// 'null' seen but empty
+	let content = node.content || sourcesContentByPath[node.file];
+	if ( content === undefined ) {
 		if (sync) {
 			try {
 				content = readFileSync( node.file, { encoding: 'utf-8' });

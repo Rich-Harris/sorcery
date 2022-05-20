@@ -406,7 +406,7 @@ console.log "the answer is #{answer}"`;
 		});
 
 		describe( 'chain.writeSync()', () => {
-			it( 'writes a file and accompanying sourcemap', () => {
+ 			it( 'writes a file and accompanying sourcemap', () => {
 				const chain = sourcery.loadSync( 'samples/1/tmp/helloworld.min.js' );
 
 				chain.writeSync( '.tmp/write-file/helloworld.min.js' );

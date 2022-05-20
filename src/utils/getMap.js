@@ -10,6 +10,7 @@ export default function getMap ( node, sourceMapByPath, sync ) {
 	}
 	const url = getSourceMappingUrl( node.content );
 	if ( !url ) {
+		sourceMapByPath[ node.file ] = null;
 		return sync ? null : Promise.resolve( null );
 	}
 	if (sync) {

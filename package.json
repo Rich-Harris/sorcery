@@ -1,7 +1,7 @@
 {
   "name": "sourcery-map",
   "description": "Find your way through the chain of sourcemaps to the original source, like magic sourcery",
-  "version": "2.0.3",
+  "version": "2.0.4npm s",
   "author": "Emmanuel Kimmerlin",
   "repository": "https://github.com/emmkimme/sourcery-map",
   "license": "MIT",
@@ -12,6 +12,7 @@
   "main": "dist/sourcery-map.cjs.js",
   "module": "dist/sourcery-map.es.js",
   "keywords": [
+    "sorcery",
     "sourcery",
     "map",
     "sourcemap",
@@ -57,13 +58,13 @@
   },
   "scripts": {
     "build": "del-cli -f dist && rollup -m -c --format cjs -o dist/sourcery-map.cjs.js && rollup -m -c --format es -o dist/sourcery-map.es.js",
-    "pretest": "npm run build",
+    "_pretest": "npm run build",
     "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",
     "prepublish": "npm test",
     "lint": "eslint src --fix",
     "pretest-coverage": "npm run build",
-    "test-coverage": "del-cli -f coverage/* && istanbul cover --report json node_modules/.bin/_mocha -- -u exports -R spec test/test.js",
+    "test-coverage": "del-cli -f coverage && istanbul cover --report json node_modules/mocha/bin/mocha.js -- -u exports -R spec test/test.js",
     "posttest-coverage": "remap-istanbul -i coverage/coverage-final.json -o coverage/coverage-remapped.json -b dist && remap-istanbul -i coverage/coverage-final.json -o coverage/coverage-remapped.lcov -t lcovonly -b dist && remap-istanbul -i coverage/coverage-final.json -o coverage/coverage-remapped -t html -b dist",
     "ci": "npm run test-coverage && codecov < coverage/coverage-remapped.lcov",
     "deploy": "npm publish ./ --registry https://registry.npmjs.org"
