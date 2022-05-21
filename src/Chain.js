@@ -10,9 +10,9 @@ const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
 	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
 '\\s*$', 'g' );
 
-export default function Chain ( node, sourcesContentByPath, options ) {
+export default function Chain ( node, nodeCacheByFile, options ) {
 	this.node = node;
-	this.sourcesContentByPath = sourcesContentByPath;
+	this.nodeCacheByFile = nodeCacheByFile;
 	this.options = options;
 
 	this._stats = {};
@@ -117,7 +117,13 @@ Chain.prototype = {
 			file: basename( this.node.file ),
 			// absolute path option ?
 			sources: allSources.map( source => getSourcePath( this.node, source, options ) ),
-			sourcesContent: allSources.map( source => includeContent ? this.sourcesContentByPath[ source ] : null ),
+			sourcesContent: allSources.map((source) => {
+				if (!includeContent) {
+					return null;
+				}
+			 	const node = source ? this.nodeCacheByFile[ source ] : null;
+				return node ? node.content : null;
+			}),
 			names: allNames,
 			mappings
 		});

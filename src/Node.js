@@ -27,20 +27,21 @@ export default function Node ({ file, content }) {
 }
 
 Node.prototype = {
-	load ( sourcesContentByPath, sourceMapByPath, options ) {
-		return getContent( this, sourcesContentByPath, false ).then( content => {
+	load ( nodeCacheByFile, options ) {
+		return getContent( this, false ).then( content => {
+			this.content = content;
 			if ( content == null ) {
 				return null;
 			}
-			this.content = content;
 
-			return getMap( this, sourceMapByPath ).then( map => {
+			return getMap( this, false).then( map => {
+				this.map = map;
 				if ( map == null ) {
 					return null;
 				}
-				applyMap(this, map);
+				resolveMap(this, nodeCacheByFile);
 
-				const promises = this.sources.map( node => node.load( sourcesContentByPath, sourceMapByPath, options ) );
+				const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
 				return Promise.all( promises );
 			});
 		})
@@ -49,15 +50,14 @@ Node.prototype = {
 		});
 	},
 
-	loadSync ( sourcesContentByPath, sourceMapByPath, options ) {
-		let content = getContent(this, sourcesContentByPath, true);
-		if (content != null) {
-			this.content = content;
-			const map = getMap( this, sourceMapByPath, true );
-			if ( map != null ) {
-				applyMap(this, map);
+	loadSync ( nodeCacheByFile, options ) {
+		this.content = getContent(this, true);
+		if (this.content != null) {
+			this.map = getMap( this, true );
+			if (this.map != null ) {
+				resolveMap(this, nodeCacheByFile);
 
-				this.sources.map( node => node.loadSync( sourcesContentByPath, sourceMapByPath, options ) );
+				this.sources.map( node => node.loadSync( nodeCacheByFile, options ) );
 			}
 		}
 		checkOriginalSource( this, options );
@@ -133,8 +133,8 @@ Node.prototype = {
 	}
 };
 
-function applyMap(node, map) {
-	node.map = map;
+function resolveMap(node, nodeCacheByFile) {
+	const map = node.map;
 	let decodingStart = process.hrtime();
 	node.mappings = decode( map.mappings );
 	let decodingTime = process.hrtime( decodingStart );
@@ -145,10 +145,10 @@ function applyMap(node, map) {
 	const sourceRoot = node.file ? resolve( dirname( node.file ), manageFileProtocol( map.sourceRoot ) || '' ) : '';
 
 	node.sources = map.sources.map( ( source, i ) => {
-		return new Node({
-			file: source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null,
-			content: sourcesContent[i]
-		});
+		const file = source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null;
+		const node = file && nodeCacheByFile[file] || new Node({ file });
+		// Current content has the priority
+		node.content = node.content || sourcesContent[i];
 	});
 }
 
