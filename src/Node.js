@@ -150,7 +150,9 @@ function resolveMap(node, nodeCacheByFile) {
 		if (file) {
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
 			// Current content has the priority
-			node.content = node.content || content;
+			if (node.content === undefined) {
+				node.content = content;
+			}
 			return node;
 		}
 		else {
