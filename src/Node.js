@@ -5,14 +5,14 @@ import getContent from './utils/getContent.js';
 
 export default function Node ({ file, content }) {
 	this.file = file ? resolve( manageFileProtocol( file ) ) : null;
-	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+	this.content = content || undefined; // sometimes exists in sourcesContent, sometimes doesn't
 
-	if ( !this.file && this.content === null ) {
+	if ( !this.file && this.content === undefined ) {
 		throw new Error( 'A source must specify either file or content' );
 	}
 
 	// these get filled in later
-	this.map = null;
+	this.map = undefined;
 	this.mappings = null;
 	this.sources = null;
 	this.isOriginalSource = null;
@@ -31,13 +31,13 @@ Node.prototype = {
 		return getContent( this, false ).then( content => {
 			this.content = content;
 			if ( content == null ) {
-				return null;
+				return;
 			}
 
 			return getMap( this, false).then( map => {
 				this.map = map;
 				if ( map == null ) {
-					return null;
+					return;
 				}
 				resolveMap(this, nodeCacheByFile);
 
@@ -146,9 +146,17 @@ function resolveMap(node, nodeCacheByFile) {
 
 	node.sources = map.sources.map( ( source, i ) => {
 		const file = source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null;
-		const node = file && nodeCacheByFile[file] || new Node({ file });
-		// Current content has the priority
-		node.content = node.content || sourcesContent[i];
+		const content = (sourcesContent[i] == null) ? undefined : sourcesContent[i];
+		if (file) {
+			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
+			// Current content has the priority
+			node.content = node.content || content;
+			return node;
+		}
+		else {
+			const node = new Node({ content });
+			return node;
+		}
 	});
 }
 

@@ -20,15 +20,16 @@ function init ( file, options = {}) {
 	options.existingContentOnly = ( options.existingContentOnly == null ) ? true : options.existingContentOnly;
 
 	let nodeCacheByFile = {};
+	file = resolve(file);
 	const node = new Node({ file });
-	nodeCacheByFile[file] = node;
+	nodeCacheByFile[node.file] = node;
 
 	if ( options.content ) {
 		Object.keys( options.content ).forEach( key => {
 			const file = resolve( key );
 			const node = nodeCacheByFile[file] || new Node({ file });
 			node.content = options.content[ key ];
-			nodeCacheByFile[file] = node;
+			nodeCacheByFile[node.file] = node;
 		});
 	}
 	if ( options.sourcemaps ) {
@@ -36,9 +37,8 @@ function init ( file, options = {}) {
 			const file = resolve( key );
 			const node = nodeCacheByFile[file] || new Node({ file });
 			node.map = options.sourcemaps[ key ];
-			nodeCacheByFile[file] = node;
+			nodeCacheByFile[node.file] = node;
 		});
 	}
-
 	return { node, nodeCacheByFile, options };
 }
