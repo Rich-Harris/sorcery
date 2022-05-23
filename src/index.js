@@ -1,5 +1,6 @@
 import { resolve } from 'path';
 import { through } from 'through';
+import { writeFileSync } from 'fs-extra';
 
 import Node from './Node.js';
 import Chain from './Chain.js';
