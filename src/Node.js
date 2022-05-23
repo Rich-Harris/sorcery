@@ -41,8 +41,13 @@ Node.prototype = {
 				}
 				resolveMap(this, nodeCacheByFile);
 
-				const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
-				return Promise.all( promises );
+				if (options.flatten === true) {
+					const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
+					return Promise.all( promises );
+				}
+				else {
+					return Promise.resolve();
+				}
 			});
 		})
 		.then( () => {
@@ -56,8 +61,9 @@ Node.prototype = {
 			this.map = getMap( this, true );
 			if (this.map != null ) {
 				resolveMap(this, nodeCacheByFile);
-
-				this.sources.map( node => node.loadSync( nodeCacheByFile, options ) );
+				if (options.flatten === true) {
+					this.sources.map( node => node.loadSync( nodeCacheByFile, options ) );
+				}
 			}
 		}
 		checkOriginalSource( this, options );

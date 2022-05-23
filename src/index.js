@@ -11,13 +11,18 @@ export function transform(raw_options) {
 	function end () { 
 		const { node, nodeCacheByFile, options } = init( undefined, source, raw_options );
 		node.loadSync( nodeCacheByFile, options )
-		if (node.isOriginalSource === false) {
+		if (!node.isOriginalSource) {
 			const chain = new Chain( node, nodeCacheByFile, options );
-			chain.apply();
-			chain.write();
-			this.queue(source.replace(sourceMolder.comment, adaptedComment));
-			this.queue(null);
+			const { resolved, content, map, chain_options } = chain.getContentAndMap( options.output, options );
+			this.queue(content);
+			if ( !chain_options.inline ) {
+				writeFileSync( resolved + '.map', map.toString() );
+			}
 		}
+		else {
+			this.queue(source);
+		}
+		this.queue(null);
 	}
 	return through(write, end);
 }

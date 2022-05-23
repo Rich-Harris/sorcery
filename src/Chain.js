@@ -32,9 +32,6 @@ Chain.prototype = {
 	},
 
 	apply ( raw_options = {}) {
-		let allNames = [];
-		let allSources = [];
-
 		const options = Object.assign({}, this.options, raw_options);
 		if (options.sourcePathTemplate == null) {
 			if (options.base) {
@@ -45,6 +42,8 @@ Chain.prototype = {
 			}
 		}
 
+		let allNames = [];
+		let allSources = [];
 		const applySegment = ( segment, result ) => {
 			if ( segment.length < 4 ) return;
 
@@ -86,8 +85,9 @@ Chain.prototype = {
 		};
 
 		let i = this.node.mappings.length;
-		let allMappings = new Array( i );
+		let allMappings;
 		if (options.flatten) {
+			allMappings = new Array( i );
 			// Trace mappings
 			let tracingStart = process.hrtime();
 
@@ -139,7 +139,7 @@ Chain.prototype = {
 	},
 
 	write ( dest, raw_options ) {
-		const { resolved, content, map, options } = processWriteOptions( this, dest, raw_options );
+		const { resolved, content, map, options } = this.getContentAndMap( dest, raw_options );
 
 		return ensureDir(dirname(resolved))
 		.then(() => {
@@ -154,43 +154,43 @@ Chain.prototype = {
 	},
 
 	writeSync ( dest, raw_options ) {
-		const { resolved, content, map, options } = processWriteOptions( this, dest, raw_options );
+		const { resolved, content, map, options } = this.getContentAndMap( dest, raw_options );
 
 		ensureDirSync(dirname(resolved));
 		writeFileSync( resolved, content );
 		if ( !options.inline ) {
 			writeFileSync( resolved + '.map', map.toString() );
 		}
+	},
+
+	getContentAndMap ( dest, raw_options ) {
+		if ( typeof dest === 'string' ) {
+			raw_options = raw_options || {};
+			raw_options.output = dest;
+		}
+		else if ( typeof dest === 'object' ) {
+			raw_options = dest;
+		}
+		else {
+			raw_options = options || {};
+		}
+	
+		const options = Object.assign({}, this.options, raw_options);
+		options.output = options.output || this.node.file;
+	
+		const resolved = resolve( options.output );
+		options.base = options.base ? resolve( options.base ) : dirname( resolved );
+	
+		const map = this.apply(options);
+	
+		const url = options.inline ? map.toUrl() : ( options.absolutePath ? resolved : basename( resolved ) ) + '.map';
+	
+		// TODO shouldn't url be relative?
+		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
+	
+		return { resolved, content, map, options };
 	}
-};
-
-function processWriteOptions ( chain, dest, raw_options ) {
-	if ( typeof dest === 'string' ) {
-		raw_options = raw_options || {};
-		raw_options.output = dest;
-	}
-	else if ( typeof dest === 'object' ) {
-		raw_options = dest;
-	}
-	else {
-		raw_options = options || {};
-	}
-
-	const options = Object.assign({}, chain.options, raw_options);
-	options.output = options.output || chain.node.file;
-
-	const resolved = resolve( options.output );
-	options.base = options.base ? resolve( options.base ) : dirname( resolved );
-
-	const map = chain.apply(options);
-
-	const url = options.inline ? map.toUrl() : ( options.absolutePath ? resolved : basename( resolved ) ) + '.map';
-
-	// TODO shouldn't url be relative?
-	const content = chain.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
-
-	return { resolved, content, map, options };
-}
+	};
 
 function tally ( nodes, stat ) {
 	return nodes.reduce( ( total, node ) => {
