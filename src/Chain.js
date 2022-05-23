@@ -31,11 +31,11 @@ Chain.prototype = {
 		};
 	},
 
-	apply ( options = {}) {
+	apply ( raw_options = {}) {
 		let allNames = [];
 		let allSources = [];
 
-		options = Object.assign({}, this.options, options);
+		const options = Object.assign({}, this.options, raw_options);
 		if (options.sourcePathTemplate == null) {
 			if (options.base) {
 				options.sourcePathTemplate = '[base-source-path]';
@@ -138,14 +138,8 @@ Chain.prototype = {
 		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
 	},
 
-	write ( dest, options ) {
-		if ( typeof dest !== 'string' ) {
-			options = dest;
-			dest = this.node.file;
-		}
-		options = Object.assign({}, this.options, options);
-
-		const { resolved, content, map } = processWriteOptions( dest, this, options );
+	write ( dest, raw_options ) {
+		const { resolved, content, map, options } = processWriteOptions( this, dest, raw_options );
 
 		return ensureDir(dirname(resolved))
 		.then(() => {
@@ -159,29 +153,33 @@ Chain.prototype = {
 		});
 	},
 
-	writeSync ( dest, options ) {
-		if ( typeof dest !== 'string' ) {
-			options = dest;
-			dest = this.node.file;
-		}
-		options = Object.assign({}, this.options, options);
-
-		const { resolved, content, map } = processWriteOptions( dest, this, options );
+	writeSync ( dest, raw_options ) {
+		const { resolved, content, map, options } = processWriteOptions( this, dest, raw_options );
 
 		ensureDirSync(dirname(resolved));
-
 		writeFileSync( resolved, content );
-
 		if ( !options.inline ) {
 			writeFileSync( resolved + '.map', map.toString() );
 		}
 	}
 };
 
-function processWriteOptions ( dest, chain, raw_options ) {
-	const resolved = resolve( dest );
+function processWriteOptions ( chain, dest, raw_options ) {
+	if ( typeof dest === 'string' ) {
+		raw_options = raw_options || {};
+		raw_options.output = dest;
+	}
+	else if ( typeof dest === 'object' ) {
+		raw_options = dest;
+	}
+	else {
+		raw_options = options || {};
+	}
 
-	let options = Object.assign({}, raw_options);
+	const options = Object.assign({}, chain.options, raw_options);
+	options.output = options.output || chain.node.file;
+
+	const resolved = resolve( options.output );
 	options.base = options.base ? resolve( options.base ) : dirname( resolved );
 
 	const map = chain.apply(options);
@@ -191,7 +189,7 @@ function processWriteOptions ( dest, chain, raw_options ) {
 	// TODO shouldn't url be relative?
 	const content = chain.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
 
-	return { resolved, content, map };
+	return { resolved, content, map, options };
 }
 
 function tally ( nodes, stat ) {

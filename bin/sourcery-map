@@ -53,11 +53,12 @@ else {
 			.then((files) => {
 				return files.reduce( function ( promise, file ) {
 					return promise.then( function () {
-						var input = path.join( options.input, file );
-						var output = path.join( options.output, file );
+						const input = path.join( options.input, file );
+						const output = path.join( options.output, file );
+						const local_options = Object.assign({}, options, { output });
 
-						return sourcery_map.load( input, options ).then( function ( chain ) {
-							return chain.write( output, options );
+						return sourcery_map.load( input, local_options ).then( function ( chain ) {
+							return chain.write( output, local_options );
 						});
 					});
 				}, Promise.resolve() );
