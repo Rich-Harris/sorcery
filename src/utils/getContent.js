@@ -7,7 +7,7 @@ export default function getContent ( node, sync ) {
 	if ( content !== undefined ) {
 		return sync ? content : Promise.resolve( content );
 	}
-	if (sync) {
+	if ( sync ) {
 		try {
 			return readFileSync( node.file, { encoding: 'utf-8' });
 		}

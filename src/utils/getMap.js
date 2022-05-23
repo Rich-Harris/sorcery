@@ -12,14 +12,14 @@ export default function getMap ( node, sync ) {
 	if ( !url ) {
 		return sync ? null : Promise.resolve( null );
 	}
-	if (sync) {
+	if ( sync ) {
 		const map = getMapFromUrl( url, node.file, sync );
 		return map;
 	}
 	else {
 		return getMapFromUrl( url, node.file, sync )
-		.then((map) => {
-			return map;
-		});
+			.then( ( map ) => {
+				return map;
+			});
 	}
 }

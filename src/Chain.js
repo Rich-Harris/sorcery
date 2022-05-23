@@ -32,9 +32,9 @@ Chain.prototype = {
 	},
 
 	apply ( raw_options = {}) {
-		const options = Object.assign({}, this.options, raw_options);
-		if (options.sourcePathTemplate == null) {
-			if (options.base) {
+		const options = Object.assign({}, this.options, raw_options );
+		if ( options.sourcePathTemplate == null ) {
+			if ( options.base ) {
 				options.sourcePathTemplate = '[base-source-path]';
 			}
 			else {
@@ -86,7 +86,7 @@ Chain.prototype = {
 
 		let i = this.node.mappings.length;
 		let allMappings;
-		if (options.flatten) {
+		if ( options.flatten ) {
 			allMappings = new Array( i );
 			// Trace mappings
 			let tracingStart = process.hrtime();
@@ -122,11 +122,11 @@ Chain.prototype = {
 		return new SourceMap({
 			file: basename( this.node.file ),
 			sources: allSources.map( source => getSourcePath( this.node, source, options ) ),
-			sourcesContent: allSources.map((source) => {
-				if (!includeContent) {
+			sourcesContent: allSources.map( ( source ) => {
+				if ( !includeContent ) {
 					return null;
 				}
-			 	const node = source ? this.nodeCacheByFile[ source ] : null;
+				const node = source ? this.nodeCacheByFile[ source ] : null;
 				return node ? node.content : null;
 			}),
 			names: allNames,
@@ -141,22 +141,22 @@ Chain.prototype = {
 	write ( dest, raw_options ) {
 		const { resolved, content, map, options } = this.getContentAndMap( dest, raw_options );
 
-		return ensureDir(dirname(resolved))
-		.then(() => {
-			let promises = [ writeFile( resolved, content ) ];
+		return ensureDir( dirname( resolved ) )
+			.then( () => {
+				let promises = [ writeFile( resolved, content ) ];
 
-			if ( !options.inline ) {
-				promises.push( writeFile( resolved + '.map', map.toString() ) );
-			}
+				if ( !options.inline ) {
+					promises.push( writeFile( resolved + '.map', map.toString() ) );
+				}
 
-			return Promise.all( promises );
-		});
+				return Promise.all( promises );
+			});
 	},
 
 	writeSync ( dest, raw_options ) {
 		const { resolved, content, map, options } = this.getContentAndMap( dest, raw_options );
 
-		ensureDirSync(dirname(resolved));
+		ensureDirSync( dirname( resolved ) );
 		writeFileSync( resolved, content );
 		if ( !options.inline ) {
 			writeFileSync( resolved + '.map', map.toString() );
@@ -175,13 +175,13 @@ Chain.prototype = {
 			raw_options = options || {};
 		}
 	
-		const options = Object.assign({}, this.options, raw_options);
+		const options = Object.assign({}, this.options, raw_options );
 		options.output = options.output || this.node.file;
 	
 		const resolved = resolve( options.output );
 		options.base = options.base ? resolve( options.base ) : dirname( resolved );
 	
-		const map = this.apply(options);
+		const map = this.apply( options );
 	
 		const url = options.inline ? map.toUrl() : ( options.absolutePath ? resolved : basename( resolved ) ) + '.map';
 	
@@ -190,7 +190,7 @@ Chain.prototype = {
 	
 		return { resolved, content, map, options };
 	}
-	};
+};
 
 function tally ( nodes, stat ) {
 	return nodes.reduce( ( total, node ) => {
@@ -209,15 +209,15 @@ function sourcemapComment ( url, dest ) {
 	return `\n//# ${SOURCEMAPPING_URL}=${url}\n`;
 }
 
-function getSourcePath(node, source, options) {
+function getSourcePath ( node, source, options ) {
 	const replacer = {
 		'[absolute-source-path]': source,
 		'[base-source-path]': options.base ? relative( options.base, source ) : options.base,
 		'[relative-source-path]': relative( dirname( node.file ), source )
 	};
 	let sourcePath = options.sourcePathTemplate;
-	Object.keys(replacer).forEach((key) => {
-		sourcePath = sourcePath.replace(key, replacer[key]);
+	Object.keys( replacer ).forEach( ( key ) => {
+		sourcePath = sourcePath.replace( key, replacer[key]);
 	});
-	return slash(sourcePath);
+	return slash( sourcePath );
 }

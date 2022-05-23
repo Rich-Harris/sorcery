@@ -5,28 +5,28 @@ import { writeFileSync } from 'fs-extra';
 import Node from './Node.js';
 import Chain from './Chain.js';
 
-export function transform(raw_options) {
+export function transform ( raw_options ) {
 	var source = '';
   
-	function write (data) { source += data; }
+	function write ( data ) { source += data; }
 	function end () { 
 		const { node, nodeCacheByFile, options } = init( raw_options.output, source, raw_options );
 		node.loadSync( nodeCacheByFile, options );
 		const node_options = options;
-		if (!node.isOriginalSource) {
+		if ( !node.isOriginalSource ) {
 			const chain = new Chain( node, nodeCacheByFile, node_options );
 			const { resolved, content, map, options } = chain.getContentAndMap( node_options.output, node_options );
-			this.queue(content);
+			this.queue( content );
 			if ( !options.inline ) {
 				writeFileSync( resolved + '.map', map.toString() );
 			}
 		}
 		else {
-			this.queue(source);
+			this.queue( source );
 		}
-		this.queue(null);
+		this.queue( null );
 	}
-	return through(write, end);
+	return through( write, end );
 }
 
 export function load ( file, raw_options ) {
@@ -45,11 +45,11 @@ export function loadSync ( file, raw_options = {}) {
 
 function init ( file, content, options = {}) {
 	options.existingContentOnly = ( options.existingContentOnly == null ) ? true : options.existingContentOnly;
-	options.flatten = (options.flatten == null) ? true : options.flatten;
+	options.flatten = ( options.flatten == null ) ? true : options.flatten;
 
 	let nodeCacheByFile = {};
 	const node = new Node({ file, content });
-	if (node.file) {
+	if ( node.file ) {
 		nodeCacheByFile[node.file] = node;
 	}
 

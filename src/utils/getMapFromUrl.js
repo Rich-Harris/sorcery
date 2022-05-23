@@ -10,7 +10,7 @@ import SOURCEMAPPING_URL from './sourceMappingURL.js';
  */
 function parseJSON ( json, url ) {
 	try {
-		return JSON.parse(json.replace(/^\)]}'[^\n]*\n/, ""));
+		return JSON.parse( json.replace( /^\)]}'[^\n]*\n/, '' ) );
 	} catch ( err ) {
 		throw new Error( `Could not parse sourcemap (${url}): ${err.message}` );
 	}

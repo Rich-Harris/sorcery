@@ -34,14 +34,14 @@ Node.prototype = {
 				return;
 			}
 
-			return getMap( this, false).then( map => {
+			return getMap( this, false ).then( map => {
 				this.map = map;
 				if ( map == null ) {
 					return;
 				}
-				resolveMap(this, nodeCacheByFile);
+				resolveMap( this, nodeCacheByFile );
 
-				if (options.flatten === true) {
+				if ( options.flatten === true ) {
 					const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
 					return Promise.all( promises );
 				}
@@ -50,18 +50,18 @@ Node.prototype = {
 				}
 			});
 		})
-		.then( () => {
-			checkOriginalSource( this, options );
-		});
+			.then( () => {
+				checkOriginalSource( this, options );
+			});
 	},
 
 	loadSync ( nodeCacheByFile, options ) {
-		this.content = getContent(this, true);
-		if (this.content != null) {
+		this.content = getContent( this, true );
+		if ( this.content != null ) {
 			this.map = getMap( this, true );
-			if (this.map != null ) {
-				resolveMap(this, nodeCacheByFile);
-				if (options.flatten === true) {
+			if ( this.map != null ) {
+				resolveMap( this, nodeCacheByFile );
+				if ( options.flatten === true ) {
 					this.sources.map( node => node.loadSync( nodeCacheByFile, options ) );
 				}
 			}
@@ -139,7 +139,7 @@ Node.prototype = {
 	}
 };
 
-function resolveMap(node, nodeCacheByFile) {
+function resolveMap ( node, nodeCacheByFile ) {
 	const map = node.map;
 	let decodingStart = process.hrtime();
 	node.mappings = decode( map.mappings );
@@ -152,11 +152,11 @@ function resolveMap(node, nodeCacheByFile) {
 
 	node.sources = map.sources.map( ( source, i ) => {
 		const file = source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null;
-		const content = (sourcesContent[i] == null) ? undefined : sourcesContent[i];
-		if (file) {
+		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
+		if ( file ) {
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
 			// Current content has the priority
-			if (node.content === undefined) {
+			if ( node.content === undefined ) {
 				node.content = content;
 			}
 			return node;
