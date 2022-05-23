@@ -85,25 +85,31 @@ Chain.prototype = {
 			result[ result.length ] = newSegment;
 		};
 
-		// Trace mappings
-		let tracingStart = process.hrtime();
-
 		let i = this.node.mappings.length;
 		let resolved = new Array( i );
+		if (options.flatten) {
+			// Trace mappings
+			let tracingStart = process.hrtime();
 
-		let j, line, result;
+			let j, line, result;
 
-		while ( i-- ) {
-			line = this.node.mappings[i];
-			resolved[i] = result = [];
+			while ( i-- ) {
+				line = this.node.mappings[i];
+				resolved[i] = result = [];
 
-			for ( j = 0; j < line.length; j += 1 ) {
-				applySegment( line[j], result );
+				for ( j = 0; j < line.length; j += 1 ) {
+					applySegment( line[j], result );
+				}
 			}
-		}
 
-		let tracingTime = process.hrtime( tracingStart );
-		this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
+			let tracingTime = process.hrtime( tracingStart );
+			this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
+		}
+		else {
+			resolved = this.node.mappings;
+			allSources = this.node.map.sources;
+			allNames = this.node.map.names;
+		}
 
 		// Encode mappings
 		let encodingStart = process.hrtime();
@@ -115,7 +121,6 @@ Chain.prototype = {
 
 		return new SourceMap({
 			file: basename( this.node.file ),
-			// absolute path option ?
 			sources: allSources.map( source => getSourcePath( this.node, source, options ) ),
 			sourcesContent: allSources.map((source) => {
 				if (!includeContent) {
@@ -134,6 +139,8 @@ Chain.prototype = {
 	},
 
 	write ( dest, options ) {
+		options = Object.assign({}, this.options, options);
+
 		if ( typeof dest !== 'string' ) {
 			options = dest;
 			dest = this.node.file;
@@ -156,6 +163,8 @@ Chain.prototype = {
 	},
 
 	writeSync ( dest, options ) {
+		options = Object.assign({}, this.options, options);
+
 		if ( typeof dest !== 'string' ) {
 			options = dest;
 			dest = this.node.file;

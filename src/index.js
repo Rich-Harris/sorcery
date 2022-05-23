@@ -1,28 +1,66 @@
 import { resolve } from 'path';
+import { isStream } from 'is-stream';
+
 import Node from './Node.js';
 import Chain from './Chain.js';
 
+export function transform(fileOrStream, raw_options) {
+	if (typeof fileOrStream !== 'string') {
+		const file = fileOrStream;
+		return load(file, raw_options)
+		.then((chain) => {
+			if (chain) {
+				chain.apply();
+				return chain.write();
+			}
+		});
+	 }
+	 else if (isStream(fileOrStream)) {
+		const stream = fileOrStream
+		if (!isStream.writable(stream)) {
+			return stream.emit('error', new Error('Must provide a writable stream'));
+		}
+
+		const chunks = [];
+		stream.on("data", (data) => chunks.push(data));
+    	stream.on("end", () => {
+			const { node, nodeCacheByFile, options } = init( file, [].concat(...chunks), raw_options );
+			return node.load( nodeCacheByFile, options )
+				.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) )
+				.then(() => {
+					if (chain) {
+						chain.apply();
+						return chain.write();
+					}
+				});
+		});
+	}
+	throw 'Invalid arguments';
+}
+
 export function load ( file, raw_options ) {
-	const { node, nodeCacheByFile, options } = init( file, raw_options );
+	const { node, nodeCacheByFile, options } = init( file, null, raw_options );
 
 	return node.load( nodeCacheByFile, options )
 		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) );
 }
 
 export function loadSync ( file, raw_options = {}) {
-	const { node, nodeCacheByFile, options } = init( file, raw_options );
+	const { node, nodeCacheByFile, options } = init( file, null, raw_options );
 
 	node.loadSync( nodeCacheByFile, options );
 	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options );
 }
 
-function init ( file, options = {}) {
+function init ( file, content, options = {}) {
 	options.existingContentOnly = ( options.existingContentOnly == null ) ? true : options.existingContentOnly;
+	options.flatten = (options.flatten == null) ? true : options.flatten;
 
 	let nodeCacheByFile = {};
-	file = resolve(file);
-	const node = new Node({ file });
-	nodeCacheByFile[node.file] = node;
+	const node = new Node({ file, content });
+	if (node.file) {
+		nodeCacheByFile[node.file] = node;
+	}
 
 	if ( options.content ) {
 		Object.keys( options.content ).forEach( key => {
