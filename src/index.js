@@ -9,13 +9,14 @@ export function transform(raw_options) {
   
 	function write (data) { source += data; }
 	function end () { 
-		const { node, nodeCacheByFile, options } = init( undefined, source, raw_options );
-		node.loadSync( nodeCacheByFile, options )
+		const { node, nodeCacheByFile, options } = init( raw_options.output, source, raw_options );
+		node.loadSync( nodeCacheByFile, options );
+		const node_options = options;
 		if (!node.isOriginalSource) {
-			const chain = new Chain( node, nodeCacheByFile, options );
-			const { resolved, content, map, chain_options } = chain.getContentAndMap( options.output, options );
+			const chain = new Chain( node, nodeCacheByFile, node_options );
+			const { resolved, content, map, options } = chain.getContentAndMap( node_options.output, node_options );
 			this.queue(content);
-			if ( !chain_options.inline ) {
+			if ( !options.inline ) {
 				writeFileSync( resolved + '.map', map.toString() );
 			}
 		}
