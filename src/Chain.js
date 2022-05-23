@@ -86,7 +86,7 @@ Chain.prototype = {
 		};
 
 		let i = this.node.mappings.length;
-		let resolved = new Array( i );
+		let allMappings = new Array( i );
 		if (options.flatten) {
 			// Trace mappings
 			let tracingStart = process.hrtime();
@@ -95,7 +95,7 @@ Chain.prototype = {
 
 			while ( i-- ) {
 				line = this.node.mappings[i];
-				resolved[i] = result = [];
+				allMappings[i] = result = [];
 
 				for ( j = 0; j < line.length; j += 1 ) {
 					applySegment( line[j], result );
@@ -106,14 +106,14 @@ Chain.prototype = {
 			this._stats.tracingTime = 1e9 * tracingTime[0] + tracingTime[1];
 		}
 		else {
-			resolved = this.node.mappings;
+			allMappings = this.node.mappings;
 			allSources = this.node.map.sources;
 			allNames = this.node.map.names;
 		}
 
 		// Encode mappings
 		let encodingStart = process.hrtime();
-		let mappings = encode( resolved );
+		let mappings = encode( allMappings );
 		let encodingTime = process.hrtime( encodingStart );
 		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 
@@ -139,14 +139,11 @@ Chain.prototype = {
 	},
 
 	write ( dest, options ) {
-		options = Object.assign({}, this.options, options);
-
 		if ( typeof dest !== 'string' ) {
 			options = dest;
 			dest = this.node.file;
 		}
-
-		options = options || {};
+		options = Object.assign({}, this.options, options);
 
 		const { resolved, content, map } = processWriteOptions( dest, this, options );
 
@@ -163,14 +160,11 @@ Chain.prototype = {
 	},
 
 	writeSync ( dest, options ) {
-		options = Object.assign({}, this.options, options);
-
 		if ( typeof dest !== 'string' ) {
 			options = dest;
 			dest = this.node.file;
 		}
-
-		options = options || {};
+		options = Object.assign({}, this.options, options);
 
 		const { resolved, content, map } = processWriteOptions( dest, this, options );
 

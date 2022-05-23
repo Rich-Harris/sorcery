@@ -1,1 +1,0 @@
-{"version":3,"file":"bar.js","sources":["bar.coffee"],"sourcesContent":["bar = \"bar\"\nconsole.log bar\n"],"names":[],"mappings":";AAAA;AAAA,MAAA;;EAAA,GAAA,GAAM;;EACN,OAAO,CAAC,GAAR,CAAY,GAAZ;AADA"}

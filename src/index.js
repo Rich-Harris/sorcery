@@ -1,41 +1,25 @@
 import { resolve } from 'path';
-import { isStream } from 'is-stream';
+import { through } from 'through';
 
 import Node from './Node.js';
 import Chain from './Chain.js';
 
-export function transform(fileOrStream, raw_options) {
-	if (typeof fileOrStream !== 'string') {
-		const file = fileOrStream;
-		return load(file, raw_options)
-		.then((chain) => {
-			if (chain) {
-				chain.apply();
-				return chain.write();
-			}
-		});
-	 }
-	 else if (isStream(fileOrStream)) {
-		const stream = fileOrStream
-		if (!isStream.writable(stream)) {
-			return stream.emit('error', new Error('Must provide a writable stream'));
+export function transform(raw_options) {
+	var source = '';
+  
+	function write (data) { source += data; }
+	function end () { 
+		const { node, nodeCacheByFile, options } = init( undefined, source, raw_options );
+		node.loadSync( nodeCacheByFile, options )
+		if (node.isOriginalSource === false) {
+			const chain = new Chain( node, nodeCacheByFile, options );
+			chain.apply();
+			chain.write();
+			this.queue(source.replace(sourceMolder.comment, adaptedComment));
+			this.queue(null);
 		}
-
-		const chunks = [];
-		stream.on("data", (data) => chunks.push(data));
-    	stream.on("end", () => {
-			const { node, nodeCacheByFile, options } = init( file, [].concat(...chunks), raw_options );
-			return node.load( nodeCacheByFile, options )
-				.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) )
-				.then(() => {
-					if (chain) {
-						chain.apply();
-						return chain.write();
-					}
-				});
-		});
 	}
-	throw 'Invalid arguments';
+	return through(write, end);
 }
 
 export function load ( file, raw_options ) {
