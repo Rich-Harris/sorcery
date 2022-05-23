@@ -11,7 +11,7 @@ export default {
 			exclude: 'node_modules/**'
 		})
 	],
-	external: [ 'path', 'fs-extra', 'buffer-crc32', 'sourcemap-codec'],
+	external: [ 'path', 'fs-extra', 'buffer-crc32', 'sourcemap-codec', 'is-stream'],
 	output: {
 		sourcemap: true
 	}

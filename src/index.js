@@ -1,40 +1,82 @@
 import { resolve } from 'path';
+import { isStream } from 'is-stream';
+
 import Node from './Node.js';
 import Chain from './Chain.js';
 
-export function load ( file, raw_options ) {
-	const { node, sourcesContentByPath, sourceMapByPath, options } = init( file, raw_options );
+export function transform(fileOrStream, raw_options) {
+	if (typeof fileOrStream !== 'string') {
+		const file = fileOrStream;
+		return load(file, raw_options)
+		.then((chain) => {
+			if (chain) {
+				chain.apply();
+				return chain.write();
+			}
+		});
+	 }
+	 else if (isStream(fileOrStream)) {
+		const stream = fileOrStream
+		if (!isStream.writable(stream)) {
+			return stream.emit('error', new Error('Must provide a writable stream'));
+		}
 
-	return node.load( sourcesContentByPath, sourceMapByPath, options )
-		.then( () => node.isOriginalSource ? null : new Chain( node, sourcesContentByPath, options ) );
+		const chunks = [];
+		stream.on("data", (data) => chunks.push(data));
+    	stream.on("end", () => {
+			const { node, nodeCacheByFile, options } = init( file, [].concat(...chunks), raw_options );
+			return node.load( nodeCacheByFile, options )
+				.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) )
+				.then(() => {
+					if (chain) {
+						chain.apply();
+						return chain.write();
+					}
+				});
+		});
+	}
+	throw 'Invalid arguments';
+}
+
+export function load ( file, raw_options ) {
+	const { node, nodeCacheByFile, options } = init( file, null, raw_options );
+
+	return node.load( nodeCacheByFile, options )
+		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) );
 }
 
 export function loadSync ( file, raw_options = {}) {
-	const { node, sourcesContentByPath, sourceMapByPath, options } = init( file, raw_options );
+	const { node, nodeCacheByFile, options } = init( file, null, raw_options );
 
-	node.loadSync( sourcesContentByPath, sourceMapByPath, options );
-	return node.isOriginalSource ? null : new Chain( node, sourcesContentByPath, options );
+	node.loadSync( nodeCacheByFile, options );
+	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options );
 }
 
-function init ( file, options = {}) {
+function init ( file, content, options = {}) {
 	options.existingContentOnly = ( options.existingContentOnly == null ) ? true : options.existingContentOnly;
+	options.flatten = (options.flatten == null) ? true : options.flatten;
 
-	const node = new Node({ file });
-
-	let sourcesContentByPath = {};
-	let sourceMapByPath = {};
+	let nodeCacheByFile = {};
+	const node = new Node({ file, content });
+	if (node.file) {
+		nodeCacheByFile[node.file] = node;
+	}
 
 	if ( options.content ) {
 		Object.keys( options.content ).forEach( key => {
-			sourcesContentByPath[ resolve( key ) ] = options.content[ key ];
+			const file = resolve( key );
+			const node = nodeCacheByFile[file] || new Node({ file });
+			node.content = options.content[ key ];
+			nodeCacheByFile[node.file] = node;
 		});
 	}
-
 	if ( options.sourcemaps ) {
 		Object.keys( options.sourcemaps ).forEach( key => {
-			sourceMapByPath[ resolve( key ) ] = options.sourcemaps[ key ];
+			const file = resolve( key );
+			const node = nodeCacheByFile[file] || new Node({ file });
+			node.map = options.sourcemaps[ key ];
+			nodeCacheByFile[node.file] = node;
 		});
 	}
-
-	return { node, sourcesContentByPath, sourceMapByPath, options };
+	return { node, nodeCacheByFile, options };
 }

@@ -5,14 +5,14 @@ import getContent from './utils/getContent.js';
 
 export default function Node ({ file, content }) {
 	this.file = file ? resolve( manageFileProtocol( file ) ) : null;
-	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
+	this.content = content || undefined; // sometimes exists in sourcesContent, sometimes doesn't
 
-	if ( !this.file && this.content === null ) {
+	if ( !this.file && this.content === undefined ) {
 		throw new Error( 'A source must specify either file or content' );
 	}
 
 	// these get filled in later
-	this.map = null;
+	this.map = undefined;
 	this.mappings = null;
 	this.sources = null;
 	this.isOriginalSource = null;
@@ -27,20 +27,21 @@ export default function Node ({ file, content }) {
 }
 
 Node.prototype = {
-	load ( sourcesContentByPath, sourceMapByPath, options ) {
-		return getContent( this, sourcesContentByPath, false ).then( content => {
-			if ( content == null ) {
-				return null;
-			}
+	load ( nodeCacheByFile, options ) {
+		return getContent( this, false ).then( content => {
 			this.content = content;
+			if ( content == null ) {
+				return;
+			}
 
-			return getMap( this, sourceMapByPath ).then( map => {
+			return getMap( this, false).then( map => {
+				this.map = map;
 				if ( map == null ) {
-					return null;
+					return;
 				}
-				applyMap(this, map);
+				resolveMap(this, nodeCacheByFile);
 
-				const promises = this.sources.map( node => node.load( sourcesContentByPath, sourceMapByPath, options ) );
+				const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
 				return Promise.all( promises );
 			});
 		})
@@ -49,15 +50,14 @@ Node.prototype = {
 		});
 	},
 
-	loadSync ( sourcesContentByPath, sourceMapByPath, options ) {
-		let content = getContent(this, sourcesContentByPath, true);
-		if (content != null) {
-			this.content = content;
-			const map = getMap( this, sourceMapByPath, true );
-			if ( map != null ) {
-				applyMap(this, map);
+	loadSync ( nodeCacheByFile, options ) {
+		this.content = getContent(this, true);
+		if (this.content != null) {
+			this.map = getMap( this, true );
+			if (this.map != null ) {
+				resolveMap(this, nodeCacheByFile);
 
-				this.sources.map( node => node.loadSync( sourcesContentByPath, sourceMapByPath, options ) );
+				this.sources.map( node => node.loadSync( nodeCacheByFile, options ) );
 			}
 		}
 		checkOriginalSource( this, options );
@@ -133,8 +133,8 @@ Node.prototype = {
 	}
 };
 
-function applyMap(node, map) {
-	node.map = map;
+function resolveMap(node, nodeCacheByFile) {
+	const map = node.map;
 	let decodingStart = process.hrtime();
 	node.mappings = decode( map.mappings );
 	let decodingTime = process.hrtime( decodingStart );
@@ -145,10 +145,20 @@ function applyMap(node, map) {
 	const sourceRoot = node.file ? resolve( dirname( node.file ), manageFileProtocol( map.sourceRoot ) || '' ) : '';
 
 	node.sources = map.sources.map( ( source, i ) => {
-		return new Node({
-			file: source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null,
-			content: sourcesContent[i]
-		});
+		const file = source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null;
+		const content = (sourcesContent[i] == null) ? undefined : sourcesContent[i];
+		if (file) {
+			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
+			// Current content has the priority
+			if (node.content === undefined) {
+				node.content = content;
+			}
+			return node;
+		}
+		else {
+			const node = new Node({ content });
+			return node;
+		}
 	});
 }
 
