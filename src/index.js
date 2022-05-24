@@ -4,18 +4,18 @@ import { writeFileSync } from 'fs-extra';
 
 import Node from './Node.js';
 import Chain from './Chain.js';
+import parseOptions from './utils/parseOptions.js';
 
-export function transform ( raw_options ) {
+export function transform ( transform_options ) {
 	var source = '';
   
 	function write ( data ) { source += data; }
 	function end () { 
-		const { node, nodeCacheByFile, options } = init( raw_options.output, source, raw_options );
+		const { node, nodeCacheByFile, options } = init( transform_options.output, source, transform_options );
 		node.loadSync( nodeCacheByFile, options );
-		const node_options = options;
 		if ( !node.isOriginalSource ) {
-			const chain = new Chain( node, nodeCacheByFile, node_options );
-			const { resolved, content, map, options } = chain.getContentAndMap( node_options.output, node_options );
+			const chain = new Chain( node, nodeCacheByFile, transform_options );
+			const { resolved, content, map, options } = chain.getContentAndMap( node_options.output, transform_options );
 			this.queue( content );
 			if ( !options.inline ) {
 				writeFileSync( resolved + '.map', map.toString() );
@@ -29,23 +29,22 @@ export function transform ( raw_options ) {
 	return through( write, end );
 }
 
-export function load ( file, raw_options ) {
-	const { node, nodeCacheByFile, options } = init( file, null, raw_options );
+export function load ( file, load_options ) {
+	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	return node.load( nodeCacheByFile, options )
-		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) );
+		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, load_options ) );
 }
 
-export function loadSync ( file, raw_options = {}) {
-	const { node, nodeCacheByFile, options } = init( file, null, raw_options );
+export function loadSync ( file, load_options = {}) {
+	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	node.loadSync( nodeCacheByFile, options );
-	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options );
+	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, load_options );
 }
 
-function init ( file, content, options = {}) {
-	options.existingContentOnly = ( options.existingContentOnly == null ) ? true : options.existingContentOnly;
-	options.flatten = ( options.flatten == null ) ? true : options.flatten;
+function init ( file, content, original_options = {}) {
+	const options = parseOptions(original_options);
 
 	let nodeCacheByFile = {};
 	const node = new Node({ file, content });

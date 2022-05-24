@@ -13,13 +13,22 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but 
 *existingContentOnly* default true  
 Apply the transformation chain while the sources content are available. We want to end with a map which refers existing local sources only.
 
+Exorcist-like [experimental]
+Can replace exorcist 
+```
+  stream.pipe(exorcist(mapFile, undefined, undefined, path.dirname(inputFile)))
+```
+by such code
+```
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceMappingStorage='[relative-path]' }))]
+```
+
 **Build**  
 Fix build which was not working on Windows.  
 
 ## Next steps
 * absolutePath for sources
 * flatten optional
-* support stream (exorcist replacement)
 * expose a Webpack plugin (like source-map-loader)  
 * add d.ts
 

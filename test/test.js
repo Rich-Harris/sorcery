@@ -12,7 +12,7 @@ const sourcery = require( '../' );
 process.chdir( __dirname );
 
 describe( 'sourcery', function () {
-	this.timeout( 20000 );
+	this.timeout( 200000 );
 
 	beforeEach( () => fse.rm( '.tmp', { recursive: true, force: true } ) );
 	afterEach( () => fse.rm( '.tmp', { recursive: true, force: true } ) );

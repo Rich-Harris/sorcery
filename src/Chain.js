@@ -4,6 +4,7 @@ import { encode } from 'sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
+import parseOptions from './utils/parseOptions.js';
 
 const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\n]+)|` + // js
@@ -31,16 +32,8 @@ Chain.prototype = {
 		};
 	},
 
-	apply ( raw_options = {}) {
-		const options = Object.assign({}, this.options, raw_options );
-		if ( options.sourcePathTemplate == null ) {
-			if ( options.base ) {
-				options.sourcePathTemplate = '[base-source-path]';
-			}
-			else {
-				options.sourcePathTemplate = '[relative-source-path]';
-			}
-		}
+	apply ( apply_options = {}) {
+		const options = Object.assign({}, this.options, parseOptions(apply_options) );
 
 		let allNames = [];
 		let allSources = [];
@@ -138,8 +131,8 @@ Chain.prototype = {
 		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
 	},
 
-	write ( dest, raw_options ) {
-		const { resolved, content, map, options } = this.getContentAndMap( dest, raw_options );
+	write ( dest, write_options ) {
+		const { resolved, content, map, options } = this.getContentAndMap( dest, write_options );
 
 		return ensureDir( dirname( resolved ) )
 			.then( () => {
@@ -153,8 +146,8 @@ Chain.prototype = {
 			});
 	},
 
-	writeSync ( dest, raw_options ) {
-		const { resolved, content, map, options } = this.getContentAndMap( dest, raw_options );
+	writeSync ( dest, write_options ) {
+		const { resolved, content, map, options } = this.getContentAndMap( dest, write_options );
 
 		ensureDirSync( dirname( resolved ) );
 		writeFileSync( resolved, content );
@@ -163,23 +156,23 @@ Chain.prototype = {
 		}
 	},
 
-	getContentAndMap ( dest, raw_options ) {
+	getContentAndMap ( dest, write_options ) {
 		if ( typeof dest === 'string' ) {
-			raw_options = raw_options || {};
-			raw_options.output = dest;
+			write_options = write_options || {};
+			write_options.output = dest;
 		}
 		else if ( typeof dest === 'object' ) {
-			raw_options = dest;
+			write_options = dest;
 		}
 		else {
-			raw_options = options || {};
+			write_options = write_options || {};
 		}
+
+		write_options.output = write_options.output || this.node.file;
+		const resolved = resolve( write_options.output );
+		write_options.base = write_options.base ? resolve( write_options.base ) : dirname( resolved );
 	
-		const options = Object.assign({}, this.options, raw_options );
-		options.output = options.output || this.node.file;
-	
-		const resolved = resolve( options.output );
-		options.base = options.base ? resolve( options.base ) : dirname( resolved );
+		const options = Object.assign({}, this.options, parseOptions(write_options) );
 	
 		const map = this.apply( options );
 	
@@ -211,9 +204,9 @@ function sourcemapComment ( url, dest ) {
 
 function getSourcePath ( node, source, options ) {
 	const replacer = {
-		'[absolute-source-path]': source,
-		'[base-source-path]': options.base ? relative( options.base, source ) : options.base,
-		'[relative-source-path]': relative( dirname( node.file ), source )
+		'[absolute-path]': source,
+		'[base-path]': options.base ? relative( options.base, source ) : options.base,
+		'[relative-path]': relative( dirname( node.file ), source )
 	};
 	let sourcePath = options.sourcePathTemplate;
 	Object.keys( replacer ).forEach( ( key ) => {

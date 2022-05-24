@@ -41,7 +41,7 @@ Node.prototype = {
 				}
 				resolveMap( this, nodeCacheByFile );
 
-				if ( options.flatten === true ) {
+				if ( options.flatten ) {
 					const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
 					return Promise.all( promises );
 				}
@@ -61,7 +61,7 @@ Node.prototype = {
 			this.map = getMap( this, true );
 			if ( this.map != null ) {
 				resolveMap( this, nodeCacheByFile );
-				if ( options.flatten === true ) {
+				if ( options.flatten ) {
 					this.sources.map( node => node.loadSync( nodeCacheByFile, options ) );
 				}
 			}
@@ -169,7 +169,7 @@ function resolveMap ( node, nodeCacheByFile ) {
 }
 
 function checkOriginalSource ( node, options ) {
-	if ( node.sources == null || node.sources.length == 0 || node.map == null || ( options.existingContentOnly === true && node.sources.some( ( node ) => node.content == null ) ) ) {
+	if ( node.sources == null || node.sources.length == 0 || node.map == null || ( options.flatten === 'existing' && node.sources.some( ( node ) => node.content == null ) ) ) {
 		node.isOriginalSource = true;
 		node.map = null;
 		node.mappings = null;

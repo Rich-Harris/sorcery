@@ -1,16 +1,17 @@
 interface LoadOptions {
-    base: string;
     input: string;
-    output: string;
     content: string[];
     sourcemap: string[];
 }
 
 interface ChainOptions {
+    base: string;
+    output: string;
     inline: boolean;
     absolutePath: boolean;
-    sourcePathTemplate: string;
+    sourceMappingStorage: 'inline' | '[absolute-path]' | '[base-path]' | '[relative-path]';
+    sourcePathTemplate: '[absolute-path]' | '[base-path]' | '[relative-path]' | string;
     includeContent: boolean;
     existingContentOnly: boolean; // true
-    flatten: boolean; // true
+    flatten: 'full' | 'existing' | false
 }
