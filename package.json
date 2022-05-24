@@ -13,13 +13,14 @@
   "module": "dist/sourcery-map.es.js",
   "keywords": [
     "sorcery",
-    "sourcery",
+    "exorcist",
     "map",
     "sourcemap",
     "excludeContent",
+    "externalize",
     "bundle",
-    "minify",
-    "transformation chain"
+    "transformation",
+    "flatten"
   ],
   "maintainers": [
     {
@@ -41,6 +42,7 @@
     "coffee-script": "^1.10.0",
     "del-cli": "^4.0.1",
     "eslint": "^8.15.0",
+    "exorcist": "^2.0.0",
     "glob": "^8.0.3",
     "istanbul": "^0.4.3",
     "less": "^4.1.2",

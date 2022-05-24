@@ -16,7 +16,7 @@ command = minimist( process.argv.slice( 2 ), {
 		h: 'help',
 		d: 'datauri',
 		x: 'excludeContent',
-		e: 'existingContentOnly',
+		f: 'flatten',
 		b: 'base'
 	}
 });
@@ -42,12 +42,13 @@ else {
 		...command,
 		inline: command.datauri,
 		includeContent: !command.excludeContent,
-		output: command.output || command.input
+		output: command.output || command.input,
+		flatten: (command.flatten === 'false') ? false : command.flatten
 	};
-	fse.stat( command.input ).then( function ( stats ) {
+	fse.stat( options.input ).then( function ( stats ) {
 		if ( stats.isDirectory() ) {
 			const globby_options = {
-				cwd: command.input
+				cwd: options.input
 			}
 			return globby("**/*.js", globby_options)
 			.then((files) => {
