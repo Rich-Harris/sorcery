@@ -47,7 +47,7 @@ function init ( file, content, original_options = {}) {
 	const options = parseLoadOptions( original_options );
 
 	file = file || options.input;
-	if (file) {
+	if ( file ) {
 		file = resolve( file );
 	}
 
