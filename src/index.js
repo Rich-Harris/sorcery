@@ -4,7 +4,7 @@ import { writeFileSync } from 'fs-extra';
 
 import Node from './Node.js';
 import Chain from './Chain.js';
-import parseOptions from './utils/parseOptions.js';
+import { parseLoadOptions } from './utils/parseOptions.js';
 
 export function transform ( transform_options ) {
 	var source = '';
@@ -15,7 +15,7 @@ export function transform ( transform_options ) {
 		node.loadSync( nodeCacheByFile, options );
 		if ( !node.isOriginalSource ) {
 			const chain = new Chain( node, nodeCacheByFile, transform_options );
-			const { resolved, content, map, options } = chain.getContentAndMap( node_options.output, transform_options );
+			const { resolved, content, map, options } = chain.getContentAndMap( transform_options.output, transform_options );
 			this.queue( content );
 			if ( !options.inline ) {
 				writeFileSync( resolved + '.map', map.toString() );
@@ -33,19 +33,20 @@ export function load ( file, load_options ) {
 	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	return node.load( nodeCacheByFile, options )
-		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, load_options ) );
+		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) );
 }
 
 export function loadSync ( file, load_options = {}) {
 	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	node.loadSync( nodeCacheByFile, options );
-	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, load_options );
+	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options );
 }
 
 function init ( file, content, original_options = {}) {
-	const options = parseOptions(original_options);
+	const options = parseLoadOptions( original_options );
 
+	file = file ? resolve( file ) : file;
 	let nodeCacheByFile = {};
 	const node = new Node({ file, content });
 	if ( node.file ) {

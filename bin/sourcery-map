@@ -41,7 +41,6 @@ else {
 	const options = { 
 		...command,
 		inline: command.datauri,
-		includeContent: !command.excludeContent,
 		output: command.output || command.input,
 		flatten: (command.flatten === 'false') ? false : command.flatten
 	};
@@ -65,10 +64,11 @@ else {
 				}, Promise.resolve() );
 			});
 		}
-
-		return sourcery_map.load( options.input, options ).then( function ( chain ) {
-			return chain.write( options.output, options );
-		});
+		else {
+			return sourcery_map.load( options.input, options ).then( function ( chain ) {
+				return chain.write( options.output, options );
+			});
+		}
 	}).catch( function ( err ) {
 		setTimeout( function () {
 			throw err;

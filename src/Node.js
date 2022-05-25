@@ -1,10 +1,10 @@
-import { dirname, resolve } from 'path';
+import path from 'path';
 import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 import getContent from './utils/getContent.js';
 
 export default function Node ({ file, content }) {
-	this.file = file ? resolve( manageFileProtocol( file ) ) : null;
+	this.file = file ? path.resolve( manageFileProtocol( file ) ) : null;
 	this.content = content || undefined; // sometimes exists in sourcesContent, sometimes doesn't
 
 	if ( !this.file && this.content === undefined ) {
@@ -39,7 +39,7 @@ Node.prototype = {
 				if ( map == null ) {
 					return;
 				}
-				resolveMap( this, nodeCacheByFile );
+				resolveMap( this, nodeCacheByFile, options );
 
 				if ( options.flatten ) {
 					const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
@@ -60,9 +60,9 @@ Node.prototype = {
 		if ( this.content != null ) {
 			this.map = getMap( this, true );
 			if ( this.map != null ) {
-				resolveMap( this, nodeCacheByFile );
+				resolveMap( this, nodeCacheByFile, options );
 				if ( options.flatten ) {
-					this.sources.map( node => node.loadSync( nodeCacheByFile, options ) );
+					this.sources.forEach( node => node.loadSync( nodeCacheByFile, options ) );
 				}
 			}
 		}
@@ -139,7 +139,7 @@ Node.prototype = {
 	}
 };
 
-function resolveMap ( node, nodeCacheByFile ) {
+function resolveMap ( node, nodeCacheByFile, options ) {
 	const map = node.map;
 	let decodingStart = process.hrtime();
 	node.mappings = decode( map.mappings );
@@ -148,10 +148,20 @@ function resolveMap ( node, nodeCacheByFile ) {
 
 	const sourcesContent = map.sourcesContent || [];
 
-	const sourceRoot = node.file ? resolve( dirname( node.file ), manageFileProtocol( map.sourceRoot ) || '' ) : '';
+	var sourceRoot;
+	// Priority to the 'sourceRoot' of the map
+	if ( map.sourceRoot && node.file ) {
+		sourceRoot = path.resolve( path.dirname( node.file ), manageFileProtocol( map.sourceRoot ) );
+	}
+	else if ( options.base ) {
+		sourceRoot = options.base;
+	}
+	else {
+		sourceRoot = node.file ? path.dirname( node.file ) : '';
+	}
 
 	node.sources = map.sources.map( ( source, i ) => {
-		const file = source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null;
+		const file = source ? path.resolve( sourceRoot, manageFileProtocol( source ) ) : null;
 		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
 		if ( file ) {
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });

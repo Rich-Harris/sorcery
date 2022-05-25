@@ -4,5 +4,5 @@
  * @returns {string}
  */
 export default function atob ( base64 ) {
-	return new Buffer( base64, 'base64' ).toString( 'utf8' );
+	return Buffer.from( base64, 'base64' ).toString( 'utf8' );
 }

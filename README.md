@@ -20,8 +20,14 @@ Can replace exorcist
 ```
 by such code
 ```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceMappingStorage='[relative-path]' }))]
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceMappingStorage='[relative-path]', sourceRoot: '' }))]
 ```
+
+But now, you can at the same time, flatten the map doing
+```
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'existing', sourceMappingStorage='[relative-path]' }))]
+```
+
 
 **Build**  
 Fix build which was not working on Windows.  
@@ -132,7 +138,7 @@ npm install -g sourcery-map
     -o, --output <file|folder>      Output file (if absent, will overwrite input)
     -d, --datauri                   Append map as a data URI, rather than separate file
     -x, --excludeContent            Don't populate the sourcesContent array
-    -e, --existingContentOnly <true|false>
+    -f, --flatten <true|false>
                                     true: stop to the last existing file of the chain (default).
                                     false: reach the original source even if not present
 ```

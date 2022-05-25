@@ -4,7 +4,7 @@ import { encode } from 'sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
-import parseOptions from './utils/parseOptions.js';
+import { parseChainOptions } from './utils/parseOptions.js';
 
 const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\n]+)|` + // js
@@ -33,10 +33,11 @@ Chain.prototype = {
 	},
 
 	apply ( apply_options = {}) {
-		const options = Object.assign({}, this.options, parseOptions(apply_options) );
+		const options = Object.assign({}, this.options, parseChainOptions( apply_options ) );
 
 		let allNames = [];
 		let allSources = [];
+
 		const applySegment = ( segment, result ) => {
 			if ( segment.length < 4 ) return;
 
@@ -51,10 +52,10 @@ Chain.prototype = {
 				return;
 			}
 
-			let sourceIndex = allSources.indexOf( traced.source );
+			let sourceIndex = allSources.findIndex( ( node ) => node.file === traced.source );
 			if ( !~sourceIndex ) {
 				sourceIndex = allSources.length;
-				allSources.push( traced.source );
+				allSources.push( this.nodeCacheByFile[traced.source]);
 			}
 
 			let newSegment = [
@@ -100,7 +101,7 @@ Chain.prototype = {
 		}
 		else {
 			allMappings = this.node.mappings;
-			allSources = this.node.map.sources;
+			allSources = this.node.sources;
 			allNames = this.node.map.names;
 		}
 
@@ -110,20 +111,18 @@ Chain.prototype = {
 		let encodingTime = process.hrtime( encodingStart );
 		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 
-		let includeContent = options.includeContent !== false;
-
 		return new SourceMap({
 			file: basename( this.node.file ),
-			sources: allSources.map( source => getSourcePath( this.node, source, options ) ),
-			sourcesContent: allSources.map( ( source ) => {
-				if ( !includeContent ) {
+			sources: allSources.map( sourceNode => getSourcePath( this.node, sourceNode.file, options ) ),
+			sourcesContent: allSources.map( ( sourceNode ) => {
+				if ( options.excludeContent ) {
 					return null;
 				}
-				const node = source ? this.nodeCacheByFile[ source ] : null;
-				return node ? node.content : null;
+				return sourceNode.content;
 			}),
 			names: allNames,
-			mappings
+			mappings,
+			sourceRoot: options.sourceRoot
 		});
 	},
 
@@ -172,7 +171,7 @@ Chain.prototype = {
 		const resolved = resolve( write_options.output );
 		write_options.base = write_options.base ? resolve( write_options.base ) : dirname( resolved );
 	
-		const options = Object.assign({}, this.options, parseOptions(write_options) );
+		const options = Object.assign({}, this.options, parseChainOptions( write_options ) );
 	
 		const map = this.apply( options );
 	
@@ -206,7 +205,7 @@ function getSourcePath ( node, source, options ) {
 	const replacer = {
 		'[absolute-path]': source,
 		'[base-path]': options.base ? relative( options.base, source ) : options.base,
-		'[relative-path]': relative( dirname( node.file ), source )
+		'[relative-path]': relative( dirname( node.file || options.output ), source )
 	};
 	let sourcePath = options.sourcePathTemplate;
 	Object.keys( replacer ).forEach( ( key ) => {

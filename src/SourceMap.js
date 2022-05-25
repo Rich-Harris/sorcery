@@ -8,6 +8,7 @@ export default function SourceMap ( properties ) {
 	this.sourcesContent = properties.sourcesContent;
 	this.names          = properties.names;
 	this.mappings       = properties.mappings;
+	this.sourceRoot     = properties.sourceRoot;
 }
 
 SourceMap.prototype = {
