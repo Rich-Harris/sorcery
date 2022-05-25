@@ -46,7 +46,11 @@ export function loadSync ( file, load_options = {}) {
 function init ( file, content, original_options = {}) {
 	const options = parseLoadOptions( original_options );
 
-	file = file ? resolve( file ) : file;
+	file = file || options.input;
+	if (file) {
+		file = resolve( file );
+	}
+
 	let nodeCacheByFile = {};
 	const node = new Node({ file, content });
 	if ( node.file ) {
