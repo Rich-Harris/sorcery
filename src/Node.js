@@ -150,10 +150,10 @@ function resolveMap ( node, nodeCacheByFile, options ) {
 
 	var sourceRoot = node.file ? dirname( node.file ) : '';
 	// Priority to the 'sourceRoot' of the map
-	if ( map.sourceRoot ) {
+	if ( map.sourceRoot != null ) {
 		sourceRoot = resolve( sourceRoot, manageFileProtocol( map.sourceRoot ) );
 	}
-	else if ( options.sourceRootResolution ) {
+	else if ( options.sourceRootResolution != null ) {
 		sourceRoot = resolve( options.sourceRootResolution );
 	}
 
