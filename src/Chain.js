@@ -162,12 +162,13 @@ Chain.prototype = {
 		}
 		else if ( typeof dest === 'object' ) {
 			write_options = dest;
+			write_options.output = this.node.file;
 		}
 		else {
 			write_options = write_options || {};
+			write_options.output = this.node.file;
 		}
 
-		write_options.output = write_options.output || this.node.file;
 		const resolved = resolve( write_options.output );
 		write_options.base = write_options.base ? resolve( write_options.base ) : dirname( resolved );
 	
@@ -204,8 +205,7 @@ function sourcemapComment ( url, dest ) {
 function getSourcePath ( node, source, options ) {
 	const replacer = {
 		'[absolute-path]': source,
-		'[base-path]': options.base ? relative( options.base, source ) : options.base,
-		'[relative-path]': relative( dirname( node.file || options.output ), source )
+		'[relative-path]': relative( options.base || (node.file ? dirname(node.file) : ''), source )
 	};
 	let sourcePath = options.sourcePathTemplate;
 	Object.keys( replacer ).forEach( ( key ) => {
