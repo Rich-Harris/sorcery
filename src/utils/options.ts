@@ -2,7 +2,7 @@ interface LoadOptions {
     input: string;
     content: { [file: string]: string };
     sourcemaps: { [file: string]: string };
-    sourceRootResolution: string; // base path of the sources relative path of the map
+    sourceRootResolution: string; // base path of the relative sources path in the map
 }
 
 interface SaveOptions {
@@ -13,7 +13,6 @@ interface SaveOptions {
     sourcePathTemplate: '[absolute-path]' | '[relative-path]' | string;
     sourceRoot: string;
     excludeContent: boolean;
-    existingContentOnly: boolean; // true
     flatten: 'full' | 'existing' | false
 }
 

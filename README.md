@@ -33,10 +33,8 @@ But now, you can at the same time, flatten the map doing
 Fix build which was not working on Windows.  
 
 ## Next steps
-* absolutePath for sources
-* flatten optional
 * expose a Webpack plugin (like source-map-loader)  
-* add d.ts
+* add d.ts or migrate to TypeScript
 
 ## Usage
 

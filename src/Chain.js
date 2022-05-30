@@ -131,28 +131,51 @@ Chain.prototype = {
 	},
 
 	write ( dest, write_options ) {
-		const { resolved, content, map, options } = this.getContentAndMap( dest, write_options );
-
-		return ensureDir( dirname( resolved ) )
-			.then( () => {
-				let promises = [ writeFile( resolved, content ) ];
-
-				if ( options.sourceMappingStorage !== 'inline' ) {
-					promises.push( writeFile( resolved + '.map', map.toString() ) );
-				}
-
-				return Promise.all( promises );
+		let chains;
+		if (write_options && write_options.recursive) {
+			chains = Object.values(nodeCacheByFile).map((node) => {
+				return new Chain(node, this.nodeCacheByFile, this.options);
 			});
+		}
+		else {
+			chains = [this];
+		}
+
+		return Promise.all(chains.map((chain) => {
+			const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
+			return ensureDir( dirname( resolved ) )
+				.then( () => {
+					let promises = [ writeFile( resolved, content ) ];
+
+					if ( options.sourceMappingStorage !== 'inline' ) {
+						promises.push( writeFile( resolved + '.map', map.toString() ) );
+					}
+
+					return Promise.all( promises );
+				});
+		}));
 	},
 
 	writeSync ( dest, write_options ) {
-		const { resolved, content, map, options } = this.getContentAndMap( dest, write_options );
-
-		ensureDirSync( dirname( resolved ) );
-		writeFileSync( resolved, content );
-		if ( options.sourceMappingStorage !== 'inline' ) {
-			writeFileSync( resolved + '.map', map.toString() );
+		let chains;
+		if (write_options && write_options.recursive) {
+			chains = Object.values(nodeCacheByFile).map((node) => {
+				return new Chain(node, this.nodeCacheByFile, this.options);
+			});
 		}
+		else {
+			chains = [this];
+		}
+
+		chains.forEach((chain) => {
+			const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
+
+			ensureDirSync( dirname( resolved ) );
+			writeFileSync( resolved, content );
+			if ( options.sourceMappingStorage !== 'inline' ) {
+				writeFileSync( resolved + '.map', map.toString() );
+			}
+		});
 	},
 
 	getContentAndMap ( dest, write_options ) {

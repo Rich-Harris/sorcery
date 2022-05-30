@@ -142,6 +142,11 @@ Node.prototype = {
 
 function resolveMap ( node, nodeCacheByFile, options ) {
 	const map = node.map;
+
+	// Browserify or similar tools when inlining the map, set the file to a generic name like "generated.js"
+	// We restore the proper name here
+	map.file = node.file || map.file;
+
 	let decodingStart = process.hrtime();
 	node.mappings = decode( map.mappings );
 	let decodingTime = process.hrtime( decodingStart );
