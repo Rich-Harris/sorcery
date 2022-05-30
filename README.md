@@ -39,7 +39,7 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 | API | Command line | Value | Description |
 | ----------- | ----------- | ----------- | ----------- |
 | output | -o, --output | `<file>` | Output file (if absent, will overwrite input) |
-| --- | -d, --datauri | | *deprecated* use `sourceMappingURL` 'inline' |
+| inline | -d, --datauri | | *deprecated* equivalent to `sourceMappingURL` 'inline' |
 | excludeContent | -x, --excludeContent | | Don't populate the sourcesContent array |
 | flatten | -f, --flatten | `full` (default) <br/>`existing` | flatten source map until the original file is reached<br/>flatten source map until the file (content) exists |
 | sourceMappingURL | --sourceMappingURL | `[relative-path]` (default)<br/>`inline`<br/>`[absolute-path]`<br/>`[base-path]`| TBD</br>Append map as a data URI rather than separate file<br/>TBD<br/>[not supported yet]|
@@ -166,7 +166,7 @@ by such code
 
 you can flatten the map at the same time
 ```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'realistic', sourceRootResolution: '' }))]
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'realistic', sourceRootResolution: '', excludeContent: true }))]
 ```
 
 ## License
