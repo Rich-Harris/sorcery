@@ -2,7 +2,7 @@ import { resolve, dirname } from 'path';
 import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 import getContent from './utils/getContent.js';
-import { existsSync } from 'fs';
+import { existsSync } from 'fs-extra';
 
 export default function Node ({ file, content }) {
 	this.file = file ? resolve( manageFileProtocol( file ) ) : null;

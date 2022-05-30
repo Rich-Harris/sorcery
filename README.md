@@ -17,6 +17,8 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 * sourceMappingURL can be inline content, absolute, relative...
 * recursive, rewrite all the chain of maps [experimental]
 
+**Beware**, all these features are experimental and not fully covered by tests, if you find an issue, do not hesitate to create a bug or contribute ;-)
+
 ## Next steps
 * expose a Webpack plugin (like source-map-loader)  
 * add d.ts or migrate to TypeScript
@@ -40,8 +42,8 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 | --- | -d, --datauri | | *deprecated* use `sourceMappingURL` 'inline' |
 | excludeContent | -x, --excludeContent | | Don't populate the sourcesContent array |
 | flatten | -f, --flatten | `full` (default) <br/>`existing` | flatten source map until the original file is reached<br/>flatten source map until the file (content) exists |
-| sourceMappingURL | --sourceMappingURL | `inline`<br/>`[absolute-path]`<br/>`[base-path]`<br/>`[relative-path]`| Append map as a data URI rather than separate file<br/>TBD<br/>[not supported yet]<br/>TBD |
-| sourcePathTemplate | --sourcePathTemplate | `[relative-path]` (default)<br/>`[absolute-path]`<br/>`string`| Source paths are relative to the file location <br/>Source paths are absolute<br/>Customize the relative path and can contain `[relative-path]` or `[absolute-path]`<br/>for instance ```webpack://[relative-path]``` |
+| sourceMappingURL | --sourceMappingURL | `[relative-path]` (default)<br/>`inline`<br/>`[absolute-path]`<br/>`[base-path]`| TBD</br>Append map as a data URI rather than separate file<br/>TBD<br/>[not supported yet]|
+| sourcePathTemplate | --sourcePathTemplate | `[relative-path]` (default)<br/>`[absolute-path]`<br/>`string`| Source paths are relative to the file location <br/>Source paths are absolute<br/>Customize the relative path, can contain `[relative-path]` or `[absolute-path]`<br/>for instance ```webpack://[relative-path]``` |
 
 #### misc
 | Command line | Description |
@@ -101,6 +103,9 @@ var loc = chain.trace( x, y );
 chain.writeSync();
 ```
 
+You can pass an optional second argument to sorcery.load() and sorcery.loadSync(), with zero or more of the following properties:
+content - a map of filename: contents pairs. filename will be resolved against the current working directory if needs be
+sourcemaps - a map of filename: sourcemap pairs, where filename is the name of the file the sourcemap is related to. This will override any sourceMappingURL comments in the file itself.
 ```js
 sourcery_map.load( 'some/generated/code.min.js', {
   content: {
