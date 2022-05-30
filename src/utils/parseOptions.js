@@ -12,10 +12,10 @@ export function parseChainOptions ( raw_options ) {
 
 	options.sourcePathTemplate = options.sourcePathTemplate || '[relative-path]';
 
-	if ( options.sourceMappingStorage == null ) {
+	if ( options.sourceMappingURL == null ) {
 		const inline = ( options.inline === true );
 		const absolutePath = ( options.absolutePath === true );
-		options.sourceMappingStorage = inline ? 'inline' : absolutePath ? '[absolute-path]' : '[relative-path]';
+		options.sourceMappingURL = inline ? 'inline' : absolutePath ? '[absolute-path]' : '[relative-path]';
 	}
 
 	return options;

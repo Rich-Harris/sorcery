@@ -1,6 +1,6 @@
 # sourcery-map.js
 
-This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but with few improvements added:
+This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with few improvements added:
 
 **We merged pull requests**  
 * [Adjust delimiter used to detect the end of source map URLs in JS files](https://github.com/Rich-Harris/sorcery/pull/176)
@@ -8,6 +8,14 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but 
 * [Handle file:// paths to source files](https://github.com/Rich-Harris/sorcery/pull/173)
 * [Ignore missing / unavailable files](https://github.com/Rich-Harris/sorcery/pull/165)
 * [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sorcery/pull/14)
+
+**New features**
+* Flatten is optional and can manage existing files only (ease the debugging)
+* source path can be customized, relative or absolute.
+* Provide a source root resolution fallback when map has been generated from another path (browserify)
+* [exorcist](https://www.npmjs.com/package/exorcist) like [experimental]
+* sourceMappingURL can be inline content, absolute, relative...
+* recursive, rewrite all the chain of maps [experimental]
 
 ## Next steps
 * expose a Webpack plugin (like source-map-loader)  
@@ -20,7 +28,7 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but 
 #### parsing map
 | API | Command line | Value | Description |
 | ----------- | ----------- | ----------- | ----------- |
-| --- | -i, --input | `file`<br/>`folder` | Input file<br/>Input folder |
+| --- | -i, --input | `<file>`<br/>`<folder>` | Input file<br/>Input folder |
 | content | --- | a map of `filename: contents` pairs. | `filename` will be resolved against the current working directory if needs be |
 | sourcemaps | --- | a map of `filename: sourcemap` pairs | where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself |
 | sourceRootResolution | --- | <folder> | base path of the relative sources path in the map |
@@ -28,35 +36,19 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but 
 #### generating map
 | API | Command line | Value | Description |
 | ----------- | ----------- | ----------- | ----------- |
-| output | -o, --output | `file`<br/>`folder` | Output file (if absent, will overwrite input) |
-| --- | -d, --datauri | | *deprecated* use `sourceMappingStorage` 'inline' |
+| output | -o, --output | `<file>` | Output file (if absent, will overwrite input) |
+| --- | -d, --datauri | | *deprecated* use `sourceMappingURL` 'inline' |
 | excludeContent | -x, --excludeContent | | Don't populate the sourcesContent array |
-| flatten | -f, --flatten | `full` (default) <br/>`existing` | flatten source map until the original source<br/>flatten source map while the source file exists |
-| sourceMappingStorage | --sourceMappingStorage | `inline`<br/>`[absolute-path]`<br/>`[base-path]`<br/>`[relative-path]`| Append map as a data URI rather than separate file<br/>TBD<br/>TBD<br/>TBD |
-
-
+| flatten | -f, --flatten | `full` (default) <br/>`existing` | flatten source map until the original file is reached<br/>flatten source map until the file (content) exists |
+| sourceMappingURL | --sourceMappingURL | `inline`<br/>`[absolute-path]`<br/>`[base-path]`<br/>`[relative-path]`| Append map as a data URI rather than separate file<br/>TBD<br/>[not supported yet]<br/>TBD |
+| sourcePathTemplate | --sourcePathTemplate | `[relative-path]` (default)<br/>`[absolute-path]`<br/>`string`| Source paths are relative to the file location <br/>Source paths are absolute<br/>Customize the relative path and can contain `[relative-path]` or `[absolute-path]`<br/>for instance ```webpack://[relative-path]``` |
 
 #### misc
-| API | Command line | Description |
-| ----------- | ----------- |----------- |
-| --- | -h, --help | Show help message |
-| --- | -v, --version | Show version |
+| Command line | Description |
+| ----------- |----------- |
+| -h, --help | Show help message |
+| -v, --version | Show version |
 
-
-### Exorcist-like [experimental]
-Can replace exorcist 
-```
-  stream.pipe(exorcist(mapFile, undefined, undefined, path.dirname(inputFile)))
-```
-by such code
-```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceRoot: '' }))]
-```
-
-But now, you can at the same time, flatten the map doing
-```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'realistic'' }))]
-```
 
 ### As a node module
 
@@ -125,7 +117,6 @@ sourcery_map.load( 'some/generated/code.min.js', {
   /* ... */
 });
 ```
-
 Any files not found will be read from the filesystem as normal.
 
 #### Command line usage
@@ -158,6 +149,20 @@ sourcery-map -d -i some/generated/code.min.js
 sourcery-map -i some/generated/code.min.js -o newfile.js
 ```
 
+### Exorcist-like [experimental]
+Can replace exorcist 
+```
+  stream.pipe(exorcist(mapFile, undefined, undefined, path.dirname(inputFile)))
+```
+by such code
+```
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceRootResolution: '' }))]
+```
+
+you can flatten the map at the same time
+```
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'realistic', sourceRootResolution: '' }))]
+```
 
 ## License
 

@@ -7,9 +7,9 @@ interface LoadOptions {
 
 interface SaveOptions {
     output: string;
-    inline: boolean;        // deprecated: sourceMappingStorage === 'inline'
-    absolutePath: boolean;  // deprecated: sourceMappingStorage === '[absolute-path]'
-    sourceMappingStorage: 'inline' | '[absolute-path]' | '[base-path]' | '[relative-path]';
+    inline: boolean;        // deprecated: sourceMappingURL === 'inline'
+    absolutePath: boolean;  // deprecated: sourceMappingURL === '[absolute-path]'
+    sourceMappingURL: 'inline' | '[absolute-path]' | '[base-path]' | '[relative-path]';
     sourcePathTemplate: '[absolute-path]' | '[relative-path]' | string;
     sourceRoot: string;
     excludeContent: boolean;

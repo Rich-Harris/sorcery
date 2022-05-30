@@ -17,7 +17,7 @@ export function transform ( transform_options ) {
 			const chain = new Chain( node, nodeCacheByFile, transform_options );
 			const { resolved, content, map, options } = chain.getContentAndMap( transform_options.output, transform_options );
 			this.queue( content );
-			if ( options.sourceMappingStorage !== 'inline' ) {
+			if ( options.sourceMappingURL !== 'inline' ) {
 				writeFileSync( resolved + '.map', map.toString() );
 			}
 		}

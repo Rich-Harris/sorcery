@@ -147,7 +147,7 @@ Chain.prototype = {
 				.then( () => {
 					let promises = [ writeFile( resolved, content ) ];
 
-					if ( options.sourceMappingStorage !== 'inline' ) {
+					if ( options.sourceMappingURL !== 'inline' ) {
 						promises.push( writeFile( resolved + '.map', map.toString() ) );
 					}
 
@@ -172,7 +172,7 @@ Chain.prototype = {
 
 			ensureDirSync( dirname( resolved ) );
 			writeFileSync( resolved, content );
-			if ( options.sourceMappingStorage !== 'inline' ) {
+			if ( options.sourceMappingURL !== 'inline' ) {
 				writeFileSync( resolved + '.map', map.toString() );
 			}
 		});
@@ -199,7 +199,7 @@ Chain.prototype = {
 	
 		const map = this.apply( options );
 	
-		const url = ( options.sourceMappingStorage === 'inline' ) ? map.toUrl() : (( options.sourceMappingStorage === '[absolute-path]' ) ? resolved : basename( resolved )) + '.map';
+		const url = ( options.sourceMappingURL === 'inline' ) ? map.toUrl() : (( options.sourceMappingURL === '[absolute-path]' ) ? resolved : basename( resolved )) + '.map';
 	
 		// TODO shouldn't url be relative?
 		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );

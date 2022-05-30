@@ -13,6 +13,7 @@ try {
     contentPACKAGEJSON.bin['sorcery-map'] = contentPACKAGEJSON.bin['sourcery-map'];
     delete contentPACKAGEJSON.bin['sourcery-map'];
     fse.writeJSONSync('package.json', contentPACKAGEJSON);
+
     child_process.execSync('npm run deploy');
 }
 catch (err) {
