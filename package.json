@@ -1,7 +1,7 @@
 {
   "name": "sourcery-map",
   "description": "Find your way through the chain of sourcemaps to the original source, like magic sourcery",
-  "version": "2.1.0-alpha.1",
+  "version": "2.1.0",
   "author": "Emmanuel Kimmerlin",
   "repository": "https://github.com/emmkimme/sourcery-map",
   "license": "MIT",

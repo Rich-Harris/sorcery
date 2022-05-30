@@ -9,34 +9,54 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) but 
 * [Ignore missing / unavailable files](https://github.com/Rich-Harris/sorcery/pull/165)
 * [Single character segment compatibility (needed for traceur)](https://github.com/Rich-Harris/sorcery/pull/14)
 
-**New feature**  
-*existingContentOnly* default true  
-Apply the transformation chain while the sources content are available. We want to end with a map which refers existing local sources only.
+## Next steps
+* expose a Webpack plugin (like source-map-loader)  
+* add d.ts or migrate to TypeScript
 
-Exorcist-like [experimental]
+## Usage
+
+### Options
+
+#### parsing map
+| API | Command line | Value | Description |
+| ----------- | ----------- | ----------- | ----------- |
+| --- | -i, --input | `file`<br/>`folder` | Input file<br/>Input folder |
+| content | --- | a map of `filename: contents` pairs. | `filename` will be resolved against the current working directory if needs be |
+| sourcemaps | --- | a map of `filename: sourcemap` pairs | where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself |
+| sourceRootResolution | --- | <folder> | base path of the relative sources path in the map |
+
+#### generating map
+| API | Command line | Value | Description |
+| ----------- | ----------- | ----------- | ----------- |
+| output | -o, --output | `file`<br/>`folder` | Output file (if absent, will overwrite input) |
+| --- | -d, --datauri | | *deprecated* use `sourceMappingStorage` 'inline' |
+| excludeContent | -x, --excludeContent | | Don't populate the sourcesContent array |
+| flatten | -f, --flatten | `full` (default) <br/>`existing` | flatten source map until the original source<br/>flatten source map while the source file exists |
+| sourceMappingStorage | --sourceMappingStorage | `inline`<br/>`[absolute-path]`<br/>`[base-path]`<br/>`[relative-path]`| Append map as a data URI rather than separate file<br/>TBD<br/>TBD<br/>TBD |
+
+
+
+#### misc
+| API | Command line | Description |
+| ----------- | ----------- |----------- |
+| --- | -h, --help | Show help message |
+| --- | -v, --version | Show version |
+
+
+### Exorcist-like [experimental]
 Can replace exorcist 
 ```
   stream.pipe(exorcist(mapFile, undefined, undefined, path.dirname(inputFile)))
 ```
 by such code
 ```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceMappingStorage='[relative-path]', sourceRoot: '' }))]
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceRoot: '' }))]
 ```
 
 But now, you can at the same time, flatten the map doing
 ```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'existing', sourceMappingStorage='[relative-path]' }))]
+  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'realistic'' }))]
 ```
-
-
-**Build**  
-Fix build which was not working on Windows.  
-
-## Next steps
-* expose a Webpack plugin (like source-map-loader)  
-* add d.ts or migrate to TypeScript
-
-## Usage
 
 ### As a node module
 
@@ -89,15 +109,6 @@ var loc = chain.trace( x, y );
 chain.writeSync();
 ```
 
-#### Advanced options
-
-You can pass an optional second argument to `sourcery_map.load()` and `sourcery_map.loadSync()`, with zero or more of the following properties:
-
-* `content` - a map of `filename: contents` pairs. `filename` will be resolved against the current working directory if needs be
-* `sourcemaps` - a map of `filename: sourcemap` pairs, where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself.
-
-For example:
-
 ```js
 sourcery_map.load( 'some/generated/code.min.js', {
   content: {
@@ -117,7 +128,7 @@ sourcery_map.load( 'some/generated/code.min.js', {
 
 Any files not found will be read from the filesystem as normal.
 
-### On the command line
+#### Command line usage
 
 First, install sourcery-map globally:
 
@@ -128,17 +139,6 @@ npm install -g sourcery-map
 ```
   Usage:
     sourcery-map [options]
-
-  Options:
-    -h, --help                      Show help message
-    -v, --version                   Show version
-    -i, --input <file|folder>       Input file
-    -o, --output <file|folder>      Output file (if absent, will overwrite input)
-    -d, --datauri                   Append map as a data URI, rather than separate file
-    -x, --excludeContent            Don't populate the sourcesContent array
-    -f, --flatten <true|false>
-                                    true: stop to the last existing file of the chain (default).
-                                    false: reach the original source even if not present
 ```
 
 Examples:

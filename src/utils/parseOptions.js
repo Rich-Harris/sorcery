@@ -2,8 +2,7 @@ export function parseLoadOptions ( raw_options ) {
 	const options = Object.assign({}, raw_options );
 
 	if ( options.flatten == null ) {
-		const existingContentOnly = ( options.existingContentOnly === false );
-		options.flatten = existingContentOnly ? 'existing' : 'full';
+		options.flatten = 'full';
 	}
 	return options;
 }
