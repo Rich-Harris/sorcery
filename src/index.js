@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
 import { through } from 'through';
 import { writeFileSync } from 'fs-extra';
 
@@ -46,10 +46,19 @@ export function loadSync ( file, load_options = {}) {
 function init ( file, content, original_options = {}) {
 	const options = parseLoadOptions( original_options );
 
+	options.sourceRoots = [];
+	
 	file = file || options.input;
 	if ( file ) {
 		file = resolve( file );
+		options.sourceRoots.push(dirname(file));
 	}
+
+	if (options.sourceRootResolution) {
+		options.sourceRoots.resolve(options.sourceRootResolution);
+	}
+
+	options.sourceRoots.push(resolve());
 
 	let nodeCacheByFile = {};
 	const node = new Node({ file, content });

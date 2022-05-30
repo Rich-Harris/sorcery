@@ -2,6 +2,7 @@ import { resolve, dirname } from 'path';
 import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 import getContent from './utils/getContent.js';
+import { existsSync } from 'fs';
 
 export default function Node ({ file, content }) {
 	this.file = file ? resolve( manageFileProtocol( file ) ) : null;
@@ -148,17 +149,25 @@ function resolveMap ( node, nodeCacheByFile, options ) {
 
 	const sourcesContent = map.sourcesContent || [];
 
-	var sourceRoot = node.file ? dirname( node.file ) : '';
-	// Priority to the 'sourceRoot' of the map
-	if ( map.sourceRoot != null ) {
-		sourceRoot = resolve( sourceRoot, manageFileProtocol( map.sourceRoot ) );
-	}
-	else if ( options.sourceRootResolution != null ) {
-		sourceRoot = resolve( options.sourceRootResolution );
-	}
+	const mapSourceRoot = map.sourceRoot ? manageFileProtocol( map.sourceRoot ) : '';
+	var sourceRoots = options.sourceRoots.map((sourceRoot) => resolve(sourceRoot, mapSourceRoot));
+    if ( node.file ) {
+        sourceRoots.unshift(resolve(dirname( node.file ), mapSourceRoot));
+    }
 
 	node.sources = map.sources.map( ( source, i ) => {
-		const file = source ? resolve( sourceRoot, manageFileProtocol( source ) ) : null;
+		let file = source;
+		if (file) {
+			const fileResolved = sourceRoots
+			.map((sourceRoot) => {
+				return source ? resolve(sourceRoot, source) : null;
+			});
+			const fileFound = fileResolved
+			.filter((source) => {
+				return source ? existsSync(source) : false;
+			});
+			file = fileFound[0] || fileResolved[0];
+		}
 		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
 		if ( file ) {
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });

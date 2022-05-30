@@ -1,14 +1,11 @@
 interface LoadOptions {
     input: string;
-    content: string[];
-    sourcemap: string[];
-}
-
-interface ReadOptions {
+    content: { [file: string]: string };
+    sourcemaps: { [file: string]: string };
     sourceRootResolution: string; // base path of the sources relative path of the map
 }
 
-interface WriteOptions {
+interface SaveOptions {
     output: string;
     inline: boolean;        // deprecated
     absolutePath: boolean;
@@ -20,5 +17,5 @@ interface WriteOptions {
     flatten: 'full' | 'existing' | false
 }
 
-interface ChainOptions extends ReadOptions, WriteOptions {
+interface ChainOptions extends LoadOptions, SaveOptions {
 }
