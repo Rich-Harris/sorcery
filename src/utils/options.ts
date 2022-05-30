@@ -7,8 +7,8 @@ interface LoadOptions {
 
 interface SaveOptions {
     output: string;
-    inline: boolean;        // deprecated
-    absolutePath: boolean;
+    inline: boolean;        // deprecated: sourceMappingStorage === 'inline'
+    absolutePath: boolean;  // deprecated: sourceMappingStorage === '[absolute-path]'
     sourceMappingStorage: 'inline' | '[absolute-path]' | '[base-path]' | '[relative-path]';
     sourcePathTemplate: '[absolute-path]' | '[relative-path]' | string;
     sourceRoot: string;

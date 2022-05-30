@@ -14,8 +14,8 @@ export function parseChainOptions ( raw_options ) {
 	options.sourcePathTemplate = options.sourcePathTemplate || '[relative-path]';
 
 	if ( options.sourceMappingStorage == null ) {
-		const inline = ( options.inline === false );
-		const absolutePath = ( options.absolutePath === false );
+		const inline = ( options.inline === true );
+		const absolutePath = ( options.absolutePath === true );
 		options.sourceMappingStorage = inline ? 'inline' : absolutePath ? '[absolute-path]' : '[relative-path]';
 	}
 

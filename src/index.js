@@ -17,7 +17,7 @@ export function transform ( transform_options ) {
 			const chain = new Chain( node, nodeCacheByFile, transform_options );
 			const { resolved, content, map, options } = chain.getContentAndMap( transform_options.output, transform_options );
 			this.queue( content );
-			if ( !options.inline ) {
+			if ( options.sourceMappingStorage !== 'inline' ) {
 				writeFileSync( resolved + '.map', map.toString() );
 			}
 		}
@@ -46,19 +46,21 @@ export function loadSync ( file, load_options = {}) {
 function init ( file, content, original_options = {}) {
 	const options = parseLoadOptions( original_options );
 
-	options.sourceRoots = [];
-	
+	// Set keep insertion order
+	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/@@iterator
+	const sourceRoots = new Set();
+
 	file = file || options.input;
 	if ( file ) {
 		file = resolve( file );
-		options.sourceRoots.push(dirname(file));
+		sourceRoots.add(dirname(file));
 	}
-
 	if (options.sourceRootResolution) {
-		options.sourceRoots.resolve(options.sourceRootResolution);
+		sourceRoots.add(resolve(options.sourceRootResolution));
 	}
+	sourceRoots.add(resolve());
 
-	options.sourceRoots.push(resolve());
+	options.sourceRoots = Array.from(sourceRoots);
 
 	let nodeCacheByFile = {};
 	const node = new Node({ file, content });
