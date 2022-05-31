@@ -1,9 +1,8 @@
 import { resolve, dirname } from 'path';
 import { through } from 'through';
-import { writeFileSync } from 'fs-extra';
 
 import Node from './Node.js';
-import Chain from './Chain.js';
+import Chain, { writeStream } from './Chain.js';
 import { parseLoadOptions } from './utils/parseOptions.js';
 
 export function transform ( transform_options ) {
@@ -14,12 +13,8 @@ export function transform ( transform_options ) {
 		const { node, nodeCacheByFile, options } = init( transform_options.output, source, transform_options );
 		node.loadSync( nodeCacheByFile, options );
 		if ( !node.isOriginalSource ) {
-			const chain = new Chain( node, nodeCacheByFile, transform_options );
-			const { resolved, content, map, options } = chain.getContentAndMap( transform_options.output, transform_options );
+			const content = writeStream( node, nodeCacheByFile, transform_options );
 			this.queue( content );
-			if ( options.sourceMappingURL !== 'inline' ) {
-				writeFileSync( resolved + '.map', map.toString() );
-			}
 		}
 		else {
 			this.queue( source );
@@ -53,14 +48,14 @@ function init ( file, content, original_options = {}) {
 	file = file || options.input;
 	if ( file ) {
 		file = resolve( file );
-		sourceRoots.add(dirname(file));
+		sourceRoots.add( dirname( file ) );
 	}
-	if (options.sourceRootResolution) {
-		sourceRoots.add(resolve(options.sourceRootResolution));
+	if ( options.sourceRootResolution ) {
+		sourceRoots.add( resolve( options.sourceRootResolution ) );
 	}
-	sourceRoots.add(resolve());
+	sourceRoots.add( resolve() );
 
-	options.sourceRoots = Array.from(sourceRoots);
+	options.sourceRoots = Array.from( sourceRoots );
 
 	let nodeCacheByFile = {};
 	const node = new Node({ file, content });

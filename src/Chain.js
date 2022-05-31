@@ -33,6 +33,10 @@ Chain.prototype = {
 	},
 
 	apply ( apply_options = {}) {
+		if ( this.node.isOriginalSource ) {
+			return null;
+		}
+
 		const options = Object.assign({}, this.options, parseChainOptions( apply_options ) );
 
 		let allNames = [];
@@ -131,51 +135,30 @@ Chain.prototype = {
 	},
 
 	write ( dest, write_options ) {
-		let chains;
-		if (write_options && write_options.recursive) {
-			chains = Object.values(nodeCacheByFile).map((node) => {
-				return new Chain(node, this.nodeCacheByFile, this.options);
+		return writeChain( this, dest, write_options )
+			.then( () => {
+				if ( write_options && write_options.recursive ) {
+					return Promise.all( Object.values( this.nodeCacheByFile )
+						.filter( ( node ) => node !== this.node )
+						.map( ( node ) => {
+							const chain = new Chain( node, this.nodeCacheByFile, write_options );
+							return writeChain( chain, write_options );
+						})
+					);
+				}
 			});
-		}
-		else {
-			chains = [this];
-		}
-
-		return Promise.all(chains.map((chain) => {
-			const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
-			return ensureDir( dirname( resolved ) )
-				.then( () => {
-					let promises = [ writeFile( resolved, content ) ];
-
-					if ( options.sourceMappingURL !== 'inline' ) {
-						promises.push( writeFile( resolved + '.map', map.toString() ) );
-					}
-
-					return Promise.all( promises );
-				});
-		}));
 	},
 
 	writeSync ( dest, write_options ) {
-		let chains;
-		if (write_options && write_options.recursive) {
-			chains = Object.values(nodeCacheByFile).map((node) => {
-				return new Chain(node, this.nodeCacheByFile, this.options);
-			});
+		writeSyncChain( this, dest, write_options );
+		if ( write_options && write_options.recursive ) {
+			Object.values( this.nodeCacheByFile )
+				.filter( ( node ) => node !== this.node )
+				.map( ( node ) => {
+					const chain = new Chain( node, this.nodeCacheByFile, write_options );
+					writeSyncChain( chain, write_options );
+				});
 		}
-		else {
-			chains = [this];
-		}
-
-		chains.forEach((chain) => {
-			const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
-
-			ensureDirSync( dirname( resolved ) );
-			writeFileSync( resolved, content );
-			if ( options.sourceMappingURL !== 'inline' ) {
-				writeFileSync( resolved + '.map', map.toString() );
-			}
-		});
 	},
 
 	getContentAndMap ( dest, write_options ) {
@@ -199,12 +182,17 @@ Chain.prototype = {
 	
 		const map = this.apply( options );
 	
-		const url = ( options.sourceMappingURL === 'inline' ) ? map.toUrl() : (( options.sourceMappingURL === '[absolute-path]' ) ? resolved : basename( resolved )) + '.map';
-	
-		// TODO shouldn't url be relative?
-		const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
-	
-		return { resolved, content, map, options };
+		if ( map ) {
+			const url = ( options.sourceMappingURL === 'inline' ) ? map.toUrl() : ( ( options.sourceMappingURL === '[absolute-path]' ) ? resolved : basename( resolved ) ) + '.map';
+		
+			// TODO shouldn't url be relative?
+			const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
+		
+			return { resolved, content, map, options };
+		}
+		else {
+			return { resolved, content: this.node.content, options };
+		}
 	}
 };
 
@@ -228,11 +216,58 @@ function sourcemapComment ( url, dest ) {
 function getSourcePath ( node, source, options ) {
 	const replacer = {
 		'[absolute-path]': source,
-		'[relative-path]': relative( options.base || (node.file ? dirname(node.file) : ''), source )
+		'[relative-path]': relative( options.base || ( node.file ? dirname( node.file ) : '' ), source )
 	};
 	let sourcePath = options.sourcePathTemplate;
 	Object.keys( replacer ).forEach( ( key ) => {
 		sourcePath = sourcePath.replace( key, replacer[key]);
 	});
 	return slash( sourcePath );
+}
+
+function writeChain ( chain, dest, write_options ) {
+	const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
+	return ensureDir( dirname( resolved ) )
+		.then( () => {
+			let promises = [];
+			if ( content ) {
+				promises.push( writeFile( resolved, content ) );
+			}
+			if ( map && options.sourceMappingURL !== 'inline' ) {
+				promises.push( writeFile( resolved + '.map', map.toString() ) );
+			}
+
+			return Promise.all( promises );
+		});
+}
+
+function writeSyncChain ( chain, dest, write_options ) {
+	const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
+	ensureDirSync( dirname( resolved ) );
+	if ( content ) {
+		writeFileSync( resolved, content );
+	}
+	if ( map && options.sourceMappingURL !== 'inline' ) {
+		writeFileSync( resolved + '.map', map.toString() );
+	}
+}
+
+export function writeStream ( stream_node, nodeCacheByFile, transform_options ) {
+	const chain = new Chain( stream_node, nodeCacheByFile, transform_options );
+	const { resolved, content, map, options } = chain.getContentAndMap( transform_options.output, transform_options );
+	if ( map && options.sourceMappingURL !== 'inline' ) {
+		ensureDirSync( dirname( resolved ) );
+		writeFileSync( resolved + '.map', map.toString() );
+	}
+
+	if ( options && options.recursive ) {
+		Object.values( nodeCacheByFile )
+			.filter( ( othernode ) => othernode !== stream_node )
+			.forEach( ( node ) => {
+				const chain = new Chain( node, nodeCacheByFile, transform_options );
+				writeSyncChain( chain, transform_options );
+			});
+	}
+
+	return content;
 }
