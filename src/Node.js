@@ -155,19 +155,19 @@ function resolveMap ( node, nodeCacheByFile, options ) {
 	const sourcesContent = map.sourcesContent || [];
 
 	const mapSourceRoot = map.sourceRoot ? manageFileProtocol( map.sourceRoot ) : '';
-	var sourceRoots = options.sourceRoots.map((sourceRoot) => resolve(sourceRoot, mapSourceRoot));
-    if ( node.file ) {
-        sourceRoots.unshift(resolve(dirname( node.file ), mapSourceRoot));
-    }
+	var sourceRoots = options.sourceRoots.map( ( sourceRoot ) => resolve( sourceRoot, mapSourceRoot ) );
+	if ( node.file ) {
+		sourceRoots.unshift( resolve( dirname( node.file ), mapSourceRoot ) );
+	}
 
 	node.sources = map.sources.map( ( source, i ) => {
 		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
-		if (source) {
+		if ( source ) {
 			const fileResolved = sourceRoots
-			.map((sourceRoot) => {
-				return resolve(sourceRoot, source);
-			});
-			const file = fileResolved.find(existsSync) || fileResolved[0];
+				.map( ( sourceRoot ) => {
+					return resolve( sourceRoot, source );
+				});
+			const file = fileResolved.find( existsSync ) || fileResolved[0];
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
 			// Current content has the priority
 			if ( node.content === undefined ) {
