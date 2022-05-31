@@ -35,9 +35,10 @@ Chain.prototype = {
 	apply ( apply_options ) {
 		const options = parseOptions(this.options, apply_options);
 
-		if ( this.node.isOriginalSource(apply_options) ) {
+		if ( this.node.isOriginalSource(options) ) {
 			return null;
 		}
+
 		let allNames = [];
 		let allSources = [];
 
@@ -48,7 +49,7 @@ Chain.prototype = {
 				segment[2], // source code line
 				segment[3], // source code column
 				this.node.map.names[ segment[4] ],
-				apply_options
+				options
 			);
 
 			if ( !traced ) {
@@ -115,7 +116,7 @@ Chain.prototype = {
 		let encodingTime = process.hrtime( encodingStart );
 		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 
-		return new SourceMap({
+		const map = new SourceMap({
 			file: basename( this.node.file ),
 			sources: allSources.map( sourceNode => getSourcePath( this.node, sourceNode.file, options ) ),
 			sourcesContent: allSources.map( ( sourceNode ) => {
@@ -128,6 +129,10 @@ Chain.prototype = {
 			mappings,
 			sourceRoot: options.sourceRoot
 		});
+		if (options.sourceRoot) {
+            map.sourceRoot = options.sourceRoot;
+        }
+        return map;
 	},
 
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {

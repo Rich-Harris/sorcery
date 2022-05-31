@@ -23,13 +23,10 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 * expose a Webpack plugin (like source-map-loader)  
 * add d.ts or migrate to TypeScript
 
-## Usage
 
-### Options
+## Options
 
-you can pass all options during the parsing or the generation of the map, but they will be applied only when needed.
-
-#### Parsing map (load/loadSync)
+### Parsing map (load, loadSync)
 | API | Command line | Value | Description |
 | ----------- | ----------- | ----------- | ----------- |
 | --- | -i, --input | `<file>`<br/>`<folder>` | Input file<br/>Input folder |
@@ -37,7 +34,7 @@ you can pass all options during the parsing or the generation of the map, but th
 | sourcemaps | --- | a map of `filename: sourcemap` pairs | where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself |
 | sourceRootResolution | --- | <folder> | base path of the relative sources path in the map |
 
-#### Generating map (apply, write, writeSync)
+### Generating map (apply, write, writeSync)
 | API | Command line | Value | Description |
 | ----------- | ----------- | ----------- | ----------- |
 | output | -o, --output | `<file>` | Output file (if absent, will overwrite input) |
@@ -45,22 +42,16 @@ you can pass all options during the parsing or the generation of the map, but th
 | excludeContent | -x, --excludeContent | | Don't populate the sourcesContent array |
 | sourceMappingURL | --sourceMappingURL | `[relative-path]` (default)<br/>`inline`<br/>`[absolute-path]`<br/>`[base-path]`| TBD</br>Append map as a data URI rather than separate file<br/>TBD<br/>[not supported yet]|
 | sourcePathTemplate | --sourcePathTemplate | `[relative-path]` (default)<br/>`[absolute-path]`<br/>`<string>`| Source paths are relative to the file location <br/>Source paths are absolute<br/>Customize the relative path, can contain `[relative-path]` or `[absolute-path]`<br/>for instance ```webpack://[relative-path]``` |
+| flatten | -f, --flatten | `full` (default)<br/>`existing`<br/>`<false>` | flatten source map until the original file is reached<br/>flatten source map until the file (content) exists<br/>do not flatten the map |
 
-#### Parsing / Generating map
-| API | Command line | Value | Description |
-| ----------- | ----------- | ----------- | ----------- |
-| (*) flatten | -f, --flatten | `full` (default)<br/>`existing`<br/>`<false>` | flatten source map until the original file is reached<br/>flatten source map until the file (content) exists<br/>do not flatten the map |
-
-(*) if flatten is applied during the parsing of maps (load/loadSync), it may limit the hability to have a more advanced flatten during the generation (apply/write). Basically, if you pass flatten: `false` during the parsing, you will not be able to generate `full` or `existing` maps further.
-
-#### misc
+### misc
 | Command line | Description |
 | ----------- |----------- |
 | -h, --help | Show help message |
 | -v, --version | Show version |
 
 
-### As a node module
+## Usage as a node module
 
 Install sourcery-map locally:
 
@@ -132,7 +123,7 @@ sourcery_map.load( 'some/generated/code.min.js', {
 ```
 Any files not found will be read from the filesystem as normal.
 
-#### Command line usage
+### Command line usage
 
 First, install sourcery-map globally:
 

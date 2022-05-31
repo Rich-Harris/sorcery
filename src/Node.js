@@ -45,13 +45,13 @@ Node.prototype = {
 				}
 				resolveMap( this, nodeCacheByFile, options );
 
-				if ( options.flatten ) {
+				// if ( options.flatten ) {
 					const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
 					return Promise.all( promises );
-				}
-				else {
-					return Promise.resolve();
-				}
+				// }
+				// else {
+				// 	return Promise.resolve();
+				// }
 			});
 		})
 	},
@@ -62,9 +62,9 @@ Node.prototype = {
 			this.map = getMap( this, true );
 			if ( this.map != null ) {
 				resolveMap( this, nodeCacheByFile, options );
-				if ( options.flatten ) {
+				// if ( options.flatten ) {
 					this.sources.forEach( node => node.loadSync( nodeCacheByFile, options ) );
-				}
+				// }
 			}
 		}
 	},
@@ -124,7 +124,7 @@ Node.prototype = {
 					let nameIndex = segments[i][4] || 0;
 
 					let parent = this.sources[sourceFileIndex];
-					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[nameIndex] || name );
+					return parent.trace( sourceCodeLine, sourceCodeColumn, this.map.names[nameIndex] || name, options );
 				}
 			}
 		}
@@ -135,7 +135,7 @@ Node.prototype = {
 		let nameIndex = segments[0][4] || 0;
 
 		let parent = this.sources[sourceFileIndex];
-		return parent.trace( sourceCodeLine, null, this.map.names[nameIndex] || name );
+		return parent.trace( sourceCodeLine, null, this.map.names[nameIndex] || name, options );
 	}
 };
 
