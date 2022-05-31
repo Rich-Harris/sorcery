@@ -27,7 +27,9 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 
 ### Options
 
-#### parsing map
+you can pass all options during the parsing or the generation of the map, but they will be applied only when needed.
+
+#### Parsing map (load/loadSync)
 | API | Command line | Value | Description |
 | ----------- | ----------- | ----------- | ----------- |
 | --- | -i, --input | `<file>`<br/>`<folder>` | Input file<br/>Input folder |
@@ -35,15 +37,21 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 | sourcemaps | --- | a map of `filename: sourcemap` pairs | where `filename` is the name of the file the sourcemap is related to. This will override any `sourceMappingURL` comments in the file itself |
 | sourceRootResolution | --- | <folder> | base path of the relative sources path in the map |
 
-#### generating map
+#### Generating map (apply, write, writeSync)
 | API | Command line | Value | Description |
 | ----------- | ----------- | ----------- | ----------- |
 | output | -o, --output | `<file>` | Output file (if absent, will overwrite input) |
 | inline | -d, --datauri | | *deprecated* equivalent to `sourceMappingURL` 'inline' |
 | excludeContent | -x, --excludeContent | | Don't populate the sourcesContent array |
-| flatten | -f, --flatten | `full` (default) <br/>`existing` | flatten source map until the original file is reached<br/>flatten source map until the file (content) exists |
 | sourceMappingURL | --sourceMappingURL | `[relative-path]` (default)<br/>`inline`<br/>`[absolute-path]`<br/>`[base-path]`| TBD</br>Append map as a data URI rather than separate file<br/>TBD<br/>[not supported yet]|
 | sourcePathTemplate | --sourcePathTemplate | `[relative-path]` (default)<br/>`[absolute-path]`<br/>`string`| Source paths are relative to the file location <br/>Source paths are absolute<br/>Customize the relative path, can contain `[relative-path]` or `[absolute-path]`<br/>for instance ```webpack://[relative-path]``` |
+
+#### Parsing / Generating map
+| API | Command line | Value | Description |
+| ----------- | ----------- | ----------- | ----------- |
+| (*) flatten | -f, --flatten | `full` (default) <br/>`existing` | flatten source map until the original file is reached<br/>flatten source map until the file (content) exists |
+
+(*) if flatten is applied during the parsing of maps (load/loadSync), it may limit the hability to have a more advanced flatten during the generation (apply/write). Basically, if you pass flatten: `false` during the parsing, you will not be able to generate `full` or `existing` maps further.
 
 #### misc
 | Command line | Description |
