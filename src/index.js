@@ -3,7 +3,7 @@ import { through } from 'through';
 
 import Node from './Node.js';
 import Chain, { writeStream } from './Chain.js';
-import { parseLoadOptions } from './utils/parseOptions.js';
+import { parseOptions } from './utils/parseOptions.js';
 
 export function transform ( transform_options ) {
 	var source = '';
@@ -12,7 +12,7 @@ export function transform ( transform_options ) {
 	function end () { 
 		const { node, nodeCacheByFile, options } = init( transform_options.output, source, transform_options );
 		node.loadSync( nodeCacheByFile, options );
-		if ( !node.isOriginalSource ) {
+		if ( !node.isOriginalSource(options) ) {
 			const content = writeStream( node, nodeCacheByFile, transform_options );
 			this.queue( content );
 		}
@@ -28,18 +28,18 @@ export function load ( file, load_options ) {
 	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	return node.load( nodeCacheByFile, options )
-		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) );
+		.then( () => node.isOriginalSource(options) ? null : new Chain( node, nodeCacheByFile, load_options ) );
 }
 
-export function loadSync ( file, load_options = {}) {
+export function loadSync ( file, load_options) {
 	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	node.loadSync( nodeCacheByFile, options );
-	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options );
+	return node.isOriginalSource(options) ? null : new Chain( node, nodeCacheByFile, load_options );
 }
 
-function init ( file, content, original_options = {}) {
-	const options = parseLoadOptions( original_options );
+function init ( file, content, load_options) {
+	const options = parseOptions( load_options );
 
 	// Set keep insertion order
 	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/@@iterator

@@ -4,7 +4,7 @@ import { encode } from 'sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
-import { parseChainOptions } from './utils/parseOptions.js';
+import { parseOptions } from './utils/parseOptions.js';
 
 const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\n]+)|` + // js
@@ -32,12 +32,12 @@ Chain.prototype = {
 		};
 	},
 
-	apply ( apply_options = {}) {
-		if ( this.node.isOriginalSource ) {
+	apply ( apply_options ) {
+		const options = parseOptions(this.options, apply_options);
+
+		if ( this.node.isOriginalSource(options) ) {
 			return null;
 		}
-
-		const options = Object.assign({}, this.options, parseChainOptions( apply_options ) );
 
 		let allNames = [];
 		let allSources = [];
@@ -48,7 +48,8 @@ Chain.prototype = {
 			const traced = this.node.sources[ segment[1] ].trace( // source
 				segment[2], // source code line
 				segment[3], // source code column
-				this.node.map.names[ segment[4] ]
+				this.node.map.names[ segment[4] ],
+				options
 			);
 
 			if ( !traced ) {
@@ -115,7 +116,7 @@ Chain.prototype = {
 		let encodingTime = process.hrtime( encodingStart );
 		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 
-		return new SourceMap({
+		const map = new SourceMap({
 			file: basename( this.node.file ),
 			sources: allSources.map( sourceNode => getSourcePath( this.node, sourceNode.file, options ) ),
 			sourcesContent: allSources.map( ( sourceNode ) => {
@@ -128,10 +129,15 @@ Chain.prototype = {
 			mappings,
 			sourceRoot: options.sourceRoot
 		});
+		if (options.sourceRoot) {
+            map.sourceRoot = options.sourceRoot;
+        }
+        return map;
 	},
 
-	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
-		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
+	trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {
+		const options = parseOptions( this.options, trace_options );
+		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, options );
 	},
 
 	write ( dest, write_options ) {
@@ -178,20 +184,18 @@ Chain.prototype = {
 		const resolved = resolve( write_options.output );
 		write_options.base = write_options.base ? resolve( write_options.base ) : dirname( resolved );
 	
-		const options = Object.assign({}, this.options, parseChainOptions( write_options ) );
+		const options = parseOptions( this.options, write_options );
 	
 		const map = this.apply( options );
 	
 		if ( map ) {
 			const url = ( options.sourceMappingURL === 'inline' ) ? map.toUrl() : ( ( options.sourceMappingURL === '[absolute-path]' ) ? resolved : basename( resolved ) ) + '.map';
-		
 			// TODO shouldn't url be relative?
-			const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
-		
+			const content = this.node.content && this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
 			return { resolved, content, map, options };
 		}
 		else {
-			const content = this.node.content.replace( SOURCEMAP_COMMENT, '' );
+			const content = this.node.content && this.node.content.replace( SOURCEMAP_COMMENT, '' );
 			return { resolved, content, options };
 		}
 	}
