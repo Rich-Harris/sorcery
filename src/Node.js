@@ -161,20 +161,13 @@ function resolveMap ( node, nodeCacheByFile, options ) {
     }
 
 	node.sources = map.sources.map( ( source, i ) => {
-		let file = source;
-		if (file) {
+		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
+		if (source) {
 			const fileResolved = sourceRoots
 			.map((sourceRoot) => {
-				return source ? resolve(sourceRoot, source) : null;
+				return resolve(sourceRoot, source);
 			});
-			const fileFound = fileResolved
-			.filter((source) => {
-				return source ? existsSync(source) : false;
-			});
-			file = fileFound[0] || fileResolved[0];
-		}
-		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
-		if ( file ) {
+			const file = fileResolved.find(existsSync) || fileResolved[0];
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
 			// Current content has the priority
 			if ( node.content === undefined ) {
