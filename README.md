@@ -156,16 +156,25 @@ sourcery-map -i some/generated/code.min.js -o newfile.js
 ### Exorcist-like [experimental]
 Can replace exorcist 
 ```
-  stream.pipe(exorcist(mapFile, undefined, undefined, path.dirname(inputFile)))
+  const basedir = process.cwd();
+  const browserify_options = { 
+        debug: true,
+        basedir,
+        ...options
+    };
+
+    browserify(inputFile, browserify_options)
+    .bundle()
+    .pipe(exorcist(mapFile, undefined, undefined, path.dirname(inputFile)))
 ```
 by such code
 ```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceRootResolution: '' }))]
+    .pipe(sourcery_map.transform({ output: bundleFile, flatten: false, sourceRootResolution: baseDir }))]
 ```
 
 you can flatten the map at the same time
 ```
-  stream.pipe(sourcery_map.transform({ output: bundleFile, flatten: 'realistic', sourceRootResolution: '', excludeContent: true }))]
+    .pipe(sourcery_map.transform({ output: bundleFile, flatten: 'existing', sourceRootResolution: baseDir }))]
 ```
 
 ## License
