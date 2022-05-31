@@ -191,7 +191,8 @@ Chain.prototype = {
 			return { resolved, content, map, options };
 		}
 		else {
-			return { resolved, content: this.node.content, options };
+			const content = this.node.content.replace( SOURCEMAP_COMMENT, '' );
+			return { resolved, content, options };
 		}
 	}
 };
