@@ -4,7 +4,7 @@ import { encode } from 'sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
-import { parseChainOptions } from './utils/parseOptions.js';
+import { parseOptions } from './utils/parseOptions.js';
 
 const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
 	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\n]+)|` + // js
@@ -32,13 +32,12 @@ Chain.prototype = {
 		};
 	},
 
-	apply ( apply_options = {}) {
-		if ( this.node.isOriginalSource ) {
+	apply ( apply_options ) {
+		const options = parseOptions(this.options, apply_options);
+
+		if ( this.node.isOriginalSource(apply_options) ) {
 			return null;
 		}
-
-		const options = Object.assign({}, this.options, parseChainOptions( apply_options ) );
-
 		let allNames = [];
 		let allSources = [];
 
@@ -48,7 +47,8 @@ Chain.prototype = {
 			const traced = this.node.sources[ segment[1] ].trace( // source
 				segment[2], // source code line
 				segment[3], // source code column
-				this.node.map.names[ segment[4] ]
+				this.node.map.names[ segment[4] ],
+				apply_options
 			);
 
 			if ( !traced ) {
@@ -131,7 +131,7 @@ Chain.prototype = {
 	},
 
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {
-		const options = Object.assign({}, this.options, parseChainOptions( trace_options ) );
+		const options = parseOptions( this.options, trace_options );
 		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, options );
 	},
 
@@ -179,7 +179,7 @@ Chain.prototype = {
 		const resolved = resolve( write_options.output );
 		write_options.base = write_options.base ? resolve( write_options.base ) : dirname( resolved );
 	
-		const options = Object.assign({}, this.options, parseChainOptions( write_options ) );
+		const options = parseOptions( this.options, write_options );
 	
 		const map = this.apply( options );
 	

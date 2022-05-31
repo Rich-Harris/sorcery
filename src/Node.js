@@ -28,7 +28,7 @@ export default function Node ({ file, content }) {
 
 Node.prototype = {
 	isOriginalSource ( options ) {
-		return ( node.sources == null || node.sources.length == 0 || node.map == null || ( options.flatten === 'existing' && node.sources.some( ( node ) => node.content == null ) ) );
+		return ( this.sources == null || this.sources.length == 0 || this.map == null || ( options && options.flatten === 'existing' && this.sources.some( ( node ) => node.content == null ) ) );
 	},
 	
 	load ( nodeCacheByFile, options ) {
@@ -154,19 +154,19 @@ function resolveMap ( node, nodeCacheByFile, options ) {
 	const sourcesContent = map.sourcesContent || [];
 
 	const mapSourceRoot = map.sourceRoot ? manageFileProtocol( map.sourceRoot ) : '';
-	var sourceRoots = options.sourceRoots.map( ( sourceRoot ) => resolve( sourceRoot, mapSourceRoot ) );
-	if ( node.file ) {
-		sourceRoots.unshift( resolve( dirname( node.file ), mapSourceRoot ) );
-	}
+	var sourceRoots = options.sourceRoots.map((sourceRoot) => resolve(sourceRoot, mapSourceRoot));
+    if ( node.file ) {
+        sourceRoots.unshift(resolve(dirname( node.file ), mapSourceRoot));
+    }
 
 	node.sources = map.sources.map( ( source, i ) => {
 		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
-		if ( source ) {
+		if (source) {
 			const fileResolved = sourceRoots
-				.map( ( sourceRoot ) => {
-					return resolve( sourceRoot, source );
-				});
-			const file = fileResolved.find( existsSync ) || fileResolved[0];
+			.map((sourceRoot) => {
+				return resolve(sourceRoot, source);
+			});
+			const file = fileResolved.find(existsSync) || fileResolved[0];
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
 			// Current content has the priority
 			if ( node.content === undefined ) {
