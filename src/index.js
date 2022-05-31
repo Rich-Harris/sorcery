@@ -12,7 +12,7 @@ export function transform ( transform_options ) {
 	function end () { 
 		const { node, nodeCacheByFile, options } = init( transform_options.output, source, transform_options );
 		node.loadSync( nodeCacheByFile, options );
-		if ( !node.isOriginalSource ) {
+		if ( !node.isOriginalSource(options) ) {
 			const content = writeStream( node, nodeCacheByFile, transform_options );
 			this.queue( content );
 		}
@@ -28,14 +28,14 @@ export function load ( file, load_options ) {
 	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	return node.load( nodeCacheByFile, options )
-		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options ) );
+		.then( () => node.isOriginalSource(options) ? null : new Chain( node, nodeCacheByFile, options ) );
 }
 
 export function loadSync ( file, load_options = {}) {
 	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	node.loadSync( nodeCacheByFile, options );
-	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, options );
+	return node.isOriginalSource(options) ? null : new Chain( node, nodeCacheByFile, options );
 }
 
 function init ( file, content, original_options = {}) {

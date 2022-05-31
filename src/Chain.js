@@ -130,8 +130,9 @@ Chain.prototype = {
 		});
 	},
 
-	trace ( oneBasedLineIndex, zeroBasedColumnIndex ) {
-		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null );
+	trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {
+		const options = Object.assign({}, this.options, parseChainOptions( trace_options ) );
+		return this.node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, options );
 	},
 
 	write ( dest, write_options ) {

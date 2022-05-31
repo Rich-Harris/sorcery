@@ -16,7 +16,6 @@ export default function Node ({ file, content }) {
 	this.map = undefined;
 	this.mappings = null;
 	this.sources = null;
-	this.isOriginalSource = null;
 
 	this._stats = {
 		decodingTime: 0,
@@ -28,6 +27,10 @@ export default function Node ({ file, content }) {
 }
 
 Node.prototype = {
+	isOriginalSource ( options ) {
+		return ( node.sources == null || node.sources.length == 0 || node.map == null || ( options.flatten === 'existing' && node.sources.some( ( node ) => node.content == null ) ) );
+	},
+	
 	load ( nodeCacheByFile, options ) {
 		return getContent( this, false ).then( content => {
 			this.content = content;
@@ -51,9 +54,6 @@ Node.prototype = {
 				}
 			});
 		})
-			.then( () => {
-				checkOriginalSource( this, options );
-			});
 	},
 
 	loadSync ( nodeCacheByFile, options ) {
@@ -67,7 +67,6 @@ Node.prototype = {
 				}
 			}
 		}
-		checkOriginalSource( this, options );
 	},
 
 	/**
@@ -85,10 +84,10 @@ Node.prototype = {
 	     @property {string || null} name - the name corresponding
 	     to the segment being traced
 	 */
-	trace ( lineIndex, columnIndex, name ) {
+	trace ( lineIndex, columnIndex, name, options ) {
 		// If this node doesn't have a source map, we have
 		// to assume it is the original source
-		if ( this.isOriginalSource ) {
+		if ( this.isOriginalSource(options) ) {
 			return {
 				source: this.file,
 				line: lineIndex + 1,
@@ -180,15 +179,6 @@ function resolveMap ( node, nodeCacheByFile, options ) {
 			return node;
 		}
 	});
-}
-
-function checkOriginalSource ( node, options ) {
-	if ( node.sources == null || node.sources.length == 0 || node.map == null || ( options.flatten === 'existing' && node.sources.some( ( node ) => node.content == null ) ) ) {
-		node.isOriginalSource = true;
-		node.map = null;
-		node.mappings = null;
-		node.sources = null;
-	}
 }
 
 function manageFileProtocol ( file ) {
