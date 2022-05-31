@@ -185,14 +185,12 @@ Chain.prototype = {
 	
 		if ( map ) {
 			const url = ( options.sourceMappingURL === 'inline' ) ? map.toUrl() : ( ( options.sourceMappingURL === '[absolute-path]' ) ? resolved : basename( resolved ) ) + '.map';
-		
 			// TODO shouldn't url be relative?
-			const content = this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
-		
+			const content = this.node.content && this.node.content.replace( SOURCEMAP_COMMENT, '' ) + sourcemapComment( url, resolved );
 			return { resolved, content, map, options };
 		}
 		else {
-			const content = this.node.content.replace( SOURCEMAP_COMMENT, '' );
+			const content = this.node.content && this.node.content.replace( SOURCEMAP_COMMENT, '' );
 			return { resolved, content, options };
 		}
 	}
