@@ -50,11 +50,16 @@ export default function getMapFromUrl ( url, base, sync ) {
 
 	if ( sync ) {
 		try {
-			return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
-		} catch ( e ) {
+			const json = readFileSync( url, { encoding: 'utf-8' });
+			return parseJSON( json, url );
+		}
+		catch ( e ) {
 			return null;
 		}
-	} else {
-		return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) ).catch( () => null );
+	}
+	else {
+		return readFile( url, { encoding: 'utf-8' })
+			.then( json => parseJSON( json, url ) )
+			.catch( () => null );
 	}
 }

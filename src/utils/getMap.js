@@ -5,12 +5,12 @@ export default function getMap ( node, sync ) {
 	// 'undefined' never seen
 	// 'null' seen but empty
 	const map = node.map;
-	if ( map !== undefined ) {
-		return sync ? map : Promise.resolve( map );
+	if ( map === undefined ) {
+		const url = getSourceMappingUrl( node.content );
+		if ( !url ) {
+			return sync ? null : Promise.resolve( null );
+		}
+		return getMapFromUrl( url, node.file, sync );
 	}
-	const url = getSourceMappingUrl( node.content );
-	if ( !url ) {
-		return sync ? null : Promise.resolve( null );
-	}
-	return getMapFromUrl( url, node.file, sync );
+	return sync ? map : Promise.resolve( map );
 }
