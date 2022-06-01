@@ -28,11 +28,17 @@ export default function Node ({ file, content }) {
 
 Node.prototype = {
 	get isOriginalSource() {
-		return ( this.sources == null || this.sources.length == 0 || this.map == null );
+		return (this.map == null );
 	},
 	
 	isFinalSourceContent ( options ) {
-		return ( this.isOriginalSource || ( options && options.flatten === 'existing' && this.sources.some( ( node ) => node.content == null ) ) );
+		if (this.isOriginalSource) {
+			return true;
+		}
+		if ( options && options.flatten === 'existing') {
+			return (this.sources == null) || this.sources.some( ( node ) => node.content == null );
+		}
+		return false;
 	},
 	
 	load ( nodeCacheByFile, options ) {

@@ -15,12 +15,11 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 * Provide a source root resolution fallback when map has been generated from another path (browserify)
 * [exorcist](https://www.npmjs.com/package/exorcist) like [experimental]
 * sourceMappingURL can be inline content, absolute, relative...
-* recursive, rewrite all the chain of maps [experimental]
 
 **Beware**, all these features are experimental and not fully covered by tests, if you find an issue, do not hesitate to create a bug or contribute ;-)
 
 ## Next steps
-* expose a Webpack plugin (like source-map-loader)  
+* expose a Webpack plugin (equivalent to source-map-loader)  
 * add d.ts or migrate to TypeScript
 
 
