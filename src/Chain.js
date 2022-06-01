@@ -33,9 +33,9 @@ Chain.prototype = {
 	},
 
 	apply ( apply_options ) {
-		const options = parseOptions(this.options, apply_options);
+		const options = parseOptions( this.options, apply_options );
 
-		if ( this.node.isFinalSourceContent(options) ) {
+		if ( this.node.isFinalSourceContent( options ) ) {
 			return null;
 		}
 
@@ -128,9 +128,9 @@ Chain.prototype = {
 			mappings,
 			sourceRoot: options.sourceRoot
 		});
-		if (options.sourceRoot) {
-            map.sourceRoot = options.sourceRoot;
-        }
+		if ( options.sourceRoot ) {
+			map.sourceRoot = options.sourceRoot;
+		}
 		return map;
 	},
 

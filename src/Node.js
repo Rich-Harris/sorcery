@@ -27,16 +27,16 @@ export default function Node ({ file, content }) {
 }
 
 Node.prototype = {
-	get isOriginalSource() {
-		return (this.map == null );
+	get isOriginalSource () {
+		return ( this.map == null );
 	},
 	
 	isFinalSourceContent ( options ) {
-		if (this.isOriginalSource) {
+		if ( this.isOriginalSource ) {
 			return true;
 		}
-		if ( options && options.flatten === 'existing') {
-			return (this.sources == null) || this.sources.some( ( node ) => node.content == null );
+		if ( options && options.flatten === 'existing' ) {
+			return ( this.sources == null ) || this.sources.some( ( node ) => node.content == null );
 		}
 		return false;
 	},
@@ -56,14 +56,14 @@ Node.prototype = {
 				resolveMap( this, nodeCacheByFile, options );
 
 				// if ( options.flatten ) {
-					const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
-					return Promise.all( promises );
+				const promises = this.sources.map( node => node.load( nodeCacheByFile, options ) );
+				return Promise.all( promises );
 				// }
 				// else {
 				// 	return Promise.resolve();
 				// }
 			});
-		})
+		});
 	},
 
 	loadSync ( nodeCacheByFile, options ) {
@@ -73,7 +73,7 @@ Node.prototype = {
 			if ( this.map != null ) {
 				resolveMap( this, nodeCacheByFile, options );
 				// if ( options.flatten ) {
-					this.sources.forEach( node => node.loadSync( nodeCacheByFile, options ) );
+				this.sources.forEach( node => node.loadSync( nodeCacheByFile, options ) );
 				// }
 			}
 		}
@@ -97,7 +97,7 @@ Node.prototype = {
 	trace ( lineIndex, columnIndex, name, options ) {
 		// If this node doesn't have a source map, we have
 		// to assume it is the original source
-		if ( this.isFinalSourceContent(options) ) {
+		if ( this.isFinalSourceContent( options ) ) {
 			return {
 				source: this.file,
 				line: lineIndex + 1,
@@ -164,19 +164,19 @@ function resolveMap ( node, nodeCacheByFile, options ) {
 	const sourcesContent = map.sourcesContent || [];
 
 	const mapSourceRoot = map.sourceRoot ? manageFileProtocol( map.sourceRoot ) : '';
-	var sourceRoots = options.sourceRoots.map((sourceRoot) => resolve(sourceRoot, mapSourceRoot));
-    if ( node.file ) {
-        sourceRoots.unshift(resolve(dirname( node.file ), mapSourceRoot));
-    }
+	var sourceRoots = options.sourceRoots.map( ( sourceRoot ) => resolve( sourceRoot, mapSourceRoot ) );
+	if ( node.file ) {
+		sourceRoots.unshift( resolve( dirname( node.file ), mapSourceRoot ) );
+	}
 
 	node.sources = map.sources.map( ( source, i ) => {
 		const content = ( sourcesContent[i] == null ) ? undefined : sourcesContent[i];
-		if (source) {
+		if ( source ) {
 			const fileResolved = sourceRoots
-			.map((sourceRoot) => {
-				return resolve(sourceRoot, source);
-			});
-			const file = fileResolved.find(existsSync) || fileResolved[0];
+				.map( ( sourceRoot ) => {
+					return resolve( sourceRoot, source );
+				});
+			const file = fileResolved.find( existsSync ) || fileResolved[0];
 			const node = nodeCacheByFile[file] = nodeCacheByFile[file] || new Node({ file });
 			// Current content has the priority
 			if ( node.content === undefined ) {

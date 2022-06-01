@@ -31,14 +31,14 @@ export function load ( file, load_options ) {
 		.then( () => node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, load_options ) );
 }
 
-export function loadSync ( file, load_options) {
+export function loadSync ( file, load_options ) {
 	const { node, nodeCacheByFile, options } = init( file, null, load_options );
 
 	node.loadSync( nodeCacheByFile, options );
 	return node.isOriginalSource ? null : new Chain( node, nodeCacheByFile, load_options );
 }
 
-function init ( file, content, load_options) {
+function init ( file, content, load_options ) {
 	const options = parseOptions( load_options );
 
 	// Set keep insertion order
