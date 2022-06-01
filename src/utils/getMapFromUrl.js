@@ -7,6 +7,8 @@ import SOURCEMAPPING_URL from './sourceMappingURL.js';
  * Strip any JSON XSSI avoidance prefix from the string (as documented
  * in the source maps specification), and then parse the string as
  * JSON.
+ * see chromium:\src\third_party\devtools-frontend\src\front_end\core\sdk\SourceMap.ts
+ * see \webpack\source-map-loader\dist\index.js
  */
 function parseJSON ( json, url ) {
 	try {

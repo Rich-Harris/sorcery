@@ -35,7 +35,7 @@ Chain.prototype = {
 	apply ( apply_options ) {
 		const options = parseOptions(this.options, apply_options);
 
-		if ( this.node.isOriginalSource(options) ) {
+		if ( this.node.isFinalSourceContent(options) ) {
 			return null;
 		}
 
@@ -118,12 +118,11 @@ Chain.prototype = {
 
 		const map = new SourceMap({
 			file: basename( this.node.file ),
-			sources: allSources.map( sourceNode => getSourcePath( this.node, sourceNode.file, options ) ),
+			sources: allSources.map( ( sourceNode ) => {
+				return getSourcePath( this.node, sourceNode.file, options );
+			}),
 			sourcesContent: allSources.map( ( sourceNode ) => {
-				if ( options.excludeContent ) {
-					return null;
-				}
-				return sourceNode.content;
+				return options.excludeContent ? null : sourceNode.content;
 			}),
 			names: allNames,
 			mappings,
@@ -132,7 +131,7 @@ Chain.prototype = {
 		if (options.sourceRoot) {
             map.sourceRoot = options.sourceRoot;
         }
-        return map;
+		return map;
 	},
 
 	trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {

@@ -27,8 +27,12 @@ export default function Node ({ file, content }) {
 }
 
 Node.prototype = {
-	isOriginalSource ( options ) {
-		return ( this.sources == null || this.sources.length == 0 || this.map == null || ( options && options.flatten === 'existing' && this.sources.some( ( node ) => node.content == null ) ) );
+	get isOriginalSource() {
+		return ( this.sources == null || this.sources.length == 0 || this.map == null );
+	},
+	
+	isFinalSourceContent ( options ) {
+		return ( this.isOriginalSource || ( options && options.flatten === 'existing' && this.sources.some( ( node ) => node.content == null ) ) );
 	},
 	
 	load ( nodeCacheByFile, options ) {
@@ -87,7 +91,7 @@ Node.prototype = {
 	trace ( lineIndex, columnIndex, name, options ) {
 		// If this node doesn't have a source map, we have
 		// to assume it is the original source
-		if ( this.isOriginalSource(options) ) {
+		if ( this.isFinalSourceContent(options) ) {
 			return {
 				source: this.file,
 				line: lineIndex + 1,
@@ -181,6 +185,7 @@ function resolveMap ( node, nodeCacheByFile, options ) {
 	});
 }
 
+// what about https://nodejs.org/docs/latest-v16.x/api/url.html#urlfileurltopathurl
 function manageFileProtocol ( file ) {
 	// resolve file:///path to /path
 	if ( !!file && file.indexOf( 'file://' ) === 0 ) {
