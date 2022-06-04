@@ -4,6 +4,50 @@ import getMap from './utils/getMap.js';
 import getContent from './utils/getContent.js';
 import { existsSync } from 'fs-extra';
 
+export function _init ( file, content, load_options ) {
+	const options = parseOptions( load_options );
+
+	// Set keep insertion order
+	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/@@iterator
+	const sourceRoots = new Set();
+
+	file = file || options.input;
+	if ( file ) {
+		file = resolve( file );
+		sourceRoots.add( dirname( file ) );
+	}
+	if ( options.sourceRootResolution ) {
+		sourceRoots.add( resolve( options.sourceRootResolution ) );
+	}
+	sourceRoots.add( resolve() );
+
+	options.sourceRoots = Array.from( sourceRoots );
+
+	let nodeCacheByFile = {};
+	const node = new Node({ file, content });
+	if ( node.file ) {
+		nodeCacheByFile[node.file] = node;
+	}
+
+	if ( options.content ) {
+		Object.keys( options.content ).forEach( key => {
+			const file = resolve( key );
+			const node = nodeCacheByFile[file] || new Node({ file });
+			node.content = options.content[ key ];
+			nodeCacheByFile[node.file] = node;
+		});
+	}
+	if ( options.sourcemaps ) {
+		Object.keys( options.sourcemaps ).forEach( key => {
+			const file = resolve( key );
+			const node = nodeCacheByFile[file] || new Node({ file });
+			node.map = options.sourcemaps[ key ];
+			nodeCacheByFile[node.file] = node;
+		});
+	}
+	return { node, nodeCacheByFile, options };
+}
+
 export default function Node ({ file, content }) {
 	this.file = file ? resolve( manageFileProtocol( file ) ) : null;
 	this.content = content || undefined; // sometimes exists in sourcesContent, sometimes doesn't

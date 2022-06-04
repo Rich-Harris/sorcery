@@ -3,13 +3,8 @@ import { writeFile, writeFileSync, ensureDir, ensureDirSync } from 'fs-extra';
 import { encode } from 'sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
-import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
+import SOURCEMAPPING_URL, { SOURCEMAP_COMMENT } from './utils/sourceMappingURL.js';
 import { parseOptions } from './utils/parseOptions.js';
-
-const SOURCEMAP_COMMENT = new RegExp( '\n*(?:' +
-	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^\n]+)|` + // js
-	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
-'\\s*$', 'g' );
 
 export default function Chain ( node, nodeCacheByFile, options ) {
 	this.node = node;
