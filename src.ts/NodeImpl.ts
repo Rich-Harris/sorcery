@@ -84,7 +84,7 @@ export class NodeImpl implements Node {
         return this._decodingTime;
     }
 
-	get mappings() {
+    get mappings() {
         return this._mappings;
     }
 
@@ -92,14 +92,11 @@ export class NodeImpl implements Node {
         return (this._map == null);
     }
 
-    isFinalSourceContent(existing: boolean) {
+    get isCompleteSourceContent() {
         if (this.isOriginalSource) {
             return true;
         }
-        if (existing === true) {
-            return (this._sources == null) || this._sources.some((node) => node._content == null);
-        }
-        return false;
+        return (this._sources == null) || this._sources.some((node) => node._content == null);
     }
 
     load(): Promise<void> {
@@ -133,10 +130,10 @@ export class NodeImpl implements Node {
         }
     }
 
-    trace(lineIndex: number, columnIndex: number, name?: string, existing?: boolean): Trace {
+    trace(lineIndex: number, columnIndex: number, name?: string, options?: Options): Trace {
         // If this node doesn't have a source map, we have
         // to assume it is the original source
-        if (this.isFinalSourceContent(existing)) {
+        if (this.isOriginalSource || (options && options.flatten === 'existing' && !this.isCompleteSourceContent)) {
             return {
                 source: this._file,
                 line: lineIndex + 1,
@@ -173,7 +170,7 @@ export class NodeImpl implements Node {
                     let nameIndex = segments[i][4] || 0;
 
                     let parent = this._sources[sourceFileIndex];
-                    return parent.trace(sourceCodeLine, sourceCodeColumn, this._map.names[nameIndex] || name, existing);
+                    return parent.trace(sourceCodeLine, sourceCodeColumn, this._map.names[nameIndex] || name, options);
                 }
             }
         }
@@ -184,7 +181,7 @@ export class NodeImpl implements Node {
         let nameIndex = segments[0][4] || 0;
 
         let parent = this._sources[sourceFileIndex];
-        return parent.trace(sourceCodeLine, null, this._map.names[nameIndex] || name, existing);
+        return parent.trace(sourceCodeLine, null, this._map.names[nameIndex] || name, options);
     }
 
     resolveMap() {

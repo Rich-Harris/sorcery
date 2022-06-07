@@ -4,11 +4,11 @@ import type { Trace } from './Trace';
 
 export interface Node {
     readonly isOriginalSource: boolean;
+    readonly isCompleteSourceContent: boolean;
     readonly content: string;
     readonly map: SourceMapProps;
     readonly file: string; 
 
-    isFinalSourceContent ( existing: boolean ): boolean;
 
     load (): Promise<void>;
     loadSync (): void;
@@ -28,5 +28,5 @@ export interface Node {
          @property {string || null} name - the name corresponding
          to the segment being traced
      */
-    trace ( lineIndex: number, columnIndex: number, name?: string, existing?: boolean ): Trace;
+    trace ( lineIndex: number, columnIndex: number, name?: string, options?: Options ): Trace;
 }

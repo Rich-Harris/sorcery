@@ -16,12 +16,12 @@ export class ChainImpl {
     constructor ( node: NodeImpl ) {
         this._node = node;
         this._stats = {
-			decodingTime: 0,
-			encodingTime: 0,
-			tracingTime: 0,
-		
-			untraceable: 0,
-		};
+            decodingTime: 0,
+            encodingTime: 0,
+            tracingTime: 0,
+        
+            untraceable: 0,
+        };
     }
 
     stats (): Stats {
@@ -37,7 +37,7 @@ export class ChainImpl {
     apply ( apply_options: Options ): SourceMap | null {
         const options = parseOptions( this._node.context.options, apply_options );
 
-        if ( this._node.isFinalSourceContent( options.flatten === 'existing' ) ) {
+        if (this._node.isOriginalSource || (options && options.flatten === 'existing' && !this._node.isCompleteSourceContent)) {
             return null;
         }
 
@@ -51,7 +51,7 @@ export class ChainImpl {
                 segment[2], // source code line
                 segment[3], // source code column
                 this._node.map.names[ segment[4] ],
-                options.flatten === 'existing'
+                options
             );
 
             if ( !traced ) {
@@ -119,7 +119,7 @@ export class ChainImpl {
         this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 
         const map = new SourceMap({
-			version: 3,
+            version: 3,
             file: basename( this._node.file ),
             sources: allSources.map( ( sourceNode ) => {
                 return getSourcePath( this._node, sourceNode.file, options );
@@ -138,7 +138,7 @@ export class ChainImpl {
 
     trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {
         const options = parseOptions( this._node.context.options, trace_options );
-        return this._node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, trace_options.flatten === 'existing' );
+        return this._node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, trace_options );
     }
 
     write ( dest, write_options ) {
