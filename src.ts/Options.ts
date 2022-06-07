@@ -22,7 +22,7 @@ export interface Options extends LoadOptions, SaveOptions {
     base: string;
 }
 
-export function parseOptions ( ...raw_options: Options[] ) {
+export function parseOptions ( ...raw_options: Options[] ): Options {
 	const options = Object.assign({}, ...raw_options );
 
     options.flatten = options.flatten || 'full';

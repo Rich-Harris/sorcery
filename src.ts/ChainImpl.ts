@@ -51,7 +51,7 @@ export class ChainImpl {
                 segment[2], // source code line
                 segment[3], // source code column
                 this._node.map.names[ segment[4] ],
-                options
+                options.flatten === 'existing'
             );
 
             if ( !traced ) {
@@ -138,7 +138,7 @@ export class ChainImpl {
 
     trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {
         const options = parseOptions( this._node.context.options, trace_options );
-        return this._node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, options );
+        return this._node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, trace_options.flatten === 'existing' );
     }
 
     write ( dest, write_options ) {
