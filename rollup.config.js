@@ -17,7 +17,7 @@ export default {
 			]
 		  })
 	],
-	external: [ 'path', 'fs-extra', 'buffer-crc32', 'sourcemap-codec', 'through', 'url', 'stream'],
+	external: [ 'path', 'fs-extra', 'buffer-crc32', 'sourcemap-codec', 'url', 'stream'],
 	output: {
 		sourcemap: true
 	}

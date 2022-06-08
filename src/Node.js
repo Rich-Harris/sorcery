@@ -3,6 +3,7 @@ import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 import getContent from './utils/getContent.js';
 import { existsSync } from 'fs-extra';
+import { parseOptions } from './utils/parseOptions.js';
 
 export function _init ( file, content, load_options ) {
 	const options = parseOptions( load_options );

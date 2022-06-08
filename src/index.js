@@ -1,27 +1,33 @@
 import { resolve, dirname } from 'path';
-import { through } from 'through';
+import { Transform } from 'stream';
 
 import Node, { _init } from './Node.js';
 import Chain, { writeStream } from './Chain.js';
-import { parseOptions } from './utils/parseOptions.js';
 
 export function transform ( transform_options ) {
 	var source = '';
   
-	function write ( data ) { source += data; }
-	function end () { 
-		const { node, nodeCacheByFile, options } = _init( transform_options.output, source, transform_options );
-		node.loadSync( nodeCacheByFile, options );
-		if ( !node.isOriginalSource ) {
-			const content = writeStream( node, nodeCacheByFile, transform_options );
-			this.queue( content );
-		}
-		else {
-			this.queue( source );
-		}
-		this.queue( null );
-	}
-	return through( write, end );
+	const liner = new Transform();
+    // the transform function
+    liner._transform = function (chunk, encoding, done) {
+        source += chunk.toString();
+        done();
+    }
+    // to flush remaining data (if any)
+    liner._flush = function (done) {
+        const { node, nodeCacheByFile, options } = _init( transform_options.output, source, null, transform_options );
+        node.loadSync( nodeCacheByFile, options );
+        if ( !node.isOriginalSource ) {
+            const content = writeStream( node, nodeCacheByFile, transform_options );
+            this.push( content );
+        }
+        else {
+            this.push( source );
+        }
+       done();
+    }
+
+    return liner;
 }
 
 export function load ( file, load_options ) {
