@@ -3,15 +3,14 @@
 
     "compilerOptions": {
         "module": "es2020",
-        "moduleResolution": "node12",
+        "moduleResolution": "nodenext",
 
         // Needed for project references.
         "composite": true,
         
         "experimentalDecorators": true,
         "declaration": true,
-        "jsx": "react",
-        "outDir": "../lib/esm"
+        "outDir": "./lib/esm"
     }
 }
 

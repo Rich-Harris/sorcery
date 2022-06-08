@@ -10,7 +10,7 @@
         
         "experimentalDecorators": true,
         "declaration": true,
-        "outDir": "../lib/cjs"
+        "outDir": "./lib/cjs"
     }
 }
 

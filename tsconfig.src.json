@@ -3,5 +3,8 @@
     "include": [
         "./src.ts/**/*.ts",
     ],
+    "compilerOptions": {
+        "rootDir": "./src.ts"
+    }
 }
 

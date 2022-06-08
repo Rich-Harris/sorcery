@@ -3,4 +3,5 @@ node_modules
 cli-test
 .tmp
 dist
+lib
 coverage
