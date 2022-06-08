@@ -16,7 +16,7 @@ export class NodeImpl implements Node {
         let node: NodeImpl;
         file = file ? resolve(manageFileProtocol(file)) : null;
         if (file) {
-            let node = context.cache[file];
+            node = context.cache[file];
             if (node) {
                 if (node._content === undefined) {
                     node._content = content;
@@ -72,7 +72,7 @@ export class NodeImpl implements Node {
     }
 
     get file() {
-        return this._content;
+        return this._file;
     }
 
     get map() {
