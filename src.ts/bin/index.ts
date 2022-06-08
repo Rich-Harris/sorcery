@@ -55,7 +55,7 @@ else {
                     return promise.then( function () {
                         const input = path.join( options.input, file );
                         const output = path.join( options.output, file );
-                        const local_options = Object.assign({}, options, { output });
+                        const local_options = Object.assign({}, options, { output, input });
 
                         return sourcery_map.load( input, local_options ).then( ( chain ) => {
                             return chain.write( output, local_options );
