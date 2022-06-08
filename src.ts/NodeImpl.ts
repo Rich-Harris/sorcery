@@ -19,7 +19,10 @@ export class NodeImpl implements Node {
             node = context.cache[file];
             if (node) {
                 if (node._content === undefined) {
-                    node._content = content;
+                    node._content = content || undefined;
+                }
+                if (node._map === undefined) {
+                    node._map = map || undefined;
                 }
             }
             else {
@@ -197,7 +200,7 @@ export class NodeImpl implements Node {
         const sourcesContent = map.sourcesContent || [];
 
         const mapSourceRoot = map.sourceRoot ? manageFileProtocol(map.sourceRoot) : '';
-        var sourceRoots = this._context.sourceRoots.map((sourceRoot) => resolve(sourceRoot, mapSourceRoot));
+        const sourceRoots = this._context.sourceRoots.map((sourceRoot) => resolve(sourceRoot, mapSourceRoot));
         if (this._file) {
             sourceRoots.unshift(resolve(dirname(this._file), mapSourceRoot));
         }

@@ -3,7 +3,8 @@
 
     "compilerOptions": {
         "module": "es2020",
-        "moduleResolution": "nodenext",
+        "moduleResolution": "node",
+        // "moduleResolution": "nodenext",
 
         // Needed for project references.
         "composite": true,
