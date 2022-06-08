@@ -1,11 +1,12 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
 import { writeFile, writeFileSync, ensureDir, ensureDirSync } from 'fs-extra';
 import { encode } from 'sourcemap-codec';
-import { SourceMapProps, SourceMap } from './SourceMap';
+import { SourceMap } from './SourceMap';
 import { Stats } from './Stats';
 import { Options } from './Options';
+import type { Node } from './Node';
 import { NodeImpl } from './NodeImpl';
-import SOURCEMAPPING_URL, { SOURCEMAP_COMMENT } from './utils/sourceMappingURL';
+import { SOURCEMAPPING_URL, SOURCEMAP_COMMENT } from './utils/sourceMappingURL';
 import { parseOptions } from './Options';
 import { slash } from './utils/path';
 
@@ -113,10 +114,10 @@ export class ChainImpl {
         }
 
         // Encode mappings
-        let encodingStart = process.hrtime();
+        let hrEncodingStart = process.hrtime();
         let mappings = encode( allMappings );
-        let encodingTime = process.hrtime( encodingStart );
-        this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
+        let hrEncodingTime = process.hrtime( hrEncodingStart );
+        this._stats.encodingTime = 1e9 * hrEncodingTime[0] + hrEncodingTime[1];
 
         const map = new SourceMap({
             version: 3,
@@ -219,7 +220,7 @@ function sourcemapComment ( url, dest ) {
     return `\n//# ${SOURCEMAPPING_URL}=${url}\n`;
 }
 
-function getSourcePath ( node, source, options ) {
+function getSourcePath ( node: Node, source: string, options: Options ) {
     const replacer = {
         '[absolute-path]': source,
         '[relative-path]': relative( options.base || ( node.file ? dirname( node.file ) : '' ), source )
@@ -231,7 +232,7 @@ function getSourcePath ( node, source, options ) {
     return slash( sourcePath );
 }
 
-function writeChain ( chain, dest, write_options ) {
+function writeChain ( chain: ChainImpl, dest: string, write_options: Options ) {
     const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
     return ensureDir( dirname( resolved ) )
         .then( () => {
@@ -247,7 +248,7 @@ function writeChain ( chain, dest, write_options ) {
         });
 }
 
-function writeSyncChain ( chain, dest, write_options ) {
+function writeSyncChain ( chain: ChainImpl, dest: string, write_options: Options ) {
     const { resolved, content, map, options } = chain.getContentAndMap( dest, write_options );
     ensureDirSync( dirname( resolved ) );
     if ( content ) {

@@ -5,12 +5,11 @@ import { getContent, getContentSync } from './utils/getContent';
 import { existsSync } from 'fs-extra';
 
 import type { Node } from './Node';
-import type { Stats } from './Stats';
-import { SourceMapProps } from './SourceMap';
 import type { Trace } from './Trace';
 import type { Options } from './Options';
 import { manageFileProtocol } from './utils/path';
-import { Context } from './Context';
+import type { Context } from './Context';
+import type { SourceMapProps } from './SourceMap';
 
 export class NodeImpl implements Node {
     static Create(context: Context, file: string, content?: string, map?: SourceMapProps): NodeImpl {

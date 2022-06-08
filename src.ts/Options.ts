@@ -1,4 +1,4 @@
-import { SourceMapProps } from './SourceMap';
+import type { SourceMapProps } from './SourceMap';
 
 interface LoadOptions {
     input: string;

@@ -5,10 +5,10 @@ import type { Trace } from './Trace';
 export interface Node {
     readonly isOriginalSource: boolean;
     readonly isCompleteSourceContent: boolean;
+
     readonly content: string;
     readonly map: SourceMapProps;
     readonly file: string; 
-
 
     load (): Promise<void>;
     loadSync (): void;

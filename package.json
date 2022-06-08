@@ -37,6 +37,7 @@
     "through": "^2.3.8"
   },
   "devDependencies": {
+    "@types/through": "^0.0.30",
     "buble": "^0.20.0",
     "codecov.io": "^0.1.6",
     "coffee-script": "^1.10.0",
@@ -55,6 +56,7 @@
     "rollup-plugin-copy": "^3.4.0",
     "source-map": "^0.7.3",
     "source-map-support": "^0.5.21",
+    "typescript": "^4.7.3",
     "uglify-js": "^3.15.5"
   },
   "bin": {
@@ -62,6 +64,8 @@
   },
   "scripts": {
     "build": "del-cli -f dist && rollup -m -c --format cjs -o dist/sourcery-map.cjs.js && rollup -m -c --format es -o dist/sourcery-map.es.js",
+    "build-ts-cjs": "tsc -p tsconfig.cjs.json",
+    "build-ts-esm": "tsc -p tsconfig.esm.json",
     "_pretest": "npm run build",
     "prepare-tests": "node test/samples/prepare-tests.js",
     "test": "mocha",

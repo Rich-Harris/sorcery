@@ -1,0 +1,47 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        /* Basic Options */
+        "target": "es2020",
+        "lib": [
+            "es2020",
+            "dom",
+            "dom.iterable",
+            "webworker",
+            "webworker.importscripts"
+         ],
+         "skipLibCheck": true,
+
+        /* Module Resolution Options */
+        "incremental": true,
+
+        "preserveConstEnums": true,
+        "stripInternal": true,
+
+        /* for webpack, we need to keep comments */
+        "removeComments": false,
+
+        /* Source Map Options */
+        "sourceMap": true,
+
+        /* Strict Type-Checking Options */
+        /* "strict" covers "alwaysStrict", "noImplicitAny", "noImplicitThis", "strictNullChecks",... */
+        "strict": true,
+        "strictNullChecks": false,
+
+        /* Additional Checks */
+        "noUnusedLocals" : true,
+        "noUnusedParameters" : false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch" : true,
+        "forceConsistentCasingInFileNames": true,
+        "importsNotUsedAsValues": "error",
+
+        /* Experimental Options */
+        "experimentalDecorators": true,
+
+        /* Treat a symlinked file like a real one. */
+        "preserveSymlinks": true,
+    }
+}
+

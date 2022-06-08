@@ -1,8 +1,8 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync } from 'fs-extra';
 import atob from './atob.js';
-import { SOURCEMAPPING_URL } from './getSourceMappingUrl';
-import { SourceMapProps } from '../SourceMap';
+import { SOURCEMAPPING_URL } from './sourceMappingURL';
+import type { SourceMapProps } from '../SourceMap.js';
 
 /**
  * Strip any JSON XSSI avoidance prefix from the string (as documented
@@ -14,7 +14,7 @@ import { SourceMapProps } from '../SourceMap';
 function parseJSON ( json: string, url: string ) {
     try {
         return JSON.parse( json.replace( /^\)]}'[^\n]*\n/, '' ) );
-    } catch ( err ) {
+    } catch ( err: any ) {
         throw new Error( `Could not parse sourcemap (${url}): ${err.message}` );
     }
 }
@@ -31,9 +31,9 @@ function getMapFromBase64(url: string, base: string): SourceMapProps | null {
             return map;
         }
         catch ( err ) {
-            return null;
         }
     }
+    return null;
 }
 
 export function getMapFromUrl ( url: string, base: string ): Promise<SourceMapProps | null> {

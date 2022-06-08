@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.src.json",
+
+    "compilerOptions": {
+        "module": "commonjs",
+        "moduleResolution": "node",
+
+        // Needed for project references.
+        "composite": true,
+        
+        "experimentalDecorators": true,
+        "declaration": true,
+        "outDir": "../lib/cjs"
+    }
+}
+

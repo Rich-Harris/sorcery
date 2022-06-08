@@ -18,8 +18,6 @@ export class Context {
         this._nodeCacheByFile = {};
         this._sourceRoots = [];
 
-        // Set keep insertion order
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/@@iterator
         const sourceRoots = new Set();
 
         this._options.input = this._options.input ? path.resolve(manageFileProtocol(this._options.input)) : null;
@@ -31,6 +29,8 @@ export class Context {
         }
         sourceRoots.add(path.resolve());
 
+        // "Set" keep insertion order
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/@@iterator
         this._sourceRoots = Array.from(this._sourceRoots);
 
         if (this._options.content) {

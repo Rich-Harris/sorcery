@@ -1,4 +1,4 @@
-import SOURCEMAPPING_URL from './sourceMappingURL';
+import { SOURCEMAPPING_URL } from './sourceMappingURL';
 
 export function getSourceMappingUrl ( str: string ): string | null {
     if ( !str ) return null;

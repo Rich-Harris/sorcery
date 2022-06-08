@@ -1,4 +1,4 @@
-import { Options } from '../Options';
+import type { Options } from '../Options';
 
 export function parseOptions ( ...raw_options: Options[] ) {
 	const options = Object.assign({}, ...raw_options );
