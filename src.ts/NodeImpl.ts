@@ -23,17 +23,16 @@ export class NodeImpl implements Node {
                 }
             }
             else {
-                node = new NodeImpl(context, file, content);
+                node = new NodeImpl(context, file, content, map);
                 context.cache[file] = node;
             }
         }
         else if (content) {
-            node = new NodeImpl(context, undefined, content);
+            node = new NodeImpl(context, undefined, content, map);
         }
         else {
             throw new Error('A source must specify either file or content');
         }
-        node._map = map;
         return node;
     }
 
@@ -45,14 +44,14 @@ export class NodeImpl implements Node {
     private _sources: NodeImpl[];
     private _decodingTime: number;
 
-    private constructor(context: Context, file: string, content: string) {
+    private constructor(context: Context, file: string, content: string, map?: SourceMapProps) {
         this._context = context;
 
         this._file = file;
-        this._content = content || undefined; // sometimes exists in sourcesContent, sometimes doesn't
+        this._content = content || undefined; 
+        this._map = map || undefined
 
         // these get filled in later
-        this._map = undefined;
         this._mappings = null;
         this._sources = null;
 
