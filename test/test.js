@@ -435,9 +435,9 @@ console.log "the answer is #{answer}"`;
 	describe( 'cli', () => {
 		fse.readdirSync( 'cli' ).forEach( dir => {
 			if ( dir[0] === '.' ) return;
-			if ( dir.indexOf('exorcist') === -1) {
-				return;
-			}
+			// if ( dir.indexOf('overwrites-dir') === -1) {
+			// 	return;
+			// }
 
 			( /^solo-/.test( dir ) ? it.only : it )( dir, done => {
 				dir = path.resolve( 'cli', dir );
@@ -448,8 +448,10 @@ console.log "the answer is #{answer}"`;
 					require( path.join( dir, 'pre.js' ) )();
 				}
 
+				const package_json = require(path.join(__dirname, '..', 'package.json'));
+
 				var command = fse.readFileSync( path.join(dir, 'command.sh'), { encoding: 'utf-8' })
-					.replace( 'sourcery-map', 'node ' + path.resolve( __dirname, '../bin/sourcery-map' ) );
+					.replace( 'sourcery-map', 'node ' + path.resolve( __dirname, '..', package_json.bin['sourcery-map']) );
 
 				child_process.exec( command, {
 					cwd: dir

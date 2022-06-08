@@ -172,7 +172,7 @@ export class ChainImpl {
 
     getContentAndMap ( dest: string, write_options?: Options ) {
         if ( typeof dest === 'string' ) {
-            write_options = Object.assign(write_options, {});
+            write_options = Object.assign({}, write_options);
             write_options.output = dest;
         }
         else if ( typeof dest === 'object' ) {
@@ -180,7 +180,7 @@ export class ChainImpl {
             write_options.output = this._node.file;
         }
         else {
-            write_options = Object.assign(write_options, {});
+            write_options = Object.assign({}, write_options);
             write_options.output = this._node.file;
         }
 

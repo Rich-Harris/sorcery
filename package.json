@@ -20,7 +20,7 @@
   "main": "./lib/cjs/index.js",
   "types": "./lib/cjs/index.d.ts",
   "bin": {
-    "sourcery-map": ".lib/cjs/bin"
+    "sourcery-map": "./lib/cjs/bin/index.js"
   },
   "keywords": [
     "sorcery",
