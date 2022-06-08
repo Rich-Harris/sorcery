@@ -5,10 +5,7 @@
         "module": "es2020",
         "moduleResolution": "node",
         // "moduleResolution": "nodenext",
-
-        // Needed for project references.
-        "composite": true,
-        
+       
         "experimentalDecorators": true,
         "declaration": true,
         "outDir": "./lib/esm"

@@ -13,7 +13,7 @@
          "skipLibCheck": true,
 
         /* Module Resolution Options */
-        "incremental": true,
+        "incremental": false,
 
         "preserveConstEnums": true,
         "stripInternal": true,

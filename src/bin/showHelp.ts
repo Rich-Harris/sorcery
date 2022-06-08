@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fse from 'fs-extra';
 
-export function injectVersion( stream: NodeJS.WriteStream ) {
+export function injectVersion( stream: any ) {
     fse.readFile( path.join( __dirname, 'help.md' ), ( err, result ) => {
         var help;
 

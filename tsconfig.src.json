@@ -1,10 +1,10 @@
 {
     "extends": "./tsconfig.common.json",
     "include": [
-        "./src.ts/**/*.ts",
+        "./src/**/*.ts",
     ],
     "compilerOptions": {
-        "rootDir": "./src.ts"
+        "rootDir": "./src"
     }
 }
 
