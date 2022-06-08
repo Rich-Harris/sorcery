@@ -66,7 +66,7 @@ export class ChainImpl {
                 allSources.push( this._node.context.cache[traced.source]);
             }
 
-            let newSegment: SourceMapSegment = [
+            const newSegment: SourceMapSegment = [
                 segment[0], // generated code column
                 sourceIndex,
                 traced.line - 1,
@@ -79,8 +79,7 @@ export class ChainImpl {
                     nameIndex = allNames.length;
                     allNames.push( traced.name );
                 }
-
-                (newSegment as any)[4] = nameIndex;
+                newSegment.push(nameIndex);
             }
 
             result.push(newSegment);

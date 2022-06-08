@@ -18,7 +18,7 @@ export class Context {
         this._nodeCacheByFile = {};
         this._sourceRoots = [];
 
-        const sourceRoots = new Set();
+        const sourceRoots = new Set<string>();
 
         this._options.input = this._options.input ? path.resolve(manageFileProtocol(this._options.input)) : null;
         if (this._options.input) {
@@ -31,7 +31,7 @@ export class Context {
 
         // "Set" keep insertion order
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/@@iterator
-        this._sourceRoots = Array.from(this._sourceRoots);
+        this._sourceRoots = Array.from(sourceRoots);
 
         if (this._options.content) {
             Object.keys(this._options.content).forEach(key => {
