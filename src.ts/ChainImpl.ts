@@ -132,7 +132,7 @@ export class ChainImpl {
             names: allNames,
             mappings
         });
-        if ( options.sourceRoot ) {
+        if ( options.sourceRoot != null) {
             map.sourceRoot = options.sourceRoot;
         }
         return map;
