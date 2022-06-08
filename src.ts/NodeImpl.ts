@@ -102,15 +102,15 @@ export class NodeImpl implements Node {
         return getContent(this).then(content => {
             this._content = content;
             if (content == null) {
-                return;
+                return Promise.resolve();
             }
 
             return getMap(this).then(map => {
                 this._map = map;
                 if (map == null) {
-                    return;
+                    return Promise.resolve();
                 }
-                this.resolveMap();
+                this.resolveSources();
 
                 return Promise.all(this._sources.map(node => node.load()))
                 .then(() => {});
@@ -123,7 +123,7 @@ export class NodeImpl implements Node {
         if (this._content != null) {
             this._map = getMapSync(this);
             if (this._map != null) {
-                this.resolveMap();
+                this.resolveSources();
                 this._sources.forEach(node => node.loadSync());
             }
         }
@@ -183,7 +183,7 @@ export class NodeImpl implements Node {
         return parent.trace(sourceCodeLine, null, this._map.names[nameIndex] || name, options);
     }
 
-    resolveMap() {
+    resolveSources() {
         const map = this._map;
 
         // Browserify or similar tools when inlining the map, set the file to a generic name like "generated.js"

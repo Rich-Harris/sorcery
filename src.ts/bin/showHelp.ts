@@ -1,8 +1,8 @@
-var fse = require( 'fs-extra' ),
-    path = require( 'path' );
+import * as path from 'path';
+import * as fse from 'fs-extra';
 
-module.exports = function ( stream ) {
-    fse.readFile( path.join( __dirname, 'help.md' ), function ( err, result ) {
+export function injectVersion( stream: NodeJS.WriteStream ) {
+    fse.readFile( path.join( __dirname, 'help.md' ), ( err, result ) => {
         var help;
 
         if ( err ) throw err;

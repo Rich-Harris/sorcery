@@ -1,11 +1,11 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
 import { writeFile, writeFileSync, ensureDir, ensureDirSync } from 'fs-extra';
-import { encode } from 'sourcemap-codec';
+import { encode, SourceMapSegment, SourceMapMappings, SourceMapLine } from 'sourcemap-codec';
 import { SourceMap } from './SourceMap';
-import { Stats } from './Stats';
-import { Options } from './Options';
+import type { Stats } from './Stats';
+import type { Options } from './Options';
 import type { Node } from './Node';
-import { NodeImpl } from './NodeImpl';
+import type { NodeImpl } from './NodeImpl';
 import { SOURCEMAPPING_URL, SOURCEMAP_COMMENT } from './utils/sourceMappingURL';
 import { parseOptions } from './Options';
 import { slash } from './utils/path';
@@ -27,7 +27,7 @@ export class ChainImpl {
 
     stats (): Stats {
         return {
-            decodingTime: ( this._stats.decodingTime + tally( this._node.sources, 'decodingTime' ) ) / 1e6,
+            decodingTime: ( this._stats.decodingTime + tally( this._node.sources ) ) / 1e6,
             encodingTime: this._stats.encodingTime / 1e6,
             tracingTime: this._stats.tracingTime / 1e6,
 
@@ -42,10 +42,10 @@ export class ChainImpl {
             return null;
         }
 
-        let allNames = [];
-        let allSources = [];
+        let allNames: string[] = [];
+        let allSources: NodeImpl[] = [];
 
-        const applySegment = ( segment, result ) => {
+        const applySegment = ( segment: SourceMapSegment, result: SourceMapLine ) => {
             if ( segment.length < 4 ) return;
 
             const traced = this._node.sources[ segment[1] ].trace( // source
@@ -66,7 +66,7 @@ export class ChainImpl {
                 allSources.push( this._node.context.cache[traced.source]);
             }
 
-            let newSegment = [
+            let newSegment: SourceMapSegment = [
                 segment[0], // generated code column
                 sourceIndex,
                 traced.line - 1,
@@ -80,20 +80,22 @@ export class ChainImpl {
                     allNames.push( traced.name );
                 }
 
-                newSegment[4] = nameIndex;
+                (newSegment as any)[4] = nameIndex;
             }
 
-            result[ result.length ] = newSegment;
+            result.push(newSegment);
         };
 
         let i = this._node.mappings.length;
-        let allMappings;
+        let allMappings: SourceMapMappings;
         if ( options.flatten ) {
             allMappings = new Array( i );
             // Trace mappings
             let tracingStart = process.hrtime();
 
-            let j, line, result;
+            let j: number;
+			let line: SourceMapLine;
+			let result: SourceMapLine;
 
             while ( i-- ) {
                 line = this._node.mappings[i];
@@ -137,12 +139,12 @@ export class ChainImpl {
         return map;
     }
 
-    trace ( oneBasedLineIndex, zeroBasedColumnIndex, trace_options ) {
+    trace ( oneBasedLineIndex: number, zeroBasedColumnIndex: number, trace_options: Options ) {
         const options = parseOptions( this._node.context.options, trace_options );
-        return this._node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, trace_options );
+        return this._node.trace( oneBasedLineIndex - 1, zeroBasedColumnIndex, null, options );
     }
 
-    write ( dest, write_options ) {
+    write ( dest: string, write_options: Options ) {
         return writeChain( this, dest, write_options )
             .then( () => {
                 // if ( write_options && write_options.recursive ) {
@@ -157,7 +159,7 @@ export class ChainImpl {
             });
     }
 
-    writeSync ( dest, write_options ) {
+    writeSync ( dest: string, write_options: Options ) {
         writeSyncChain( this, dest, write_options );
         // if ( write_options && write_options.recursive ) {
         //     Object.values( this.nodeCacheByFile )
@@ -203,13 +205,13 @@ export class ChainImpl {
     }
 };
 
-function tally ( nodes, stat ) {
+function tally ( nodes: NodeImpl[] ) {
     return nodes.reduce( ( total, node ) => {
-        return total + node._stats[ stat ];
+        return total + node.decodingTime;
     }, 0 );
 }
 
-function sourcemapComment ( url, dest ) {
+function sourcemapComment ( url: string, dest: string ) {
     const ext = extname( dest );
     url = encodeURI( url );
 
@@ -221,7 +223,7 @@ function sourcemapComment ( url, dest ) {
 }
 
 function getSourcePath ( node: Node, source: string, options: Options ) {
-    const replacer = {
+    const replacer: Record<string, string> = {
         '[absolute-path]': source,
         '[relative-path]': relative( options.base || ( node.file ? dirname( node.file ) : '' ), source )
     };

@@ -1,4 +1,4 @@
-import { through } from 'through';
+import { Transform } from 'stream';
 
 import { ChainImpl, writeStream } from './ChainImpl';
 import { parseOptions } from './Options';
@@ -7,25 +7,48 @@ import { NodeImpl } from './NodeImpl';
 import { Context } from './Context';
 import type { SourceMapProps } from './SourceMap';
 import { SOURCEMAP_COMMENT } from './utils/sourceMappingURL';
+import type { Chain } from './Chain';
 
 export function transform ( transform_options: Options ) {
-    var source = '';
-  
-    function write ( data: string ) { source += data; }
-    function end () {
-		const through_context = this as any;
+    let source = '';
+
+    const liner = new Transform( { objectMode: true } );
+    // the transform function
+    liner._transform = function (chunk, encoding, done) {
+        source += chunk.toString();
+        done();
+    }
+    // to flush remaining data (if any)
+    liner._flush = function (done) {
         const node = _init( transform_options.output, source, null, transform_options );
         node.loadSync( );
         if ( !node.isOriginalSource ) {
             const content = writeStream( node );
-            through_context.queue( content );
+            this.push( content );
         }
         else {
-            through_context.queue( source );
+            this.push( source );
         }
-        through_context.queue( null );
+       done();
     }
-    return through( write, end );
+
+    return liner;
+  
+    // function write ( data: string ) { source += data; }
+    // function end () {
+    //     const through_context: any = this as any;
+    //     const node = _init( transform_options.output, source, null, transform_options );
+    //     node.loadSync( );
+    //     if ( !node.isOriginalSource ) {
+    //         const content = writeStream( node );
+    //         through_context.queue( content );
+    //     }
+    //     else {
+    //         through_context.queue( source );
+    //     }
+    //     through_context.queue( null );
+    // }
+    // return through( write, end );
 }
 
 export function webpack_loader(input: string, inputMap: string, loader_options: Options): { input: string, inputMap: string } {
@@ -42,14 +65,14 @@ export function webpack_loader(input: string, inputMap: string, loader_options: 
     return { input, inputMap }
 }
 
-export function load ( file: string, load_options: Options ) {
+export function load ( file: string, load_options: Options ): Promise<Chain | null> {
     const node = _init( file, null, null, load_options );
 
     return node.load()
         .then( () => node.isOriginalSource ? null : new ChainImpl( node ) );
 }
 
-export function loadSync ( file: string, load_options: Options ) {
+export function loadSync ( file: string, load_options: Options ): Chain | null {
     const node = _init( file, null, null, load_options );
 
     node.loadSync();

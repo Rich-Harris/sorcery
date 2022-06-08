@@ -1,7 +1,8 @@
 const { webpack_loader } = require('../');
 
 function loader(cur_input: string, cur_inputMap: string) {
-  const webpack_context = this as any;
+  /* @ts-ignore: error TS2683: 'this' implicitly has type 'any' */
+  const webpack_context: any = this;
   const loader_options = webpack_context.getOptions();
   const callback = webpack_context.async();
   const { input, inputMap } = webpack_loader(cur_input, cur_inputMap, loader_options)
