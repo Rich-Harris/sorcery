@@ -212,7 +212,7 @@ export class NodeImpl implements Node {
                     .map((sourceRoot) => {
                         return resolve(sourceRoot, source);
                     });
-                    source = fileResolved.find(existsSync) || fileResolved[0];
+                source = fileResolved.find(existsSync) || fileResolved[0];
             }
             return NodeImpl.Create(this._context, source, content);
         });

@@ -435,7 +435,7 @@ console.log "the answer is #{answer}"`;
 	describe( 'cli', () => {
 		fse.readdirSync( 'cli' ).forEach( dir => {
 			if ( dir[0] === '.' ) return;
-			// if ( dir.indexOf('overwrites-dir') === -1) {
+			// if ( dir.indexOf('exorcist') === -1) {
 			// 	return;
 			// }
 

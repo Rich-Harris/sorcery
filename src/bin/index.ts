@@ -17,7 +17,7 @@ const command = minimist( process.argv.slice( 2 ), {
         d: 'datauri',
         x: 'excludeContent',
         f: 'flatten',
-        b: 'base'
+        // b: 'base'
     }
 });
 
@@ -39,21 +39,24 @@ else if ( !command.input ) {
 
 else {
     const options: Options = { 
-        ...command,
-        input: command.input,
+        // ...command,
+        // input: command.input,
         inline: command.datauri,
-        output: command.output || command.input
+        output: command.output || command.input,
+        excludeContent: command.excludeContent,
+        flatten: command.flatten,
+        sourceRoot: command.sourceRoot,
     };
-    fse.stat( options.input ).then( function ( stats ) {
+    fse.stat( command.input ).then( function ( stats ) {
         if ( stats.isDirectory() ) {
             const globby_options = {
-                cwd: options.input
+                cwd: command.input
             }
             return globby("**/*.js", globby_options)
             .then((files) => {
                 return files.reduce( ( promise, file ) => {
                     return promise.then( function () {
-                        const input = path.join( options.input, file );
+                        const input = path.join( command.input, file );
                         const output = path.join( options.output, file );
                         const local_options = Object.assign({}, options, { output, input });
 
@@ -65,7 +68,7 @@ else {
             });
         }
         else {
-            return sourcery_map.load( options.input, options ).then( ( chain ) => {
+            return sourcery_map.load( command.input, options ).then( ( chain ) => {
                 return chain.write( options.output, options );
             });
         }

@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import { NodeImpl } from './NodeImpl';
 import { Options, parseOptions } from './Options';
-import { manageFileProtocol } from './utils/path';
+// import { manageFileProtocol } from './utils/path';
 
 export interface NodeCacheByFile {
     [file: string]: NodeImpl;
@@ -20,10 +20,10 @@ export class Context {
 
         const sourceRoots = new Set<string>();
 
-        this._options.input = this._options.input ? path.resolve(manageFileProtocol(this._options.input)) : null;
-        if (this._options.input) {
-            sourceRoots.add(path.dirname(this._options.input));
-        }
+        // this._options.input = this._options.input ? path.resolve(manageFileProtocol(this._options.input)) : null;
+        // if (this._options.input) {
+        //     sourceRoots.add(path.dirname(this._options.input));
+        // }
         if (this._options.sourceRootResolution) {
             sourceRoots.add(path.resolve(this._options.sourceRootResolution));
         }
@@ -51,6 +51,18 @@ export class Context {
 
     get cache() {
         return this._nodeCacheByFile;
+    }
+
+    addSourceRoot(sourceRoot: string) {
+        const sourceRoots = new Set<string>(this._sourceRoots);
+        sourceRoots.add(sourceRoot);
+        this._sourceRoots = Array.from(sourceRoots);
+    }
+
+    removeSourceRoot(sourceRoot: string) {
+        const sourceRoots = new Set<string>(this._sourceRoots);
+        sourceRoots.delete(sourceRoot);
+        this._sourceRoots = Array.from(sourceRoots);
     }
 
     get sourceRoots() {

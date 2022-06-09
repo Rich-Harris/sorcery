@@ -1,13 +1,18 @@
 {
-    "extends": "./tsconfig.src.json",
-
+    "extends": "./tsconfig.common.json",
+    "include": [
+        "./src/index.ts",
+        "./src/bin/*.ts",
+        "./src/webpack/*.ts"
+    ],
     "compilerOptions": {
         "module": "commonjs",
         "moduleResolution": "node",
 
         "experimentalDecorators": true,
         "declaration": true,
-        "outDir": "./lib/cjs"
+        "outDir": "./lib/cjs",
+        "rootDir": "./src"
     }
 }
 
