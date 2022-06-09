@@ -11,12 +11,8 @@ import type { SourceMapProps } from '../SourceMap.js';
  * see chromium:\src\third_party\devtools-frontend\src\front_end\core\sdk\SourceMap.ts
  * see \webpack\source-map-loader\dist\index.js
  */
-function parseJSON ( json: string, url: string ) {
-    try {
-        return JSON.parse( json.replace( /^\)]}'[^\n]*\n/, '' ) );
-    } catch ( err: any ) {
-        throw new Error( `Could not parse sourcemap (${url}): ${err.message}` );
-    }
+function parseJSON ( json: string ) {
+    return JSON.parse( json.replace( /^\)]}'[^\n]*\n/, '' ) );
 }
 
 function getMapFromBase64(url: string, base: string): SourceMapProps | null {
@@ -27,10 +23,11 @@ function getMapFromBase64(url: string, base: string): SourceMapProps | null {
         }
         const json = atob( match[1]);
         try {
-            const map = parseJSON( json, ( 'data URI in ' + base ) );
+            const map = parseJSON( json);
             return map;
         }
-        catch ( err ) {
+        catch ( err: any ) {
+            throw new Error( `Could not parse sourcemap data URI in (${base}): ${err.message}` );
         }
     }
     return null;
@@ -42,7 +39,7 @@ export function getMapFromUrl ( url: string, base: string ): Promise<SourceMapPr
         return Promise.resolve(map);
     }
     url = resolve( dirname( base ), decodeURI( url ) );
-    return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json, url ) ).catch( () => null );
+    return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json ) ).catch( () => null );
 }
 
 export function getMapFromUrlSync ( url: string, base: string ): SourceMapProps | null {
@@ -52,7 +49,7 @@ export function getMapFromUrlSync ( url: string, base: string ): SourceMapProps 
     }
     url = resolve( dirname( base ), decodeURI( url ) );
     try {
-        return parseJSON( readFileSync( url, { encoding: 'utf-8' }), url );
+        return parseJSON( readFileSync( url, { encoding: 'utf-8' }) );
     }
 	catch ( e ) {
         return null;
