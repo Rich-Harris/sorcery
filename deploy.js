@@ -1,4 +1,4 @@
-// A bit ugly but can not decide waht would be the best name for this lib !! ;-)
+// A bit ugly but can not decide what would be the best name for this lib !! ;-)
 const child_process = require('child_process');
 const fse = require('fs-extra');
 

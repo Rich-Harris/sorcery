@@ -15,13 +15,9 @@ This package is a fork of [sorcery](https://github.com/Rich-Harris/sorcery) with
 * Provide a source root resolution fallback when map has been generated from another path (browserify)
 * [exorcist](https://www.npmjs.com/package/exorcist) like [experimental]
 * sourceMappingURL can be inline content, absolute, relative...
+* webpack loader/plugin included
 
 **Beware**, all these features are experimental and not fully covered by tests, if you find an issue, do not hesitate to create a bug or contribute ;-)
-
-## Next steps
-* expose a Webpack plugin (equivalent to source-map-loader)  
-* add d.ts or migrate to TypeScript
-
 
 ## Options
 
@@ -153,7 +149,7 @@ sourcery-map -i some/generated/code.min.js -o newfile.js
 ```
 
 ### Exorcist-like [experimental]
-Can replace exorcist 
+Can replace [exorcist](https://www.npmjs.com/package/exorcist)
 ```
   const basedir = process.cwd();
   const browserify_options = { 
@@ -175,6 +171,23 @@ you can flatten the map at the same time
 ```
     .pipe(sourcery_map.transform({ output: bundleFile, flatten: 'existing', sourceRootResolution: baseDir }))]
 ```
+
+### Webpack [experimental]
+## Loader
+Can replace [source-map-loader](https://github.com/webpack-contrib/source-map-loader)
+
+  module: {
+            rules: [
+                {
+                    test: /\.js$/,
+                    use: ['sourcery-map/loader'],
+                    // use: ["source-map-loader"],
+                    enforce: "pre"
+                },
+            ]
+
+## Plugin
+TBD
 
 ## License
 
