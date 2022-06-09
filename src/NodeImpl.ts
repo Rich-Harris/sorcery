@@ -47,10 +47,14 @@ export class NodeImpl implements Node {
     private _sources: NodeImpl[];
     private _decodingTime: number;
 
+    public origin: string;
+
     private constructor(context: Context, file: string, content: string, map?: SourceMapProps) {
         this._context = context;
 
         this._file = file;
+        this.origin = this._file ? dirname(this._file) : context.origin;
+
         this._content = content || undefined; 
         this._map = map || undefined
 
@@ -202,7 +206,7 @@ export class NodeImpl implements Node {
         const mapSourceRoot = map.sourceRoot ? manageFileProtocol(map.sourceRoot) : '';
         const sourceRoots = this._context.sourceRoots.map((sourceRoot) => resolve(sourceRoot, mapSourceRoot));
         if (this._file) {
-            sourceRoots.unshift(resolve(dirname(this._file), mapSourceRoot));
+            sourceRoots.unshift(resolve(this.origin, mapSourceRoot));
         }
 
         this._sources = map.sources.map((source, i) => {

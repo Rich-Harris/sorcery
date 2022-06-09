@@ -1,4 +1,4 @@
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 import { readFile, readFileSync } from 'fs-extra';
 import atob from './atob.js';
 import { SOURCEMAPPING_URL } from './sourceMappingURL';
@@ -38,7 +38,7 @@ export function getMapFromUrl ( url: string, base: string ): Promise<SourceMapPr
     if (map) {
         return Promise.resolve(map);
     }
-    url = resolve( dirname( base ), decodeURI( url ) );
+    url = resolve( base, decodeURI( url ) );
     return readFile( url, { encoding: 'utf-8' }).then( json => parseJSON( json ) ).catch( () => null );
 }
 
@@ -47,7 +47,7 @@ export function getMapFromUrlSync ( url: string, base: string ): SourceMapProps 
     if (map) {
         return map;
     }
-    url = resolve( dirname( base ), decodeURI( url ) );
+    url = resolve( base, decodeURI( url ) );
     try {
         return parseJSON( readFileSync( url, { encoding: 'utf-8' }) );
     }

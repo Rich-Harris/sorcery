@@ -10,9 +10,7 @@ export function loader(input: string, inputMap: string) {
   const callback = webpack_context.async();
 
   const map: SourceMapProps = inputMap ? JSON.parse(inputMap): undefined;
-  loader_options = loader_options || {};
-  loader_options.sourceRootResolution = loader_options.sourceRootResolution || webpack_context.context;
-  const node = _init( undefined, input, map, loader_options );
+  const node = _init(webpack_context.context, undefined, input, map, loader_options );
   node.loadSync();
   if ( !node.isOriginalSource ) {
     const chain = new ChainImpl( node );

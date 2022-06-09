@@ -11,7 +11,7 @@ export function getMap ( node: Node ): Promise<SourceMapProps | null> {
     if ( map === undefined ) {
         const url = getSourceMappingUrl( node.content );
         if ( url ) {
-            return getMapFromUrl( url, node.file );
+            return getMapFromUrl( url, node.origin );
         }
         return Promise.resolve(null);
     }
@@ -25,7 +25,7 @@ export function getMapSync ( node: Node ): SourceMapProps | null {
     if ( map === undefined ) {
         const url = getSourceMappingUrl( node.content );
         if ( url ) {
-            return getMapFromUrlSync( url, node.file );
+            return getMapFromUrlSync( url, node.origin );
         }
         return null;
     }

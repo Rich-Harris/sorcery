@@ -9,6 +9,7 @@ export interface Node {
     readonly content: string;
     readonly map: SourceMapProps;
     readonly file: string; 
+    readonly origin: string; 
 
     load (): Promise<void>;
     loadSync (): void;

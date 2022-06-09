@@ -12,18 +12,16 @@ export class Context {
     private _nodeCacheByFile: NodeCacheByFile;
     private _sourceRoots: string[];
     private _options: Options;
+    private _origin: string;
 
-    constructor(options: Options) {
+    constructor(origin: string, options: Options) {
+        this._origin = origin;
         this._options = parseOptions(options);
         this._nodeCacheByFile = {};
         this._sourceRoots = [];
 
         const sourceRoots = new Set<string>();
 
-        // this._options.input = this._options.input ? path.resolve(manageFileProtocol(this._options.input)) : null;
-        // if (this._options.input) {
-        //     sourceRoots.add(path.dirname(this._options.input));
-        // }
         if (this._options.sourceRootResolution) {
             sourceRoots.add(path.resolve(this._options.sourceRootResolution));
         }
@@ -63,6 +61,10 @@ export class Context {
         const sourceRoots = new Set<string>(this._sourceRoots);
         sourceRoots.delete(sourceRoot);
         this._sourceRoots = Array.from(sourceRoots);
+    }
+
+    get origin() {
+        return this._origin;
     }
 
     get sourceRoots() {
