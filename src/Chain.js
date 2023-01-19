@@ -1,6 +1,6 @@
 import { basename, dirname, extname, relative, resolve } from 'path';
 import { writeFile, writeFileSync } from 'sander';
-import { encode } from 'sourcemap-codec';
+import codec from '@jridgewell/sourcemap-codec';
 import SourceMap from './SourceMap.js';
 import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
@@ -96,7 +96,7 @@ Chain.prototype = {
 
 		// Encode mappings
 		let encodingStart = process.hrtime();
-		let mappings = encode( resolved );
+		let mappings = codec.encode( resolved );
 		let encodingTime = process.hrtime( encodingStart );
 		this._stats.encodingTime = 1e9 * encodingTime[0] + encodingTime[1];
 

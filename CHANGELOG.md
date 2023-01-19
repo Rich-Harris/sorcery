@@ -1,5 +1,9 @@
 # changelog
 
+## 0.11.0
+
+* Use `@jridgewell/sourcemap-codec`
+
 ## 0.10.0
 
 * Allow CLI to recurse over a directory ([#13](https://github.com/Rich-Harris/sorcery/issues/13))

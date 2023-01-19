@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'path';
 import { readFile, readFileSync, Promise } from 'sander';
-import { decode } from 'sourcemap-codec';
+import codec from '@jridgewell/sourcemap-codec';
 import getMap from './utils/getMap.js';
 
 export default function Node ({ file, content }) {
@@ -37,7 +37,7 @@ Node.prototype = {
 				this.map = map;
 
 				let decodingStart = process.hrtime();
-				this.mappings = decode( map.mappings );
+				this.mappings = codec.decode( map.mappings );
 				let decodingTime = process.hrtime( decodingStart );
 				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
 
@@ -74,7 +74,7 @@ Node.prototype = {
 			this.isOriginalSource = true;
 		} else {
 			this.map = map;
-			this.mappings = decode( map.mappings );
+			this.mappings = codec.decode( map.mappings );
 
 			sourcesContent = map.sourcesContent || [];
 
