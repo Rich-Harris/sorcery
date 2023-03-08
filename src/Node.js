@@ -43,7 +43,7 @@ Node.prototype = {
 
 				const sourcesContent = map.sourcesContent || [];
 
-				const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+				const sourceRoot = resolve( dirname( this.file || '' ), map.sourceRoot || '' );
 
 				this.sources = map.sources.map( ( source, i ) => {
 					return new Node({
@@ -78,7 +78,7 @@ Node.prototype = {
 
 			sourcesContent = map.sourcesContent || [];
 
-			const sourceRoot = resolve( dirname( this.file ), map.sourceRoot || '' );
+			const sourceRoot = resolve( dirname( this.file || '' ), map.sourceRoot || '' );
 
 			this.sources = map.sources.map( ( source, i ) => {
 				const node = new Node({
