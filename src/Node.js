@@ -65,6 +65,8 @@ Node.prototype = {
 			}
 
 			this.content = sourcesContentByPath[ this.file ];
+		} else {
+			sourcesContentByPath[ this.file ] = this.content;
 		}
 
 		const map = getMap( this, sourceMapByPath, true );
